@@ -1,8 +1,6 @@
 import express from "express";
+import { getStatus } from "../controllers/server.controller.js";
 const router = express.Router();
 
-router.get("/", (req, res) => {
-  console.log("hit");
-  res.status(200).json("Server is live !!!");
-});
+router.get("/", getStatus);
 export default router;
