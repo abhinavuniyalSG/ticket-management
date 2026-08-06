@@ -8,8 +8,10 @@ import fallBackRoutes from "./routes/fallback.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import ticketRoutes from "./routes/ticket.routes.js";
 import userRoutes from "./routes/user.routes.js";
+import adminRoutes from "./routes/admin.routes.js";
+import departmentRoutes from "./routes/department.routes.js";
 import db from "./config/db.js";
-import { jwtAuthenticate } from "./middleware/auth.middleware.js";
+import { isAdmin, jwtAuthenticate } from "./middleware/auth.middleware.js";
 import { error } from "console";
 
 const app = express();
@@ -25,6 +27,8 @@ app.use("/status", statusRoutes);
 app.use("/auth", authRoutes);
 app.use("/task", jwtAuthenticate, ticketRoutes);
 app.use("/user", jwtAuthenticate, userRoutes);
+app.use("/admin", jwtAuthenticate, isAdmin, adminRoutes);
+app.use("/department", jwtAuthenticate, departmentRoutes);
 app.use(fallBackRoutes);
 
 app.listen(port, async () => {

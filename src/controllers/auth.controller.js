@@ -11,17 +11,24 @@ export const registerController = async (req, res) => {
     const password = req.body?.password;
     const name = req.body?.name;
     if (email === undefined || password === undefined || name === undefined) {
-      res
-        .status(400)
-        .end("Bad Request:Must contain both name, email and password");
+      res.status(400).json({
+        message: "Bad Request:Must contain name, email and password",
+      });
     }
+
     const hashedPasswored = await generateHashPassword(password);
     const result = await createUser(name, email, hashedPasswored);
     const payload = { email: req.body.email };
     const token = tokenGenerator(payload, "1h");
     res.status(200).json({ message: "User Registered", token: token });
   } catch (e) {
-    res.status(500).json("Failed to create user");
+    console.error(e);
+    if (e.code === "ER_DUP_ENTRY") {
+      return res.status(409).json({
+        message: "User already exists.",
+      });
+    }
+    res.status(500).json({ message: "Internal error: Failed to create user" });
   }
 };
 

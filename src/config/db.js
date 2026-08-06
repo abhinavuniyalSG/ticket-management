@@ -23,7 +23,7 @@ const initailizeDatabase = async () => {
     });
     console.log("connected");
     const dbName = process.env.DB_NAME;
-    console.log(`checking that database ${dbName} exist`);
+    console.log(`checking if database ${dbName} exist`);
     const [row] = await connect.query(`SHOW DATABASES LIKE '${dbName}'`);
     console.log(row);
     if (!row.length > 0) {

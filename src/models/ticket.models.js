@@ -14,9 +14,10 @@ const createTicket = async (
       email,
       department,
     ]);
+    return result;
   } catch (e) {
     console.error(e);
-    throw new Error("Filed to add user to database");
+    throw new Error("Failed to create ticket");
   }
 };
 
@@ -45,15 +46,31 @@ const getUsersTicket = async (email, way) => {
     throw new Error("Filed to get user tickets");
   }
 };
-const getTicket = async (ticketID) => {
+const getTicket = async (ticketID, email) => {
   try {
     const sqlQuery = "SELECT * FROM TICKET WHERE ticket_id =?;";
     const [ticketDetails] = await db.query(sqlQuery, [ticketID]);
-
-    return ticketDetails;
+    if (ticketDetails.length === 0) {
+      const error = new Error("Ticket not found.");
+      error.status = 404;
+      throw error;
+    }
+    const [role] = await db.query(
+      "SELECT user_role from users where user_email = ?",
+      [email],
+    );
+    if (
+      role[0].user_role !== "admin" &&
+      ticketDetails[0].assigned_to !== email &&
+      ticketDetails[0].created_by !== email
+    ) {
+      const error = new Error("You are not authorized to access the ticket.");
+      error.status = 401;
+      throw error;
+    }
+    return ticketDetails[0];
   } catch (e) {
-    console.error(e);
-    throw new Error("Failed to ticketDetails from database");
+    throw new Error(e);
   }
 };
 
@@ -63,23 +80,29 @@ const updateTicket = async (id, updates, email) => {
     const [rows] = await db.query(sqlQuery, [id]);
 
     if (rows.length === 0) {
-      throw new Error("Ticket not found");
+      const error = new Error("Ticket not found");
+      error.status = 404;
+      throw error;
     }
 
     if ("status" in updates) {
       if (rows[0].assigned_to !== email && updates.status !== "Closed") {
-        throw new Error(
+        const error = new Error(
           "Only the assigned user can set status to In Progress or Completed.",
         );
+        error.status = 403;
+        throw error;
       }
 
       if (
         rows[0].assigned_to === email &&
         !["In Progress", "Completed"].includes(updates.status)
       ) {
-        throw new Error(
+        const error = new Error(
           "Assigned user can only set status to In Progress or Completed.",
         );
+        error.status = 403;
+        throw error;
       }
     }
 
@@ -95,7 +118,9 @@ const updateTicket = async (id, updates, email) => {
 
     for (const key of Object.keys(updates)) {
       if (!allowedFields.includes(key)) {
-        throw new Error(`Unauthorized field: ${key}`);
+        const error = new Error(`Unauthorized field: ${key}`);
+        error.status = 400;
+        throw error;
       }
 
       fields.push(`${key} = ?`);
@@ -103,7 +128,9 @@ const updateTicket = async (id, updates, email) => {
     }
 
     if (fields.length === 0) {
-      throw new Error("No valid fields to update.");
+      const error = new Error("No valid fields to update.");
+      error.status = 400;
+      throw error;
     }
 
     values.push(id);

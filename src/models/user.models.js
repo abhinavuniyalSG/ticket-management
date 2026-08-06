@@ -21,7 +21,7 @@ const getUserByEmail = async (email) => {
     return users[0];
   } catch (e) {
     console.error(e);
-    throw new Error("Failed to get user details from database.");
+    throw new Error("Failed to get user details.");
   }
 };
 
