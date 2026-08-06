@@ -6,7 +6,10 @@ import path from "path";
 import statusRoutes from "./routes/status.routes.js";
 import fallBackRoutes from "./routes/fallback.routes.js";
 import authRoutes from "./routes/auth.routes.js";
+import ticketRoutes from "./routes/ticket.routes.js";
+import userRoutes from "./routes/user.routes.js";
 import db from "./config/db.js";
+import { jwtAuthenticate } from "./middleware/auth.middleware.js";
 import { error } from "console";
 
 const app = express();
@@ -20,6 +23,8 @@ app.use(express.json());
 
 app.use("/status", statusRoutes);
 app.use("/auth", authRoutes);
+app.use("/task", jwtAuthenticate, ticketRoutes);
+app.use("/user", jwtAuthenticate, userRoutes);
 app.use(fallBackRoutes);
 
 app.listen(port, async () => {

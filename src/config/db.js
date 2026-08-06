@@ -42,7 +42,7 @@ const initailizeDatabase = async () => {
     });
     const sqlQuery = await fs.readFile("./src/database/schema.sql", "utf8");
     await connect.query(sqlQuery);
-    connect.end;
+    connect.end();
     let pool = mysql.createPool({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,

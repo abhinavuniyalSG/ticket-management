@@ -1,0 +1,3 @@
+const getUserDetailController = () => {};
+
+export { getUserDetailController };
