@@ -54,8 +54,8 @@ const updateTicketByAdmin = async (id, updates) => {
       throw error;
     }
     if (
-      ticket.assigned_to === null &&
-      updates.assigned_to === undefined &&
+      ticket[0].assigned_to === null &&
+      (updates.assigned_to === undefined || updates.assigned_to === null) &&
       updates.status !== undefined
     ) {
       const error = new Error("Cannot update status of an unassigned ticket.");

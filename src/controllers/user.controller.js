@@ -4,11 +4,7 @@ const getUserDetailController = async (req, res) => {
   try {
     const email = req.user.email;
     const user = await getUserByEmail(email);
-    if (!user) {
-      return res.status(404).json({
-        message: "User not found.",
-      });
-    }
+
     return res.status(200).json({
       message: "User details fetched successfully.",
       user,
@@ -16,8 +12,8 @@ const getUserDetailController = async (req, res) => {
   } catch (e) {
     console.error(e);
 
-    return res.status(500).json({
-      message: "Internal server error.",
+    return res.status(e.status || 500).json({
+      message: e.message || "Internal server error.",
     });
   }
 };

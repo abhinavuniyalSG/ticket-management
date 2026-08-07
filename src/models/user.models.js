@@ -17,7 +17,11 @@ const getUserByEmail = async (email) => {
     if (users.length === 0) {
       return null;
     }
-
+    if (!users[0]) {
+      const error = new Error("User not found.");
+      error.status = 404;
+      return error;
+    }
     return users[0];
   } catch (e) {
     console.error(e);

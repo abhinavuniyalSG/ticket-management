@@ -39,26 +39,8 @@ const updateTicketByAdminController = async (req, res) => {
     });
   } catch (e) {
     console.error(e);
-
-    if (e.message === "Ticket not found") {
-      return res.status(404).json({
-        message: e.message,
-      });
-    }
-
-    if (
-      e.message === "No valid fields to update." ||
-      e.message === "Cannot update status of an unassigned ticket." ||
-      e.message === "Status must be 'Pending' when unassigning a ticket." ||
-      e.message.startsWith("Unauthorized field")
-    ) {
-      return res.status(400).json({
-        message: e.message,
-      });
-    }
-
-    return res.status(500).json({
-      message: "Internal server error.",
+    return res.status(e.status || 500).json({
+      message: e.message || "Internal server error.",
     });
   }
 };

@@ -5,7 +5,7 @@ import {
   getTicket,
   getUsersTicket,
   updateTicket,
-} from "../models/ticket.models.js";
+} from "../models/ticket.model.js";
 
 const getUserTicketController = async (req, res) => {
   try {
@@ -55,7 +55,7 @@ const createTicketController = async (req, res) => {
       department,
     );
 
-    res.status(200).json({ message: "successfully created" });
+    res.status(201).json({ message: "successfully created" });
   } catch (e) {
     console.error(e);
     res.status(500).json({ message: "Somne Internal error " });
@@ -90,17 +90,11 @@ const updateTicketController = async (req, res) => {
     }
 
     const result = await updateTicket(id, updates, email);
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({
-        message: "Ticket not while updating found.",
-      });
-    }
     res.status(200).json({
       message: "Ticket updated successfully.",
     });
-  } catch (error) {
-    console.error(error);
+  } catch (e) {
+    console.error(e);
     res.status(e.status || 500).json({
       message: e.message || "Internal server error.",
     });

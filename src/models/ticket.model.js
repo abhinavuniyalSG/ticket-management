@@ -65,12 +65,12 @@ const getTicket = async (ticketID, email) => {
       ticketDetails[0].created_by !== email
     ) {
       const error = new Error("You are not authorized to access the ticket.");
-      error.status = 401;
+      error.status = 403;
       throw error;
     }
     return ticketDetails[0];
   } catch (e) {
-    throw new Error(e);
+    throw e;
   }
 };
 
@@ -142,7 +142,11 @@ const updateTicket = async (id, updates, email) => {
     `;
 
     const [result] = await db.query(sql, values);
-
+    if (result.affectedRows === 0) {
+      const error = new Error("Failed to find and update ticket.");
+      error.status = 404;
+      throw error;
+    }
     return result;
   } catch (e) {
     console.error(e);
