@@ -1,16 +1,15 @@
-import db from "../config/db.js";
 import {
   createTicket,
   deleteTicket,
   getTicket,
   getUsersTicket,
   updateTicket,
-} from "../models/ticket.model.js";
+} from "../services/ticket.service.js";
 
 const getUserTicketController = async (req, res) => {
   try {
     const email = req.user.email;
-    const way = req.query?.way?.toLowerCase();
+    const way = req.query?.way;
     if (!email) {
       return res.status(400).end("Required email");
     }

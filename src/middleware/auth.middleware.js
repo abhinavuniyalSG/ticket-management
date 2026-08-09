@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import { verifyToken } from "../utils/auth.util.js";
-import { getUserByEmail } from "../models/user.models.js";
+import { getUserByEmail } from "../services/user.service.js";
 const jwtAuthenticate = (req, res, next) => {
   const token = req.headers.authorization?.split(" ")[1];
   if (!token) {

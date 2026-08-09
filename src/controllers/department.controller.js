@@ -4,7 +4,7 @@ import {
   getAllDepartments,
   getDepartment,
   updateDepartment,
-} from "../models/department.model.js";
+} from "../services/department.service.js";
 
 const getAllDepartmentController = async (req, res) => {
   try {
@@ -32,7 +32,7 @@ const createDepartmentController = async (req, res) => {
       });
     }
 
-    const result = await createDepartment(department_name.trim());
+    const result = await createDepartment(department_name);
 
     return res.status(201).json({
       message: "Department created successfully.",
@@ -76,7 +76,7 @@ const updateDepartmentController = async (req, res) => {
       });
     }
 
-    await updateDepartment(id, department_name.trim());
+    await updateDepartment(id, department_name);
 
     return res.status(200).json({
       message: "Department updated successfully.",

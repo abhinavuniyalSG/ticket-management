@@ -1,9 +1,4 @@
-import { createUser, selectUser } from "../models/auth.model.js";
-import {
-  generateHashPassword,
-  tokenGenerator,
-  verifypaswword,
-} from "../utils/auth.util.js";
+import { login, register } from "../services/auth.service.js";
 
 export const registerController = async (req, res) => {
   try {
@@ -14,10 +9,7 @@ export const registerController = async (req, res) => {
       });
     }
 
-    const hashedPasswored = await generateHashPassword(password);
-    const result = await createUser(name, email, hashedPasswored);
-    const payload = { email: req.body.email };
-    const token = tokenGenerator(payload, "1h");
+    const token = await register(name, email, password);
     res.status(201).json({ message: "User Registered", token: token });
   } catch (e) {
     console.error(e);
@@ -36,14 +28,10 @@ export const loginController = async (req, res) => {
         .status(400)
         .end("Bad Request:Must contain both name, email and password");
     }
-    const user = await selectUser(email);
-    const isMatch = await verifypaswword(password, user.user_password);
-    if (!isMatch) {
+    const token = await login(email, password);
+    if (!token) {
       return res.status(401).end("enter correct email or password");
     }
-    const secret = process.env.JWT_SECRET;
-    const payload = { email: email };
-    const token = tokenGenerator(payload, "1h");
     res.status(200).json({ message: "User successfully Login", token: token });
   } catch (e) {
     console.error(e);

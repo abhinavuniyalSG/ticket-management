@@ -1,6 +1,5 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-import db from "../config/db.js";
 
 const tokenGenerator = (payload, time) => {
   const secret = process.env.JWT_SECRET;

@@ -5,7 +5,7 @@ import {
   getUserDetailByEmail,
   updateTicketByAdmin,
   updateUserDetail,
-} from "../models/admin.model.js";
+} from "../services/admin.service.js";
 
 const getAllTicketController = async (req, res) => {
   try {

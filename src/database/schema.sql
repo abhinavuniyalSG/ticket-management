@@ -1,5 +1,4 @@
 CREATE TABLE IF NOT EXISTS department (department_id INT AUTO_INCREMENT PRIMARY KEY,department_name VARCHAR(100) NOT NULL UNIQUE);
--- CREATE TABLE IF NOT EXISTS ticket_type (ticket_type_id INT AUTO_INCREMENT PRIMARY KEY,ticket_type_name VARCHAR(100) NOT NULL,department_id INT NOT NULL, CONSTRAINT fk_tickettype_department FOREIGN KEY (department_id) REFERENCES department(department_id) ON DELETE CASCADE ON UPDATE CASCADE);
 
 CREATE TABLE IF NOT EXISTS users (user_email VARCHAR(254) PRIMARY KEY NOT NULL,user_password VARCHAR(255) NOT NULL, user_name VARCHAR(100) NOT NULL,user_role ENUM('user','admin') NOT NULL DEFAULT 'user',department_id INT DEFAULT NULL, CONSTRAINT fk_user_department FOREIGN KEY (department_id) REFERENCES department(department_id) ON DELETE SET NULL ON UPDATE CASCADE);
 

@@ -1,4 +1,4 @@
-import { getUserByEmail } from "../models/user.models.js";
+import { getUserByEmail } from "../services/user.service.js";
 
 const getUserDetailController = async (req, res) => {
   try {
