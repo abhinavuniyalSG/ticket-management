@@ -12,6 +12,7 @@ import departmentRoutes from "./routes/department.routes.js";
 import db from "./config/db.js";
 import { isAdmin, jwtAuthenticate } from "./middleware/auth.middleware.js";
 import { notFoundMiddleWare } from "./middleware/notFound.middleware.js";
+import { errorMiddleware } from "./middleware/error.middleware.js";
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
@@ -29,6 +30,7 @@ app.use("/user", jwtAuthenticate, userRoutes);
 app.use("/admin", jwtAuthenticate, isAdmin, adminRoutes);
 app.use("/department", jwtAuthenticate, departmentRoutes);
 app.use(notFoundMiddleWare);
+app.use(errorMiddleware);
 
 app.listen(port, async () => {
   try {

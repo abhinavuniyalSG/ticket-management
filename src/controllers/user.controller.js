@@ -1,6 +1,6 @@
 import { getUserByEmail } from "../services/user.service.js";
 
-const getUserDetailController = async (req, res) => {
+const getUserDetailController = async (req, res, next) => {
   try {
     const email = req.user.email;
     const user = await getUserByEmail(email);
@@ -10,11 +10,7 @@ const getUserDetailController = async (req, res) => {
       user,
     });
   } catch (e) {
-    console.error(e);
-
-    return res.status(e.status || 500).json({
-      message: e.message || "Internal server error.",
-    });
+    return next(e);
   }
 };
 

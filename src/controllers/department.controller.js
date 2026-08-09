@@ -6,7 +6,7 @@ import {
   updateDepartment,
 } from "../services/department.service.js";
 
-const getAllDepartmentController = async (req, res) => {
+const getAllDepartmentController = async (req, res, next) => {
   try {
     const departments = await getAllDepartments();
 
@@ -15,14 +15,10 @@ const getAllDepartmentController = async (req, res) => {
       departments,
     });
   } catch (e) {
-    console.error(e);
-
-    return res.status(e.status || 500).json({
-      message: e.message || "Internal server error.",
-    });
+    return next(e);
   }
 };
-const createDepartmentController = async (req, res) => {
+const createDepartmentController = async (req, res, next) => {
   try {
     const { department_name } = req.body;
 
@@ -39,14 +35,10 @@ const createDepartmentController = async (req, res) => {
       departmentId: result.insertId,
     });
   } catch (e) {
-    console.error(e);
-
-    return res.status(e.status || 500).json({
-      message: e.message || "Internal server error.",
-    });
+    return next(e);
   }
 };
-const getDepartmentController = async (req, res) => {
+const getDepartmentController = async (req, res, next) => {
   try {
     const { id } = req.params;
 
@@ -57,15 +49,11 @@ const getDepartmentController = async (req, res) => {
       department,
     });
   } catch (e) {
-    console.error(e);
-
-    return res.status(e.status || 500).json({
-      message: e.message || "Internal server error.",
-    });
+    return next(e);
   }
 };
 
-const updateDepartmentController = async (req, res) => {
+const updateDepartmentController = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { department_name } = req.body;
@@ -82,15 +70,11 @@ const updateDepartmentController = async (req, res) => {
       message: "Department updated successfully.",
     });
   } catch (e) {
-    console.error(e);
-
-    return res.status(e.status || 500).json({
-      message: e.message || "Internal server error.",
-    });
+    return next(e);
   }
 };
 
-const deleteDepartmentController = async (req, res) => {
+const deleteDepartmentController = async (req, res, next) => {
   try {
     const { id } = req.params;
 
@@ -100,11 +84,7 @@ const deleteDepartmentController = async (req, res) => {
       message: "Department deleted successfully.",
     });
   } catch (e) {
-    console.error(e);
-
-    return res.status(e.status || 500).json({
-      message: e.message || "Internal server error.",
-    });
+    return next(e);
   }
 };
 

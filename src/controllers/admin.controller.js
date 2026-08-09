@@ -7,7 +7,7 @@ import {
   updateUserDetail,
 } from "../services/admin.service.js";
 
-const getAllTicketController = async (req, res) => {
+const getAllTicketController = async (req, res, next) => {
   try {
     const tickets = await getAllTickets(req.query);
     return res.status(200).json({
@@ -15,13 +15,10 @@ const getAllTicketController = async (req, res) => {
       tickets,
     });
   } catch (e) {
-    console.error(e);
-    return res.status(500).json({
-      message: "Internal server error.",
-    });
+    return next(e);
   }
 };
-const updateTicketByAdminController = async (req, res) => {
+const updateTicketByAdminController = async (req, res, next) => {
   try {
     const { id } = req.params;
     const updates = req.body;
@@ -38,13 +35,10 @@ const updateTicketByAdminController = async (req, res) => {
       message: "Ticket updated successfully.",
     });
   } catch (e) {
-    console.error(e);
-    return res.status(e.status || 500).json({
-      message: e.message || "Internal server error.",
-    });
+    return next(e);
   }
 };
-const getAllUserConteroller = async (req, res) => {
+const getAllUserConteroller = async (req, res, next) => {
   try {
     const users = await getAllUsers();
 
@@ -53,15 +47,11 @@ const getAllUserConteroller = async (req, res) => {
       users,
     });
   } catch (e) {
-    console.error(e);
-
-    return res.status(e.status || 500).json({
-      message: e.message || "Internal server error.",
-    });
+    return next(e);
   }
 };
 
-const getUserDetail = async (req, res) => {
+const getUserDetail = async (req, res, next) => {
   try {
     const { email } = req.params;
 
@@ -72,14 +62,10 @@ const getUserDetail = async (req, res) => {
       user,
     });
   } catch (e) {
-    console.error(e);
-
-    return res.status(e.status || 500).json({
-      message: e.message || "Internal server error.",
-    });
+    return next(e);
   }
 };
-const updateUserDetailController = async (req, res) => {
+const updateUserDetailController = async (req, res, next) => {
   try {
     const { email } = req.params;
     const updates = req.body;
@@ -96,14 +82,10 @@ const updateUserDetailController = async (req, res) => {
       message: "User updated successfully.",
     });
   } catch (e) {
-    console.error(e);
-
-    return res.status(e.status || 500).json({
-      message: e.message || "Internal server error.",
-    });
+    return next(e);
   }
 };
-const deleteUserDetailController = async (req, res) => {
+const deleteUserDetailController = async (req, res, next) => {
   try {
     const { email } = req.params;
 
@@ -113,11 +95,7 @@ const deleteUserDetailController = async (req, res) => {
       message: "User deleted successfully.",
     });
   } catch (e) {
-    console.error(e);
-
-    return res.status(e.status || 500).json({
-      message: e.message || "Internal server error.",
-    });
+    return next(e);
   }
 };
 export {

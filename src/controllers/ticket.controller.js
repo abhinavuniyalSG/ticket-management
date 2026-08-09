@@ -6,7 +6,7 @@ import {
   updateTicket,
 } from "../services/ticket.service.js";
 
-const getUserTicketController = async (req, res) => {
+const getUserTicketController = async (req, res, next) => {
   try {
     const email = req.user.email;
     const way = req.query?.way;
@@ -16,28 +16,22 @@ const getUserTicketController = async (req, res) => {
     const tickets = await getUsersTicket(email, way);
     res.status(200).json({ message: "Tasks list of the user", tickets });
   } catch (e) {
-    console.error(e);
-    res.status(500).json({
-      message: "Internal server error.",
-    });
+    return next(e);
   }
 };
 
-const getTicketController = async (req, res) => {
+const getTicketController = async (req, res, next) => {
   try {
     const email = req.user.email;
     const ticketID = req.params.id;
     const ticketDetails = await getTicket(ticketID, email);
     res.status(200).json({ message: "successful", ticketDetails });
   } catch (e) {
-    console.error(e);
-    res
-      .status(e.status || 500)
-      .json({ message: e.message || "Internal server error." });
+    return next(e);
   }
 };
 
-const createTicketController = async (req, res) => {
+const createTicketController = async (req, res, next) => {
   try {
     const { ticketDetails, ticketPrority, department } = req.body;
     const email = req.user.email;
@@ -56,11 +50,10 @@ const createTicketController = async (req, res) => {
 
     res.status(201).json({ message: "successfully created" });
   } catch (e) {
-    console.error(e);
-    res.status(500).json({ message: "Somne Internal error " });
+    return next(e);
   }
 };
-const deleteTicketController = async (req, res) => {
+const deleteTicketController = async (req, res, next) => {
   try {
     const { id } = req.params;
     await deleteTicket(id);
@@ -68,13 +61,10 @@ const deleteTicketController = async (req, res) => {
       message: "Ticket deleted successfully.",
     });
   } catch (e) {
-    console.error(e);
-    res.status(e.status || 500).json({
-      message: e.message || "Internal server error.",
-    });
+    return next(e);
   }
 };
-const updateTicketController = async (req, res) => {
+const updateTicketController = async (req, res, next) => {
   try {
     const { id } = req.params;
     const updates = req.body;
@@ -93,10 +83,7 @@ const updateTicketController = async (req, res) => {
       message: "Ticket updated successfully.",
     });
   } catch (e) {
-    console.error(e);
-    res.status(e.status || 500).json({
-      message: e.message || "Internal server error.",
-    });
+    return next(e);
   }
 };
 
