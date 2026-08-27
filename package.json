@@ -2,18 +2,24 @@
   "name": "ticket-management-system",
   "version": "1.0.0",
   "description": "",
-  "main": "src/app.js",
+  "main": "src/server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node src/app.js",
-    "dev": "nodemon src/app.js"
+    "clean": "rm -rf dist",
+    "build": "npm run clean && tsc",
+    "start": "node dist/server.js",
+    "dev": "nodemon"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "nodemon": "^3.1.14",
+    "tsx": "^4.23.12",
+    "typescript": "^7.0.2"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
@@ -22,6 +28,7 @@
     "express": "^5.2.1",
     "install": "^0.13.0",
     "jsonwebtoken": "^9.0.3",
-    "mysql2": "^3.23.2"
+    "mysql2": "^3.23.2",
+    "winston": "^3.19.0"
   }
 }
