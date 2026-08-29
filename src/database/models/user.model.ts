@@ -33,6 +33,9 @@ export class User {
   @Column({ type: "varchar", select: false })
   password!: string;
 
+  @Column({ type: "varchar", nullable: true, select: false })
+  refreshToken!: string | null;
+
   @Column({ name: "department_id", type: "uuid", nullable: true })
   departmentId!: string | null;
 
