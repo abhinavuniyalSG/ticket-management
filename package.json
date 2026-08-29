@@ -8,7 +8,13 @@
     "clean": "rm -rf dist",
     "build": "npm run clean && tsc",
     "start": "node dist/server.js",
-    "dev": "nodemon"
+    "dev": "nodemon",
+    "typeorm": "tsx ./node_modules/typeorm/cli.js",
+    "migration:generate": "npm run typeorm -- migration:generate",
+    "migration:create": "npm run typeorm -- migration:create",
+    "migration:run": "npm run typeorm -- migration:run",
+    "migration:revert": "npm run typeorm -- migration:revert",
+    "migration:show": "npm run typeorm -- migration:show"
   },
   "keywords": [],
   "author": "",
@@ -29,6 +35,9 @@
     "install": "^0.13.0",
     "jsonwebtoken": "^9.0.3",
     "mysql2": "^3.23.2",
+    "pg": "^8.23.0",
+    "reflect-metadata": "^0.2.2",
+    "typeorm": "^1.1.0",
     "winston": "^3.19.0"
   }
 }

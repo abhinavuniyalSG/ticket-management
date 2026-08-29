@@ -56,7 +56,11 @@ import { Kernel } from "./core/kernel.js";
 class App {
   public app = express();
   private kernel = new Kernel();
-  private initlaize = async () => {};
+  private initlaize = async () => {
+    this.kernel.toJsonParser(this.app);
+    this.kernel.preFlight(this.app);
+    this.kernel.dbConnect();
+  };
   constructor() {
     this.initlaize().catch((e) => {
       logger.error("encounter error  while initlaize", { error: e });
