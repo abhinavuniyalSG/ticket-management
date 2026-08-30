@@ -35,10 +35,10 @@ export class AuthenticationSchema {
               : "Email must be a string",
         })
         .trim()
-        .email("Invalid email address")
         .min(1, "Email is required")
         .max(255, "Email must not exceed 255 characters")
-        .toLowerCase(),
+        .toLowerCase()
+        .pipe(z.email()),
 
       password: z
         .string({
