@@ -4,7 +4,7 @@ import type { StringValue } from "ms";
 dotenv.config();
 
 const NODE_ENV = process.env.NODE_ENV || "DEVELOPMENT";
-const LOG_LEVEL = process.env.LOG_LEVEL || "http";
+const LOG_LEVEL = process.env.LOG_LEVEL || "warn";
 
 const DB_HOST = process.env.DB_HOST || "localhost";
 const DB_USER = process.env.DB_USER || "abhinavuniyal";

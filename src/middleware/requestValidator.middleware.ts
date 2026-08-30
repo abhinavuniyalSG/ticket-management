@@ -20,9 +20,14 @@ export class requestValidator {
           break;
       }
       const result = schema.safeParse(input);
-      console.log(result);
 
       if (!result.success) {
+        logger.warn("Request validation failed", {
+          method: req.method,
+          path: req.path,
+          type,
+          errors: result.error.issues.map((issue) => issue.message),
+        });
         return res.status(400).json({
           message: "Validation failed",
           errors: result.error.issues.map((issues) => issues.message),
@@ -30,7 +35,11 @@ export class requestValidator {
       }
 
       req.normalized = { ...req.normalized, [type]: result.data };
-      logger.info("Input validated ");
+      logger.debug(`Request ${type} validated`, {
+        method: req.method,
+        path: req.path,
+        normalizedInput: req.normalized,
+      });
       next();
     };
   };

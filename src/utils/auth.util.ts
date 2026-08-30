@@ -39,24 +39,26 @@ const verifyToken = (token: string, key: string) => {
     }
   }
 };
+
 const generateHash = async (password: string) => {
   try {
     const saltRound = HASH_VARIABLES.SALT_ROUND;
     const hashedPasswored = await bcrypt.hash(password, saltRound);
     return hashedPasswored;
   } catch (e) {
-    logger.error("failed to encrypt password ", e);
+    logger.error("Failed to encrypt password", { error: e });
     throw new HttpError(500, "Failed to securely process password");
   }
 };
-const verifyHash = async (enteredPassword: string, hashPassword: string) => {
+
+const verifyHash = async (enteredPassword: string, hashPassword: string): Promise<boolean> => {
   try {
-    const isMatch = await bcrypt.compare(enteredPassword, hashPassword);
-    return isMatch;
+    return await bcrypt.compare(enteredPassword, hashPassword);
   } catch (e) {
-    console.error(e);
-    return e;
+    logger.error("Failed to verify password hash", { error: e });
+    throw new HttpError(500, "Failed to verify password");
   }
 };
 
 export { verifyToken, generateHash, tokenGenerator, verifyHash };
+

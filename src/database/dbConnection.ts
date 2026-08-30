@@ -23,8 +23,7 @@ export class DatabaseConnection {
       DatabaseConnection.connection = await AppDataSource.initialize();
       logger.info("Data Base connected ");
     } catch (e) {
-      logger.error("Failed to connect to DB");
-      logger.error(e);
+      logger.error("Failed to connect to the database", { error: e });
       throw new Error("Failed to connect to DB");
     }
   }

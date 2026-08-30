@@ -61,7 +61,7 @@ export class AuthenticationSchema {
 
   public loginSchema = z
     .object({
-      mail: z
+      email: z
         .string({
           error: (issue) =>
             issue.input === undefined

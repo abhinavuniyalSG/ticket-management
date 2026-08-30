@@ -18,8 +18,7 @@ class App {
   };
   constructor() {
     this.initlaize().catch((e) => {
-      logger.error("encounter error  while initlaize", { error: e });
-      logger.info("Closing server");
+      logger.error("Fatal error during application initialization — shutting down", { error: e });
       process.exit(1);
     });
   }
