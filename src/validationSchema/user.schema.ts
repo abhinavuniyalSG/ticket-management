@@ -11,13 +11,23 @@ export class UserSchema {
   public updateUserSchema = z
     .object({
       firstName: z
-        .string()
+        .string({
+          error: (issue) =>
+            issue.input === undefined
+              ? "First name is required"
+              : "First name must be a string",
+        })
         .trim()
         .min(1, "First name cannot be empty")
         .max(50, "First name must not exceed 50 characters")
         .optional(),
       lastName: z
-        .string()
+        .string({
+          error: (issue) =>
+            issue.input === undefined
+              ? "Last name is required"
+              : "Last name must be a string",
+        })
         .trim()
         .min(0)
         .max(50, "Last name must not exceed 50 characters")
@@ -35,7 +45,12 @@ export class UserSchema {
               ContactType.linkedin,
             ]),
             contactDetail: z
-              .string()
+              .string({
+                error: (issue) =>
+                  issue.input === undefined
+                    ? "Contact detail is required"
+                    : "Contact detail must be a string",
+              })
               .trim()
               .min(1, "Contact detail cannot be empty")
               .max(500, "Contact detail must not exceed 500 characters"),
@@ -59,7 +74,12 @@ export class UserSchema {
         ContactType.linkedin,
       ]),
       contactDetail: z
-        .string()
+        .string({
+          error: (issue) =>
+            issue.input === undefined
+              ? "Contact detail is required"
+              : "Contact detail must be a string",
+        })
         .trim()
         .min(1, "Contact detail cannot be empty")
         .max(500, "Contact detail must not exceed 500 characters"),
@@ -69,14 +89,15 @@ export class UserSchema {
   public updateContactSchema = z
     .object({
       contactType: z
-        .enum([
-          ContactType.phone,
-          ContactType.whatsapp,
-          ContactType.linkedin,
-        ])
+        .enum([ContactType.phone, ContactType.whatsapp, ContactType.linkedin])
         .optional(),
       contactDetail: z
-        .string()
+        .string({
+          error: (issue) =>
+            issue.input === undefined
+              ? "Contact detail is required"
+              : "Contact detail must be a string",
+        })
         .trim()
         .min(1, "Contact detail cannot be empty")
         .max(500, "Contact detail must not exceed 500 characters")
