@@ -1,3 +1,4 @@
+import { catchAsync } from "../utils/catchAsync.js";
 import type { Request, Response, NextFunction } from "express";
 import {
   UserService,
@@ -8,87 +9,66 @@ import {
 } from "../services/user.service.js";
 
 export class UserController {
-  public static getAllUsersController = async (
+  public static getAllUsersController = catchAsync(async (
     req: Request,
     res: Response,
     next: NextFunction,
   ) => {
-    try {
       const requester = req.user as RequesterInfo;
       const result = await UserService.getAllUsers(requester);
       return res.status(200).json(result);
-    } catch (error) {
-      next(error);
-    }
-  };
+  });
 
-  public static getUserDetailsController = async (
+  public static getUserDetailsController = catchAsync(async (
     req: Request,
     res: Response,
     next: NextFunction,
   ) => {
-    try {
       const { id } = (req.normalized?.params as { id: string }) ?? req.params;
       const requester = req.user as RequesterInfo;
       const result = await UserService.getUserById(id, requester);
       return res.status(200).json(result);
-    } catch (error) {
-      next(error);
-    }
-  };
+  });
 
-  public static updateUserController = async (
+  public static updateUserController = catchAsync(async (
     req: Request,
     res: Response,
     next: NextFunction,
   ) => {
-    try {
       const { id } = (req.normalized?.params as { id: string }) ?? req.params;
       const updateData = (req.normalized?.body as UpdateUserInput) ?? req.body;
       const requester = req.user as RequesterInfo;
       const result = await UserService.updateUser(id, updateData, requester);
       return res.status(200).json(result);
-    } catch (error) {
-      next(error);
-    }
-  };
+  });
 
-  public static deleteUserController = async (
+  public static deleteUserController = catchAsync(async (
     req: Request,
     res: Response,
     next: NextFunction,
   ) => {
-    try {
       const { id } = (req.normalized?.params as { id: string }) ?? req.params;
       const requester = req.user as RequesterInfo;
       const result = await UserService.deleteUser(id, requester);
       return res.status(200).json(result);
-    } catch (error) {
-      next(error);
-    }
-  };
+  });
 
-  public static addContactController = async (
+  public static addContactController = catchAsync(async (
     req: Request,
     res: Response,
     next: NextFunction,
   ) => {
-    try {
       const data = (req.normalized?.body as AddContactInput) ?? req.body;
       const userId = req.user?.id ?? "";
       const result = await UserService.addContact(userId, data);
       return res.status(201).json(result);
-    } catch (error) {
-      next(error);
-    }
-  };
+  });
 
-  public static updateContactController = async (
+  public static updateContactController = catchAsync(async (
     req: Request,
     res: Response,
     next: NextFunction,
   ) => {
-    try {
       const { contactId } =
         (req.normalized?.params as { contactId: string }) ?? req.params;
       const updates = (req.normalized?.body as UpdateContactInput) ?? req.body;
@@ -99,24 +79,17 @@ export class UserController {
         updates,
       );
       return res.status(200).json(result);
-    } catch (error) {
-      next(error);
-    }
-  };
+  });
 
-  public static deleteContactController = async (
+  public static deleteContactController = catchAsync(async (
     req: Request,
     res: Response,
     next: NextFunction,
   ) => {
-    try {
       const { contactId } =
         (req.normalized?.params as { contactId: string }) ?? req.params;
       const userId = req.user?.id ?? "";
       const result = await UserService.deleteContact(userId, contactId);
       return res.status(200).json(result);
-    } catch (error) {
-      next(error);
-    }
-  };
+  });
 }

@@ -4,10 +4,12 @@ import cors from "cors";
 import { DatabaseConnection } from "../database/dbConnection.js";
 import { ErrorMiddleware } from "../middleware/errorHandling.middleware.js";
 import { RequestLoggerMiddleware } from "../middleware/requestLogger.middleware.js";
+import { RateLimiterMiddleware } from "../middleware/rateLimiter.middleware.js";
 
 export class Kernel {
   private errorHandlingMiddleware = ErrorMiddleware.middleware;
   private margonHttpLogger = RequestLoggerMiddleware.requestLogger;
+  private limiter = RateLimiterMiddleware.globalLimiter;
   private database = DatabaseConnection;
   public toJsonParser = (app: Application) => {
     return app.use(express.json());
@@ -24,5 +26,8 @@ export class Kernel {
   };
   public httpLogger = (app: express.Application) => {
     app.use(this.margonHttpLogger);
+  };
+  public requestLimiter = (app: Application) => {
+    app.use(this.limiter);
   };
 }

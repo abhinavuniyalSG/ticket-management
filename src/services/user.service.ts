@@ -1,3 +1,4 @@
+import { logger } from "../core/logger.js";
 import { UserRepository } from "../database/repositry/user.repository.js";
 import { ContactRepository } from "../database/repositry/contact.repository.js";
 import { HttpError } from "../utils/httpError.utils.js";
@@ -188,6 +189,8 @@ export class UserService {
       throw new HttpError(500, "Failed to update user");
     }
 
+    logger.info("User updated successfully", { userId: id, updatedBy: requester.id });
+
     return {
       message: "User updated successfully",
       user: UserService.sanitizeUser(updatedUser),
@@ -203,12 +206,14 @@ export class UserService {
 
     if (requester.role === roleEnum.superAdmin) {
       await UserRepository.deleteUser(id);
-      return { message: "User deleted successfully" };
+        logger.info("User deleted", { userId: id, deletedBy: requester.id });
+        return { message: "User deleted successfully" };
     }
 
     if (requester.role === roleEnum.admin) {
       if (requester.id === targetUser.id) {
         await UserRepository.deleteUser(id);
+        logger.info("User deleted", { userId: id, deletedBy: requester.id });
         return { message: "User deleted successfully" };
       }
 
@@ -218,6 +223,7 @@ export class UserService {
         adminUser.departmentId === targetUser.departmentId
       ) {
         await UserRepository.deleteUser(id);
+        logger.info("User deleted", { userId: id, deletedBy: requester.id });
         return { message: "User deleted successfully" };
       }
 
@@ -230,6 +236,7 @@ export class UserService {
     if (requester.role === roleEnum.user) {
       if (requester.id === targetUser.id) {
         await UserRepository.deleteUser(id);
+        logger.info("User deleted", { userId: id, deletedBy: requester.id });
         return { message: "User deleted successfully" };
       }
 

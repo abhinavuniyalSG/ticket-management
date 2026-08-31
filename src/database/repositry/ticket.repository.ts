@@ -18,7 +18,6 @@ export interface TicketFilterOptions {
   sortOrder?: "ASC" | "DESC" | undefined;
 }
 
-
 export class TicketRepository {
   private static repository = AppDataSource.getRepository(Ticket);
 
@@ -39,15 +38,12 @@ export class TicketRepository {
       .leftJoinAndSelect("ticket.createdBy", "createdBy")
       .leftJoinAndSelect("ticket.assignedTo", "assignedTo");
 
-    // 1. Enforce RBAC Scoping
     if (options.requesterRole === roleEnum.user) {
-      // User can only see tickets created by them OR assigned to them
       query.andWhere(
         "(ticket.createdById = :requesterId OR ticket.assignedToId = :requesterId)",
         { requesterId: options.requesterId },
       );
     } else if (options.requesterRole === roleEnum.admin) {
-      // Admin can see tickets created by them, assigned to them, OR belonging to their department
       if (options.requesterDepartmentId) {
         query.andWhere(
           "(ticket.createdById = :requesterId OR ticket.assignedToId = :requesterId OR ticket.departmentId = :adminDeptId)",
@@ -63,9 +59,6 @@ export class TicketRepository {
         );
       }
     }
-    // super_admin has no scope restrictions
-
-    // 2. Apply Optional Filters
     if (options.status) {
       query.andWhere("ticket.status = :status", { status: options.status });
     }
@@ -76,7 +69,6 @@ export class TicketRepository {
       });
     }
 
-    // Department filter: only super_admin can explicitly filter by arbitrary departmentId
     if (options.requesterRole === roleEnum.superAdmin && options.departmentId) {
       query.andWhere("ticket.departmentId = :departmentId", {
         departmentId: options.departmentId,
@@ -107,7 +99,6 @@ export class TicketRepository {
       });
     }
 
-    // 3. Sorting
     const sortBy = options.sortBy ?? "createdAt";
     const sortOrder = options.sortOrder ?? "DESC";
     query.orderBy(`ticket.${sortBy}`, sortOrder);

@@ -2,9 +2,11 @@ import express from "express";
 import { AuthenticationController } from "../controllers/authentication.controller.js";
 import { requestValidator } from "../middleware/requestValidator.middleware.js";
 import { AuthenticationSchema } from "../validationSchema/authentication.schema.js";
+import { RateLimiterMiddleware } from "../middleware/rateLimiter.middleware.js";
 
 class AuthenticationRoutes {
   public router = express.Router();
+  private limiter = RateLimiterMiddleware.loginLimiter;
   private validator = requestValidator.validate;
   private requestSchema = new AuthenticationSchema();
   private initialize = () => {
@@ -15,6 +17,7 @@ class AuthenticationRoutes {
     );
     this.router.post(
       "/login",
+      this.limiter,
       this.validator("body", this.requestSchema.loginSchema),
       AuthenticationController.loginController,
     );

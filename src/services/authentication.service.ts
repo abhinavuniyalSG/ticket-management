@@ -1,3 +1,4 @@
+import { logger } from "../core/logger.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { JWT_VARIABLES } from "../config/secrets.js";
@@ -53,6 +54,8 @@ export class AuthenticationService {
       ...userWithoutSensitiveData
     } = user as any;
 
+    logger.info("User registered successfully", { userId: user.id, email: user.email });
+
     return {
       message: "User registered successfully",
       accessToken,
@@ -90,6 +93,8 @@ export class AuthenticationService {
     await UserRepository.updateRefreshToken(user.id, safeRefreshToken);
 
     const { password, refreshToken: _, ...userWithoutSensitiveData } = user;
+
+    logger.info("User logged in successfully", { userId: user.id, email: user.email });
 
     return {
       message: "Login successful",
@@ -142,6 +147,7 @@ export class AuthenticationService {
 
   public static logout = async (userId: string) => {
     await UserRepository.updateRefreshToken(userId, null);
+    logger.info("User logged out successfully", { userId });
     return {
       message: "Logout successful",
     };

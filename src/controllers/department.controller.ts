@@ -1,3 +1,4 @@
+import { catchAsync } from "../utils/catchAsync.js";
 import type { Request, Response, NextFunction } from "express";
 import {
   DepartmentService,
@@ -7,54 +8,41 @@ import {
 import type { RequesterInfo } from "../services/user.service.js";
 
 export class DepartmentController {
-  public static getAllDepartmentsController = async (
+  public static getAllDepartmentsController = catchAsync(async (
     req: Request,
     res: Response,
     next: NextFunction,
   ) => {
-    try {
       const result = await DepartmentService.getAllDepartments();
       return res.status(200).json(result);
-    } catch (error) {
-      next(error);
-    }
-  };
+  });
 
-  public static getDepartmentDetailsController = async (
+  public static getDepartmentDetailsController = catchAsync(async (
     req: Request,
     res: Response,
     next: NextFunction,
   ) => {
-    try {
       const { id } = (req.normalized?.params as { id: string }) ?? req.params;
       const result = await DepartmentService.getDepartmentById(id);
       return res.status(200).json(result);
-    } catch (error) {
-      next(error);
-    }
-  };
+  });
 
-  public static createDepartmentController = async (
+  public static createDepartmentController = catchAsync(async (
     req: Request,
     res: Response,
     next: NextFunction,
   ) => {
-    try {
       const requester = req.user as RequesterInfo;
       const body = (req.normalized?.body as CreateDepartmentInput) ?? req.body;
       const result = await DepartmentService.createDepartment(requester, body);
       return res.status(201).json(result);
-    } catch (error) {
-      next(error);
-    }
-  };
+  });
 
-  public static updateDepartmentController = async (
+  public static updateDepartmentController = catchAsync(async (
     req: Request,
     res: Response,
     next: NextFunction,
   ) => {
-    try {
       const { id } = (req.normalized?.params as { id: string }) ?? req.params;
       const requester = req.user as RequesterInfo;
       const body = (req.normalized?.body as UpdateDepartmentInput) ?? req.body;
@@ -64,23 +52,16 @@ export class DepartmentController {
         body,
       );
       return res.status(200).json(result);
-    } catch (error) {
-      next(error);
-    }
-  };
+  });
 
-  public static deleteDepartmentController = async (
+  public static deleteDepartmentController = catchAsync(async (
     req: Request,
     res: Response,
     next: NextFunction,
   ) => {
-    try {
       const { id } = (req.normalized?.params as { id: string }) ?? req.params;
       const requester = req.user as RequesterInfo;
       const result = await DepartmentService.deleteDepartment(requester, id);
       return res.status(200).json(result);
-    } catch (error) {
-      next(error);
-    }
-  };
+  });
 }
