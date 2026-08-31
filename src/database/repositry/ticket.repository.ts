@@ -1,0 +1,135 @@
+import { AppDataSource } from "../dbConnection.js";
+import { Ticket } from "../models/ticket.model.js";
+import { TicketPriority, TicketStatus } from "../../types/ticket.js";
+import { roleEnum } from "../../types/user.js";
+
+export interface TicketFilterOptions {
+  requesterRole: roleEnum;
+  requesterId: string;
+  requesterDepartmentId?: string | null | undefined;
+  status?: TicketStatus | undefined;
+  priority?: TicketPriority | undefined;
+  departmentId?: string | undefined;
+  assignedToId?: string | undefined;
+  createdById?: string | undefined;
+  createdFrom?: Date | undefined;
+  createdTo?: Date | undefined;
+  sortBy?: "createdAt" | "updatedAt" | "priority" | "status" | undefined;
+  sortOrder?: "ASC" | "DESC" | undefined;
+}
+
+
+export class TicketRepository {
+  private static repository = AppDataSource.getRepository(Ticket);
+
+  public static async findById(id: string): Promise<Ticket | null> {
+    return this.repository
+      .createQueryBuilder("ticket")
+      .leftJoinAndSelect("ticket.department", "department")
+      .leftJoinAndSelect("ticket.createdBy", "createdBy")
+      .leftJoinAndSelect("ticket.assignedTo", "assignedTo")
+      .where("ticket.ticketId = :id", { id })
+      .getOne();
+  }
+
+  public static async findAll(options: TicketFilterOptions): Promise<Ticket[]> {
+    const query = this.repository
+      .createQueryBuilder("ticket")
+      .leftJoinAndSelect("ticket.department", "department")
+      .leftJoinAndSelect("ticket.createdBy", "createdBy")
+      .leftJoinAndSelect("ticket.assignedTo", "assignedTo");
+
+    // 1. Enforce RBAC Scoping
+    if (options.requesterRole === roleEnum.user) {
+      // User can only see tickets created by them OR assigned to them
+      query.andWhere(
+        "(ticket.createdById = :requesterId OR ticket.assignedToId = :requesterId)",
+        { requesterId: options.requesterId },
+      );
+    } else if (options.requesterRole === roleEnum.admin) {
+      // Admin can see tickets created by them, assigned to them, OR belonging to their department
+      if (options.requesterDepartmentId) {
+        query.andWhere(
+          "(ticket.createdById = :requesterId OR ticket.assignedToId = :requesterId OR ticket.departmentId = :adminDeptId)",
+          {
+            requesterId: options.requesterId,
+            adminDeptId: options.requesterDepartmentId,
+          },
+        );
+      } else {
+        query.andWhere(
+          "(ticket.createdById = :requesterId OR ticket.assignedToId = :requesterId)",
+          { requesterId: options.requesterId },
+        );
+      }
+    }
+    // super_admin has no scope restrictions
+
+    // 2. Apply Optional Filters
+    if (options.status) {
+      query.andWhere("ticket.status = :status", { status: options.status });
+    }
+
+    if (options.priority) {
+      query.andWhere("ticket.priority = :priority", {
+        priority: options.priority,
+      });
+    }
+
+    // Department filter: only super_admin can explicitly filter by arbitrary departmentId
+    if (options.requesterRole === roleEnum.superAdmin && options.departmentId) {
+      query.andWhere("ticket.departmentId = :departmentId", {
+        departmentId: options.departmentId,
+      });
+    }
+
+    if (options.assignedToId) {
+      query.andWhere("ticket.assignedToId = :assignedToId", {
+        assignedToId: options.assignedToId,
+      });
+    }
+
+    if (options.createdById) {
+      query.andWhere("ticket.createdById = :createdById", {
+        createdById: options.createdById,
+      });
+    }
+
+    if (options.createdFrom) {
+      query.andWhere("ticket.createdAt >= :createdFrom", {
+        createdFrom: options.createdFrom,
+      });
+    }
+
+    if (options.createdTo) {
+      query.andWhere("ticket.createdAt <= :createdTo", {
+        createdTo: options.createdTo,
+      });
+    }
+
+    // 3. Sorting
+    const sortBy = options.sortBy ?? "createdAt";
+    const sortOrder = options.sortOrder ?? "DESC";
+    query.orderBy(`ticket.${sortBy}`, sortOrder);
+
+    return query.getMany();
+  }
+
+  public static async createTicket(data: Partial<Ticket>): Promise<Ticket> {
+    const ticket = this.repository.create(data);
+    return this.repository.save(ticket);
+  }
+
+  public static async updateTicket(
+    id: string,
+    data: Partial<Ticket>,
+  ): Promise<Ticket | null> {
+    await this.repository.update({ ticketId: id }, data);
+    return this.findById(id);
+  }
+
+  public static async deleteTicket(id: string): Promise<boolean> {
+    const result = await this.repository.delete({ ticketId: id });
+    return (result.affected ?? 0) > 0;
+  }
+}

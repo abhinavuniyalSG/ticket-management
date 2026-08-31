@@ -3,7 +3,14 @@ import z from "zod";
 export class DepartmentSchema {
   public departmentIdParamSchema = z
     .object({
-      id: z.string().uuid("Invalid department ID format"),
+      id: z
+        .string({
+          error: (issue) =>
+            issue.input === undefined
+              ? "Department id  is required"
+              : "Department id  must be a string",
+        })
+        .pipe(z.uuidv7("Invalid department ID format")),
     })
     .strict();
 
@@ -13,8 +20,8 @@ export class DepartmentSchema {
         .string({
           error: (issue) =>
             issue.input === undefined
-              ? "departmen name is required"
-              : "department name must be a string",
+              ? "Departmen name is required"
+              : "Department name must be a string",
         })
         .trim()
         .min(2, "Department name must be at least 2 characters")
@@ -23,13 +30,19 @@ export class DepartmentSchema {
         .string({
           error: (issue) =>
             issue.input === undefined
-              ? "departmen email is required"
-              : "department email must be a string",
+              ? "Departmen email is required"
+              : "Department email must be a string",
         })
         .trim()
         .max(254, "Email must not exceed 254 characters")
         .pipe(z.email("Invalid email format")),
-      managedBy: z.uuidv7("Invalid manager ID format").nullable().optional(),
+      managedBy: z
+        .string({
+          error: "User id  must be a string",
+        })
+        .pipe(z.uuidv7("Invalid manager ID format"))
+        .nullable()
+        .optional(),
     })
     .strict();
 
@@ -37,10 +50,7 @@ export class DepartmentSchema {
     .object({
       departmentName: z
         .string({
-          error: (issue) =>
-            issue.input === undefined
-              ? "departmen name is required"
-              : "department name must be a string",
+          error: "department name must be a string",
         })
         .trim()
         .min(2, "Department name must be at least 2 characters")
@@ -48,17 +58,20 @@ export class DepartmentSchema {
         .optional(),
       departmentEmail: z
         .string({
-          error: (issue) =>
-            issue.input === undefined
-              ? "departmen email is required"
-              : "department email must be a string",
+          error: "department email must be a string",
         })
         .trim()
         .max(254, "Email must not exceed 254 characters")
         .optional()
         .pipe(z.email("Invalid email format")),
 
-      managedBy: z.uuidv7("Invalid manager ID format").nullable().optional(),
+      managedBy: z
+        .string({
+          error: "User id  must be a string",
+        })
+        .pipe(z.uuidv7("Invalid manager ID format"))
+        .nullable()
+        .optional(),
     })
     .strict()
     .refine(

@@ -6,3 +6,11 @@ export enum TicketStatus {
   completed = "completed",
   closed = "closed",
 }
+
+export enum TicketPriority {
+  low = "low",
+  medium = "medium",
+  high = "high",
+  urgent = "urgent",
+}
+

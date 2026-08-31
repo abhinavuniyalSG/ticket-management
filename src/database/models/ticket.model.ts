@@ -10,7 +10,7 @@ import {
 } from "typeorm";
 import { Department } from "./department.model.js";
 import { User } from "./user.model.js";
-import { TicketStatus } from "../../types/ticket.js";
+import { TicketStatus, TicketPriority } from "../../types/ticket.js";
 
 const statusCheckConstraint = `
   (
@@ -42,6 +42,14 @@ export class Ticket {
     default: TicketStatus.open,
   })
   status!: TicketStatus;
+
+  @Column({
+    name: "priority",
+    type: "enum",
+    enum: TicketPriority,
+    default: TicketPriority.low,
+  })
+  priority!: TicketPriority;
 
   @Column({ name: "department_id", type: "uuid" })
   departmentId!: string;
