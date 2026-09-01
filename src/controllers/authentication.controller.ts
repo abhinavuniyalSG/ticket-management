@@ -47,4 +47,14 @@ export class AuthenticationController {
       const result = await AuthenticationService.logout(userId);
       return res.status(200).json(result);
   });
+
+  public static changePasswordController = catchAsync(async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) => {
+      const data = req.normalized?.body ?? req.body;
+      const result = await AuthenticationService.changePassword(data);
+      return res.status(200).json(result);
+  });
 }

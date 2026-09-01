@@ -28,6 +28,12 @@ class AuthenticationRoutes {
       AuthenticationController.refreshController,
     );
     this.router.post("/logout", authMiddleware, AuthenticationController.logoutController);
+    this.router.post(
+      "/change-password",
+      this.limiter,
+      this.validator("body", this.requestSchema.changePasswordSchema),
+      AuthenticationController.changePasswordController,
+    );
   };
   constructor() {
     this.initialize();

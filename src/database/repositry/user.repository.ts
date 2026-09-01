@@ -85,6 +85,13 @@ export class UserRepository {
     await this.repository.update(id, { refreshToken });
   }
 
+  public static async updatePassword(
+    id: string,
+    hashedPassword: string,
+  ): Promise<void> {
+    await this.repository.update(id, { password: hashedPassword });
+  }
+
   public static async updateUserWithContacts(
     id: string,
     userUpdates: Partial<User>,

@@ -23,6 +23,12 @@ interface LoginInput {
   password: string;
 }
 
+export interface ChangePasswordInput {
+  email: string;
+  oldPassword: string;
+  newPassword: string;
+}
+
 export class AuthenticationService {
   public static register = async (userDetails: RegisterInput) => {
     const existingUser = await UserRepository.findByEmail(userDetails.email);
@@ -158,6 +164,35 @@ export class AuthenticationService {
     logger.info("User logged out successfully", { userId });
     return {
       message: "Logout successful",
+    };
+  };
+
+  public static changePassword = async (input: ChangePasswordInput) => {
+    const user = await UserRepository.findByEmail(input.email);
+
+    if (!user) {
+      throw new HttpError(401, "Invalid email or old password");
+    }
+
+    const isOldPasswordValid = await verifyHashPassword(
+      input.oldPassword,
+      user.password,
+    );
+
+    if (!isOldPasswordValid) {
+      throw new HttpError(401, "Invalid email or old password");
+    }
+
+    const hashedPassword = await generateHashPassword(input.newPassword);
+    await UserRepository.updatePassword(user.id, hashedPassword);
+
+    // Invalidate the existing refresh token so other sessions must re-authenticate.
+    await UserRepository.updateRefreshToken(user.id, null);
+
+    logger.info("User changed password successfully", { userId: user.id });
+
+    return {
+      message: "Password changed successfully",
     };
   };
 }

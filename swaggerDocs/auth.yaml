@@ -1,10 +1,10 @@
 tags:
   - name: Authentication
     description: >
-      Endpoints for user registration, login, token refresh, and logout.
-      `/auth/login` is additionally rate-limited to **5 requests per minute** per IP
-      (all four routes, like every route in this API, are also subject to the global
-      **100 requests per minute** per-IP limiter).
+      Endpoints for user registration, login, token refresh, logout, and password change.
+      `/auth/login` and `/auth/change-password` are additionally rate-limited to
+      **5 requests per minute** per IP (all routes, like every route in this API, are also
+      subject to the global **100 requests per minute** per-IP limiter).
 
 paths:
   /auth/register:
@@ -132,6 +132,53 @@ paths:
         "429":
           $ref: "#/components/responses/TooManyRequests"
 
+  /auth/change-password:
+    post:
+      tags:
+        - Authentication
+      summary: Change password using email and old password
+      description: >
+        Changes a user's password. Identity is verified with `email` + `oldPassword` in the request body
+        (no Bearer token required — this is a credential-verification flow, like login, not a
+        profile-update flow). On success, the stored refresh token is invalidated, so any other active
+        session must log in again to obtain a new one.
+
+        **Rate limited** – 5 requests per minute per IP (the same stricter limiter as `POST /auth/login`,
+        since this endpoint verifies a password and is equally sensitive to brute-forcing).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePasswordRequest"
+            example:
+              email: "john.doe@example.com"
+              oldPassword: "Secret@123"
+              newPassword: "NewSecret@456"
+      responses:
+        "200":
+          description: Password changed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Password changed successfully
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          description: Email not found, or old password is incorrect (identical message for both, to avoid user enumeration)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                message: "Invalid email or old password"
+        "429":
+          $ref: "#/components/responses/LoginTooManyRequests"
+
 components:
   schemas:
     RegisterRequest:
@@ -195,6 +242,34 @@ components:
           type: string
           description: A valid, unexpired refresh token previously issued by this API.
           example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    ChangePasswordRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - email
+        - oldPassword
+        - newPassword
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 255
+          example: john.doe@example.com
+        oldPassword:
+          type: string
+          format: password
+          maxLength: 255
+          example: "Secret@123"
+        newPassword:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 255
+          description: >
+            Must contain at least one uppercase letter, one lowercase letter, one digit, and one special
+            character. Must differ from `oldPassword`.
+          example: "NewSecret@456"
 
     AuthResponse:
       type: object
