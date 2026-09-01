@@ -283,6 +283,8 @@ components:
   schemas:
     UpdateUserRequest:
       type: object
+      additionalProperties: false
+      minProperties: 1
       description: At least one field must be provided.
       properties:
         firstName:
@@ -316,6 +318,7 @@ components:
 
     AddContactRequest:
       type: object
+      additionalProperties: false
       required:
         - contactType
         - contactDetail
@@ -332,6 +335,8 @@ components:
 
     UpdateContactRequest:
       type: object
+      additionalProperties: false
+      minProperties: 1
       description: At least one field (contactType or contactDetail) must be provided.
       properties:
         contactType:

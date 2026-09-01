@@ -116,6 +116,8 @@ paths:
                     example: Department details fetched successfully
                   department:
                     $ref: "#/components/schemas/Department"
+        "400":
+          $ref: "#/components/responses/InvalidId"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "404":
@@ -202,6 +204,8 @@ paths:
                   message:
                     type: string
                     example: Department deleted successfully
+        "400":
+          $ref: "#/components/responses/InvalidId"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -213,6 +217,7 @@ components:
   schemas:
     CreateDepartmentRequest:
       type: object
+      additionalProperties: false
       required:
         - departmentName
         - departmentEmail
@@ -238,6 +243,8 @@ components:
 
     UpdateDepartmentRequest:
       type: object
+      additionalProperties: false
+      minProperties: 1
       description: At least one field must be provided.
       properties:
         departmentName:

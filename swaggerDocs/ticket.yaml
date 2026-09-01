@@ -38,7 +38,7 @@ paths:
         - Tickets
       summary: Get all tickets (role-scoped)
       description: >
-        Returns a paginated, filtered list of tickets.
+        Returns a filtered list of tickets.
         The visible scope depends on the caller's role (see tag description above).
 
         ### Available Filters
@@ -364,6 +364,7 @@ components:
   schemas:
     CreateTicketRequest:
       type: object
+      additionalProperties: false
       required:
         - title
         - description
@@ -397,6 +398,8 @@ components:
 
     UpdateTicketRequest:
       type: object
+      additionalProperties: false
+      minProperties: 1
       description: At least one field must be provided.
       properties:
         title:

@@ -7,6 +7,7 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  type Relation,
 } from "typeorm";
 import { roleEnum } from "../../types/user.js";
 import { Department } from "./department.model.js";
@@ -44,19 +45,19 @@ export class User {
     onDelete: "SET NULL",
   })
   @JoinColumn({ name: "department_id" })
-  department!: Department | null;
+  department!: Relation<Department> | null;
 
   @OneToMany(() => Contact, (contact) => contact.user)
-  contacts!: Contact[];
+  contacts!: Relation<Contact[]>;
 
   @OneToMany(() => Ticket, (ticket) => ticket.createdBy)
-  createdTickets!: Ticket[];
+  createdTickets!: Relation<Ticket[]>;
 
   @OneToMany(() => Ticket, (ticket) => ticket.assignedTo)
-  assignedTickets!: Ticket[];
+  assignedTickets!: Relation<Ticket[]>;
 
   @OneToMany(() => Department, (department) => department.manager)
-  managedDepartments!: Department[];
+  managedDepartments!: Relation<Department[]>;
 
   @CreateDateColumn({
     name: "created_at",

@@ -7,6 +7,7 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  type Relation,
 } from "typeorm";
 import { Ticket } from "./ticket.model.js";
 import { User } from "./user.model.js";
@@ -48,13 +49,13 @@ export class Department {
     onDelete: "SET NULL",
   })
   @JoinColumn({ name: "managed_by" })
-  manager!: User | null;
+  manager!: Relation<User> | null;
 
   @OneToMany(() => Ticket, (ticket) => ticket.department)
-  tickets!: Ticket[];
+  tickets!: Relation<Ticket[]>;
 
   @OneToMany(() => User, (user) => user.department)
-  users!: User[];
+  users!: Relation<User[]>;
 
   @CreateDateColumn({
     name: "created_at",

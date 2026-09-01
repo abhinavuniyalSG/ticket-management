@@ -12,7 +12,7 @@
     "typeorm": "tsx ./node_modules/typeorm/cli.js",
     "migration:generate": "npm run typeorm -- migration:generate",
     "migration:create": "npm run typeorm -- migration:create",
-    "migration:run": "npm run typeorm -- migration:run",
+    "migration:run": "npm run typeorm -- migration:run -d ./src/database/dbConnection.ts",
     "migration:revert": "npm run typeorm -- migration:revert",
     "migration:show": "npm run typeorm -- migration:show"
   },

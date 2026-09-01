@@ -7,6 +7,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   Check,
+  type Relation,
 } from "typeorm";
 import { Department } from "./department.model.js";
 import { User } from "./user.model.js";
@@ -58,7 +59,7 @@ export class Ticket {
     onDelete: "RESTRICT",
   })
   @JoinColumn({ name: "department_id" })
-  department!: Department;
+  department!: Relation<Department>;
 
   @Column({ name: "assigned_to", type: "uuid", nullable: true })
   assignedToId!: string | null;
@@ -68,7 +69,7 @@ export class Ticket {
     onDelete: "SET NULL",
   })
   @JoinColumn({ name: "assigned_to" })
-  assignedTo!: User | null;
+  assignedTo!: Relation<User> | null;
 
   @Column({ name: "created_by", type: "uuid" })
   createdById!: string;
@@ -78,7 +79,7 @@ export class Ticket {
     onDelete: "RESTRICT",
   })
   @JoinColumn({ name: "created_by" })
-  createdBy!: User;
+  createdBy!: Relation<User>;
 
   @CreateDateColumn({
     name: "created_at",

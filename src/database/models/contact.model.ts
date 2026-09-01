@@ -7,6 +7,7 @@ import {
   Unique,
   CreateDateColumn,
   UpdateDateColumn,
+  type Relation,
 } from "typeorm";
 import { User } from "./user.model.js";
 import { ContactType } from "../../types/contact.js";
@@ -25,7 +26,7 @@ export class Contact {
     onDelete: "CASCADE",
   })
   @JoinColumn({ name: "user_id" })
-  user!: User;
+  user!: Relation<User>;
 
   @Column({ name: "contact_type", type: "enum", enum: ContactType })
   contactType!: ContactType;

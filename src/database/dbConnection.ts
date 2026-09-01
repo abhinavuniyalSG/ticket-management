@@ -1,6 +1,11 @@
 import { DataSource } from "typeorm";
 import { DB_VARIABLES } from "../config/secrets.js";
 import { logger } from "../core/logger.js";
+import { fileURLToPath } from "url";
+import path, { dirname } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export const AppDataSource = new DataSource({
   type: "postgres",
@@ -11,7 +16,7 @@ export const AppDataSource = new DataSource({
   database: DB_VARIABLES.DB_NAME,
   synchronize: false,
   logging: DB_VARIABLES.DB_LOGGING,
-  entities: ["src/database/models/**/*.ts"],
+  entities: [path.resolve(`${__dirname}/models/**/*.{ts,js}`)],
   migrations: ["src/database/migration/**/*.ts"],
   //   subscribers: [],
 });
