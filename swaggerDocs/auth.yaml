@@ -398,7 +398,7 @@ components:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
           example:
-            message: "Invalid user ID format"
+            message: "Invalid ID format"
 
   securitySchemes:
     bearerAuth:

@@ -44,12 +44,15 @@ export class TicketSchema {
               : "Department id must be a string",
         })
         .pipe(z.uuidv7("Invalid department ID format")),
-      priority: z.enum([
-        TicketPriority.low,
-        TicketPriority.medium,
-        TicketPriority.high,
-        TicketPriority.urgent,
-      ]),
+      priority: z
+        .enum([
+          TicketPriority.low,
+          TicketPriority.medium,
+          TicketPriority.high,
+          TicketPriority.urgent,
+        ])
+        .optional(),
+
       assignedToId: z
         .string({
           error: "User id must be a string",

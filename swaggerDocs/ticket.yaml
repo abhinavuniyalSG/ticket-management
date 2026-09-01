@@ -233,6 +233,8 @@ paths:
                     example: Ticket details fetched successfully
                   ticket:
                     $ref: "#/components/schemas/Ticket"
+        "400":
+          $ref: "#/components/responses/InvalidId"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -349,6 +351,8 @@ paths:
                   message:
                     type: string
                     example: Ticket deleted successfully
+        "400":
+          $ref: "#/components/responses/InvalidId"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
