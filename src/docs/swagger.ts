@@ -40,6 +40,7 @@ Obtain tokens by calling \`POST /api/auth/login\`.
       { name: "Users", description: "User profile and contact management" },
       { name: "Departments", description: "Department CRUD (super_admin only for writes)" },
       { name: "Tickets", description: "Ticket lifecycle management with role-based access" },
+      { name: "Dashboard", description: "Read-only ticket analytics and statistics (role-scoped)" },
     ],
     components: {
       securitySchemes: {

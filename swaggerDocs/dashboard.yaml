@@ -1,0 +1,225 @@
+tags:
+  - name: Dashboard
+    description: >
+      Read-only ticket analytics endpoints. All routes require a valid **Bearer token**.
+
+      ### Scope by role
+      | Role | `GET /dashboard` scope | `GET /dashboard/overview` |
+      |---|---|---|
+      | `user` | 403 Forbidden | 403 Forbidden |
+      | `admin` | Own department only. Supplying `departmentId` is rejected with 403. | 403 Forbidden |
+      | `super_admin` | `departmentId` query param scopes to that department; omitted = entire system | System-wide stats + per-department breakdown |
+
+      ### Notes
+      - `productivity.averageCompletionTimeHours` is the average of `closedAt - createdAt` (in hours) for
+        tickets with status `closed` whose `closedAt` falls within the last 7 calendar days. There is no
+        `completedAt` timestamp in the schema, so tickets that reached `completed` but have not yet been
+        `closed` cannot contribute to this figure. `0` is returned when no ticket qualifies.
+      - `ticketsOverTime` always contains exactly 7 chronological entries (oldest first), one per calendar
+        day of the trailing 7-day window, including days with zero activity.
+      - `statusDistribution` and `priorityDistribution` always include every enum value, with `count: 0`
+        for values that have no matching tickets.
+
+paths:
+  /dashboard:
+    get:
+      tags:
+        - Dashboard
+      summary: Get dashboard statistics (role-scoped)
+      description: >
+        Returns ticket counts, status/priority distributions, productivity, and a 7-day activity trend.
+
+        - **admin**: always scoped to the caller's own department. Passing `departmentId` is rejected (403).
+        - **super_admin**: pass `departmentId` to scope to a department, or omit it for system-wide stats.
+        - **user**: not permitted (403).
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: departmentId
+          in: query
+          required: false
+          description: >
+            Department to scope the statistics to. Only honoured for `super_admin`; an `admin` supplying
+            this parameter receives a 403, and it is never used to override an admin's own department.
+          schema:
+            type: string
+            format: uuid
+          example: "01906c26-1234-7abc-adef-000000000020"
+      responses:
+        "200":
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Dashboard statistics fetched successfully
+                  - $ref: "#/components/schemas/DashboardMetrics"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          description: >
+            Forbidden - either the role cannot access the dashboard, an admin supplied `departmentId`,
+            or an admin's account is not assigned to a department.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                message: "Forbidden: admins cannot filter the dashboard by department"
+        "404":
+          description: Department not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                message: Department not found
+
+  /dashboard/overview:
+    get:
+      tags:
+        - Dashboard
+      summary: Get system-wide dashboard overview with per-department breakdown
+      description: >
+        `super_admin` only. Returns the same dashboard metrics computed system-wide, plus a per-department
+        breakdown (total tickets, status/priority distribution, productivity) for every existing department.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Dashboard overview
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Dashboard overview fetched successfully
+                  systemWide:
+                    $ref: "#/components/schemas/DashboardMetrics"
+                  departments:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/DepartmentDashboardBreakdown"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+components:
+  schemas:
+    StatusDistributionEntry:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [open, assigned, in_progress, review, completed, closed]
+        count:
+          type: integer
+          minimum: 0
+
+    PriorityDistributionEntry:
+      type: object
+      properties:
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        count:
+          type: integer
+          minimum: 0
+
+    TicketsOverTimeEntry:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+          example: "2026-08-26"
+        created:
+          type: integer
+          minimum: 0
+        closed:
+          type: integer
+          minimum: 0
+
+    DashboardProductivity:
+      type: object
+      properties:
+        averageCompletionTimeHours:
+          type: number
+          description: >
+            Average hours from ticket creation to closure, for tickets closed within the last 7 calendar
+            days. `0` if no ticket qualifies.
+          example: 18.42
+
+    DashboardMetrics:
+      type: object
+      properties:
+        totalTickets:
+          type: integer
+          minimum: 0
+        openTickets:
+          type: integer
+          minimum: 0
+        assignedTickets:
+          type: integer
+          minimum: 0
+        inProgressTickets:
+          type: integer
+          minimum: 0
+        reviewTickets:
+          type: integer
+          minimum: 0
+        completedTickets:
+          type: integer
+          minimum: 0
+        closedTickets:
+          type: integer
+          minimum: 0
+        statusDistribution:
+          type: array
+          items:
+            $ref: "#/components/schemas/StatusDistributionEntry"
+        priorityDistribution:
+          type: array
+          items:
+            $ref: "#/components/schemas/PriorityDistributionEntry"
+        productivity:
+          $ref: "#/components/schemas/DashboardProductivity"
+        ticketsOverTime:
+          type: array
+          minItems: 7
+          maxItems: 7
+          items:
+            $ref: "#/components/schemas/TicketsOverTimeEntry"
+
+    DepartmentDashboardBreakdown:
+      type: object
+      properties:
+        departmentId:
+          type: string
+          format: uuid
+          example: "01906c26-1234-7abc-adef-000000000020"
+        departmentName:
+          type: string
+          example: Engineering
+        totalTickets:
+          type: integer
+          minimum: 0
+        statusDistribution:
+          type: array
+          items:
+            $ref: "#/components/schemas/StatusDistributionEntry"
+        priorityDistribution:
+          type: array
+          items:
+            $ref: "#/components/schemas/PriorityDistributionEntry"
+        productivity:
+          $ref: "#/components/schemas/DashboardProductivity"
