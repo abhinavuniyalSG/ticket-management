@@ -1,0 +1,431 @@
+tags:
+  - name: Tickets
+    description: >
+      Ticket lifecycle management endpoints.
+      All routes require a valid **Bearer token**.
+
+      ### Roles & Visibility
+      | Action | user | admin | super_admin |
+      |---|---|---|---|
+      | Get all tickets | Own created/assigned | Own created/assigned + dept tickets | All tickets |
+      | Get ticket details | Own created/assigned | Own created/assigned + dept tickets | Any ticket |
+      | Create ticket | ✓ (cannot assign) | ✓ (can assign within dept) | ✓ (can assign anywhere) |
+      | Update ticket | See rules below | See rules below | See rules below |
+      | Delete ticket | Own open+unassigned | Own + dept open+unassigned | Any ticket |
+
+      ### Status State Machine
+      Tickets flow through these statuses:
+
+      ```
+      open ──(assign)──► assigned ──► in_progress ──► completed ──► review ──► closed
+        ▲                                                │
+        └──────────────────(creator reopen)─────────────┘
+      ```
+
+      **Key rules enforced on update:**
+      - Setting status to `open` **always** clears `assignedToId` to `null` (for all roles, including super_admin).
+      - **Creator** can update title/description/priority only when ticket is `open`.
+      - **Creator** can change status from `completed` → `open` or `completed` → `review`.
+      - **Assignee** can only transition: `assigned` → `in_progress`, `in_progress` → `completed`, `completed` → `in_progress`. **Cannot** go back `in_progress` → `assigned`.
+      - **Admin (same dept)** can manage assignments and close tickets (only from `review` status).
+      - **super_admin** can perform any status transition, but the `open` rule still clears the assignee.
+      - Only the **creator** can change `title`, `description`, and `priority`.
+
+paths:
+  /tickets:
+    get:
+      tags:
+        - Tickets
+      summary: Get all tickets (role-scoped)
+      description: >
+        Returns a paginated, filtered list of tickets.
+        The visible scope depends on the caller's role (see tag description above).
+
+        ### Available Filters
+        All query parameters are optional and can be combined.
+
+        > **Note on role-based filter restrictions:**
+        > - `departmentId` filter is only effective for `super_admin`. Admins and users are already scoped to their own dept/tickets.
+        > - `assignedToId` and `createdById` can be used to narrow results within the caller's own visible scope.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: Filter by ticket status
+          schema:
+            type: string
+            enum: [open, assigned, in_progress, review, completed, closed]
+        - name: priority
+          in: query
+          required: false
+          description: Filter by ticket priority
+          schema:
+            type: string
+            enum: [low, medium, high, urgent]
+        - name: departmentId
+          in: query
+          required: false
+          description: Filter by department (super_admin only; ignored for other roles)
+          schema:
+            type: string
+            format: uuid
+        - name: assignedToId
+          in: query
+          required: false
+          description: Filter tickets assigned to a specific user
+          schema:
+            type: string
+            format: uuid
+        - name: createdById
+          in: query
+          required: false
+          description: Filter tickets created by a specific user
+          schema:
+            type: string
+            format: uuid
+        - name: createdFrom
+          in: query
+          required: false
+          description: Filter tickets created on or after this ISO 8601 datetime
+          schema:
+            type: string
+            format: date-time
+          example: "2025-01-01T00:00:00Z"
+        - name: createdTo
+          in: query
+          required: false
+          description: Filter tickets created on or before this ISO 8601 datetime
+          schema:
+            type: string
+            format: date-time
+          example: "2025-12-31T23:59:59Z"
+        - name: sortBy
+          in: query
+          required: false
+          description: Field to sort results by
+          schema:
+            type: string
+            enum: [createdAt, updatedAt, priority, status]
+            default: createdAt
+        - name: sortOrder
+          in: query
+          required: false
+          description: Sort direction
+          schema:
+            type: string
+            enum: [asc, desc, ASC, DESC]
+            default: desc
+      responses:
+        "200":
+          description: Paginated list of tickets
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Tickets fetched successfully
+                  tickets:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Ticket"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+    post:
+      tags:
+        - Tickets
+      summary: Create a new ticket
+      description: >
+        Creates a new support ticket in the specified department.
+
+        **Assignment rules:**
+        - `user` role: cannot set `assignedToId` (will be rejected with 403).
+        - `admin` role: can assign the ticket to a user **in the same department only**.
+        - `super_admin` role: can assign to any user.
+
+        If `assignedToId` is provided and valid, the ticket's initial status is automatically set to `assigned`.
+        Otherwise, the ticket starts with status `open`.
+
+        The `priority` defaults to `low` if not specified.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTicketRequest"
+            examples:
+              unassigned:
+                summary: Create an open, unassigned ticket
+                value:
+                  title: "Login page crashes on Safari"
+                  description: "Safari 17+ users cannot log in due to a cookie regression."
+                  departmentId: "01906c26-1234-7abc-adef-000000000020"
+                  priority: high
+              assigned:
+                summary: Create and immediately assign a ticket (admin/super_admin)
+                value:
+                  title: "Database backup failing silently"
+                  description: "Nightly backup job exits 0 but produces no output file."
+                  departmentId: "01906c26-1234-7abc-adef-000000000020"
+                  priority: urgent
+                  assignedToId: "01906c26-1234-7abc-adef-000000000005"
+      responses:
+        "201":
+          description: Ticket created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Ticket created successfully
+                  ticket:
+                    $ref: "#/components/schemas/Ticket"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Department or assignee not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                message: Department not found
+
+  /tickets/{id}:
+    get:
+      tags:
+        - Tickets
+      summary: Get ticket details by ID
+      description: >
+        Returns full details of a single ticket.
+
+        - **user**: can only view tickets they created or are assigned to.
+        - **admin**: can view tickets created by them, assigned to them, or belonging to their department.
+        - **super_admin**: can view any ticket.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/TicketId"
+      responses:
+        "200":
+          description: Ticket details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Ticket details fetched successfully
+                  ticket:
+                    $ref: "#/components/schemas/Ticket"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    patch:
+      tags:
+        - Tickets
+      summary: Update a ticket
+      description: >
+        Partially updates a ticket. What can be updated depends on the caller's role
+        and the current state of the ticket.
+
+        ### Update Rules (applied in order)
+
+        #### Content (title, description, priority)
+        - Only the **creator** may change these fields.
+        - Only allowed when the ticket is in `open` status, **or** when the creator is simultaneously
+          changing the status from `completed` → `open` in the same request.
+
+        #### Status transitions
+        | Actor | Allowed transitions |
+        |---|---|
+        | **creator** | `completed` → `open`, `completed` → `review` |
+        | **assignee** | `assigned` → `in_progress`, `in_progress` → `completed`, `completed` → `in_progress` |
+        | **admin (same dept)** | Any transition, except closing requires `review` → `closed` |
+        | **super_admin** | Any transition |
+
+        > ⚠️ Setting status to `open` **always forces `assignedToId` to `null`**, regardless of role.
+
+        #### Assignment (assignedToId)
+        - Only **admin (same dept)** or **super_admin** can set or unset `assignedToId`.
+        - The assignee must belong to the ticket's department.
+        - When assigning an `open` ticket without explicitly passing a status, the status automatically changes to `assigned`.
+        - Setting `assignedToId` to `null` on an `assigned` ticket automatically changes status back to `open`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/TicketId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTicketRequest"
+            examples:
+              creatorEditsContent:
+                summary: Creator updates title/description (ticket must be open)
+                value:
+                  title: "Login page crash on Safari 17+"
+                  description: "Detailed repro steps added. Happens only on macOS Ventura."
+              assigneeStartsWork:
+                summary: Assignee moves ticket to in_progress
+                value:
+                  status: in_progress
+              adminAssigns:
+                summary: Admin assigns the ticket to a user
+                value:
+                  assignedToId: "01906c26-1234-7abc-adef-000000000005"
+              adminCloses:
+                summary: Admin closes a ticket (must be in review status)
+                value:
+                  status: closed
+              creatorReopens:
+                summary: Creator reopens a completed ticket
+                value:
+                  status: open
+      responses:
+        "200":
+          description: Ticket updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Ticket updated successfully
+                  ticket:
+                    $ref: "#/components/schemas/Ticket"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    delete:
+      tags:
+        - Tickets
+      summary: Delete a ticket
+      description: >
+        Permanently deletes a ticket.
+
+        **Permission rules:**
+        - **user / admin (same dept)**: can only delete a ticket that is in `open` status **and** has no assignee (`assignedToId` is null).
+        - **super_admin**: can delete any ticket regardless of status.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/TicketId"
+      responses:
+        "200":
+          description: Ticket deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Ticket deleted successfully
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+components:
+  schemas:
+    CreateTicketRequest:
+      type: object
+      required:
+        - title
+        - description
+        - departmentId
+      properties:
+        title:
+          type: string
+          minLength: 2
+          maxLength: 200
+          example: "Login page crashes on Safari"
+        description:
+          type: string
+          minLength: 5
+          example: "Safari 17+ users cannot log in due to a cookie regression."
+        departmentId:
+          type: string
+          format: uuid
+          example: "01906c26-1234-7abc-adef-000000000020"
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+          default: low
+          example: high
+        assignedToId:
+          type: string
+          format: uuid
+          nullable: true
+          description: >
+            User to assign the ticket to. Only `admin` (same dept) and `super_admin` may set this.
+          example: null
+
+    UpdateTicketRequest:
+      type: object
+      description: At least one field must be provided.
+      properties:
+        title:
+          type: string
+          minLength: 2
+          maxLength: 200
+          example: "Login page crashes on Safari 17+"
+        description:
+          type: string
+          minLength: 5
+          example: "Updated reproduction steps."
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+          example: urgent
+        status:
+          type: string
+          enum: [open, assigned, in_progress, review, completed, closed]
+          example: in_progress
+        assignedToId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Set to `null` to unassign the ticket.
+          example: "01906c26-1234-7abc-adef-000000000005"
+
+  parameters:
+    TicketId:
+      name: id
+      in: path
+      required: true
+      description: UUIDv7 identifier of the ticket
+      schema:
+        type: string
+        format: uuid
+      example: "01906c26-1234-7abc-adef-000000000030"

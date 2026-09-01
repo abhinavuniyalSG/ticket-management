@@ -27,7 +27,12 @@ export const authMiddleware = (
       JWT_VARIABLES.JWT_ACCESS_SECRET,
     ) as TokenPayload;
 
-    if (!decoded?.id || !decoded?.email || !decoded?.role) {
+    if (
+      !decoded?.id ||
+      !decoded?.email ||
+      !decoded?.role ||
+      decoded?.typ !== "access"
+    ) {
       throw new HttpError(401, "Invalid token payload");
     }
 

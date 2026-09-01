@@ -7,15 +7,39 @@ const swaggerSpec = swaggerJSDoc({
   definition: {
     openapi: "3.0.3",
     info: {
-      title: "Movies Review API",
+      title: "Ticket Management System API",
       version: "1.0.0",
-      description: "API for movie review.",
+      description: `
+## Overview
+A role-based ticket management REST API built with Express, TypeORM, and PostgreSQL.
+
+## Authentication
+All endpoints (except \`/auth/register\`, \`/auth/login\`, and \`/auth/refresh\`) require a
+**Bearer token** in the \`Authorization\` header:
+\`\`\`
+Authorization: Bearer <accessToken>
+\`\`\`
+Obtain tokens by calling \`POST /api/auth/login\`.
+
+## Roles
+| Role | Description |
+|---|---|
+| \`user\` | Regular user. Can manage own tickets and profile. |
+| \`admin\` | Department-level admin. Can manage users and tickets within their department. |
+| \`super_admin\` | Full access across all departments, users, and tickets. |
+      `,
+      contact: {
+        name: "Ticket Management System",
+      },
     },
-    servers: [{ url: "/api", description: "Current server" }],
+    servers: [
+      { url: "/api", description: "Current server" },
+    ],
     tags: [
-      { name: "Authentication", description: "User authentication operations" },
-      { name: "Movies", description: "Movie catalogue operations" },
-      { name: "Reviews", description: "Movie review operations" },
+      { name: "Authentication", description: "Register, login, token refresh, logout" },
+      { name: "Users", description: "User profile and contact management" },
+      { name: "Departments", description: "Department CRUD (super_admin only for writes)" },
+      { name: "Tickets", description: "Ticket lifecycle management with role-based access" },
     ],
     components: {
       securitySchemes: {
@@ -23,6 +47,7 @@ const swaggerSpec = swaggerJSDoc({
           type: "http",
           scheme: "bearer",
           bearerFormat: "JWT",
+          description: "Enter your JWT access token obtained from POST /api/auth/login",
         },
       },
     },
@@ -35,6 +60,15 @@ export const registerSwagger = (app: Application): void => {
   app.use(
     "/api/docs",
     swaggerUi.serve,
-    swaggerUi.setup(swaggerSpec, { explorer: true }),
+    swaggerUi.setup(swaggerSpec, {
+      explorer: true,
+      customSiteTitle: "Ticket Management API Docs",
+      swaggerOptions: {
+        persistAuthorization: true,
+        docExpansion: "list",
+        filter: true,
+        tagsSorter: "alpha",
+      },
+    }),
   );
 };

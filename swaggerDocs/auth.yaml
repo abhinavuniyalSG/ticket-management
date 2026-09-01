@@ -1,0 +1,407 @@
+tags:
+  - name: Authentication
+    description: >
+      Endpoints for user registration, login, token refresh, and logout.
+      Login is rate-limited to **5 requests per minute** per IP.
+
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      description: >
+        Creates a new user account with the role `user` by default.
+        Returns a pair of JWT tokens (access + refresh) on success.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+            example:
+              firstName: "john"
+              lastName: "doe"
+              email: "john.doe@example.com"
+              password: "Secret@123"
+      responses:
+        "201":
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Log in with email and password
+      description: >
+        Authenticates a user and returns a new JWT access token and refresh token.
+        **Rate limited** – 5 requests per minute per IP.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+            example:
+              email: "john.doe@example.com"
+              password: "Secret@123"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh access token
+      description: >
+        Exchanges a valid refresh token for a new access token and a new refresh token
+        (token rotation). The old refresh token is invalidated.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshRequest"
+      responses:
+        "200":
+          description: Tokens refreshed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                    description: New JWT access token
+                  refreshToken:
+                    type: string
+                    description: New JWT refresh token
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: Log out the current user
+      description: >
+        Invalidates the stored refresh token for the requesting user.
+        The caller must be authenticated via Bearer token.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Logout successful
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+components:
+  schemas:
+    RegisterRequest:
+      type: object
+      required:
+        - firstName
+        - lastName
+        - email
+        - password
+      properties:
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 50
+          example: john
+        lastName:
+          type: string
+          maxLength: 50
+          example: doe
+        email:
+          type: string
+          format: email
+          maxLength: 255
+          example: john.doe@example.com
+        password:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 255
+          description: >
+            Must contain at least one uppercase letter, one lowercase letter,
+            one digit, and one special character.
+          example: "Secret@123"
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: john.doe@example.com
+        password:
+          type: string
+          format: password
+          example: "Secret@123"
+
+    RefreshRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          description: A valid, unexpired refresh token previously issued by this API.
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    AuthResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Login successful
+        accessToken:
+          type: string
+          description: Short-lived JWT for authenticating API requests (Bearer token)
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refreshToken:
+          type: string
+          description: Long-lived token used only to obtain new access tokens
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        user:
+          $ref: "#/components/schemas/UserPublic"
+
+    UserPublic:
+      type: object
+      description: Safe user object (no password or refreshToken)
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "01906c26-1234-7abc-adef-000000000001"
+        firstName:
+          type: string
+          example: john
+        lastName:
+          type: string
+          example: doe
+        email:
+          type: string
+          format: email
+          example: john.doe@example.com
+        role:
+          type: string
+          enum: [user, admin, super_admin]
+          example: user
+        departmentId:
+          type: string
+          format: uuid
+          nullable: true
+          example: null
+        contacts:
+          type: array
+          items:
+            $ref: "#/components/schemas/Contact"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Contact:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "01906c26-1234-7abc-adef-000000000010"
+        contactType:
+          type: string
+          enum: [phone, whatsapp, linkedin]
+          example: phone
+        contactDetail:
+          type: string
+          example: "+91-9876543210"
+
+    Department:
+      type: object
+      properties:
+        departmentId:
+          type: string
+          format: uuid
+          example: "01906c26-1234-7abc-adef-000000000020"
+        departmentName:
+          type: string
+          example: Engineering
+        departmentEmail:
+          type: string
+          format: email
+          example: engineering@company.com
+        managedBy:
+          type: string
+          format: uuid
+          nullable: true
+          example: "01906c26-1234-7abc-adef-000000000001"
+        manager:
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/UserPublic"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Ticket:
+      type: object
+      properties:
+        ticketId:
+          type: string
+          format: uuid
+          example: "01906c26-1234-7abc-adef-000000000030"
+        title:
+          type: string
+          example: "Fix login page crash on Safari"
+        description:
+          type: string
+          example: "Users on Safari 17+ cannot log in due to a cookie-handling regression."
+        status:
+          type: string
+          enum: [open, assigned, in_progress, review, completed, closed]
+          example: open
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+          example: high
+        departmentId:
+          type: string
+          format: uuid
+          example: "01906c26-1234-7abc-adef-000000000020"
+        assignedToId:
+          type: string
+          format: uuid
+          nullable: true
+          example: null
+        createdById:
+          type: string
+          format: uuid
+          example: "01906c26-1234-7abc-adef-000000000001"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        closedAt:
+          type: string
+          format: date-time
+          nullable: true
+          example: null
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "An error occurred"
+
+  responses:
+    ValidationError:
+      description: Request body / params / query failed validation
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            message: "Email is required"
+
+    Unauthorized:
+      description: Missing or invalid authentication token
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            message: "Unauthorized: invalid or expired token"
+
+    Forbidden:
+      description: Authenticated but lacks the required role/permission
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            message: "Forbidden: insufficient permissions"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            message: "Resource not found"
+
+    Conflict:
+      description: Conflict – resource already exists
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            message: "User already exists"
+
+    TooManyRequests:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            message: "Too many requests, please try again later."
+
+    InvalidId:
+      description: Invalid UUIDv7 identifier
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            message: "Invalid user ID format"
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

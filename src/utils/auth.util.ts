@@ -4,20 +4,29 @@ import { HttpError } from "./httpError.utils.js";
 import type { TokenPayload } from "../types/jwtToken.type.js";
 import { logger } from "../core/logger.js";
 import { HASH_VARIABLES, JWT_VARIABLES } from "../config/secrets.js";
+import crypto, { randomUUID } from "crypto";
 
 const tokenGenerator = (payload: TokenPayload, generateType: string) => {
   let token;
   switch (generateType) {
     case "ACCESS":
-      token = jwt.sign(payload, JWT_VARIABLES.JWT_ACCESS_SECRET, {
-        expiresIn: JWT_VARIABLES.JWT_ACCESS_EXPIRES_IN,
-      });
+      token = jwt.sign(
+        { ...payload, jti: randomUUID(), typ: "access" },
+        JWT_VARIABLES.JWT_ACCESS_SECRET,
+        {
+          expiresIn: JWT_VARIABLES.JWT_ACCESS_EXPIRES_IN,
+        },
+      );
       break;
 
     case "REFRESH":
-      token = jwt.sign(payload, JWT_VARIABLES.JWT_REFRESH_SECRET, {
-        expiresIn: JWT_VARIABLES.JWT_REFRESH_EXPIRES_IN,
-      });
+      token = jwt.sign(
+        { ...payload, jti: randomUUID(), typ: "refresh" },
+        JWT_VARIABLES.JWT_REFRESH_SECRET,
+        {
+          expiresIn: JWT_VARIABLES.JWT_REFRESH_EXPIRES_IN,
+        },
+      );
       break;
     default:
       throw new Error("Provide valid generateType");
@@ -40,7 +49,7 @@ const verifyToken = (token: string, key: string) => {
   }
 };
 
-const generateHash = async (password: string) => {
+const generateHashPassword = async (password: string) => {
   try {
     const saltRound = HASH_VARIABLES.SALT_ROUND;
     const hashedPasswored = await bcrypt.hash(password, saltRound);
@@ -51,7 +60,10 @@ const generateHash = async (password: string) => {
   }
 };
 
-const verifyHash = async (enteredPassword: string, hashPassword: string): Promise<boolean> => {
+const verifyHashPassword = async (
+  enteredPassword: string,
+  hashPassword: string,
+): Promise<boolean> => {
   try {
     return await bcrypt.compare(enteredPassword, hashPassword);
   } catch (e) {
@@ -60,5 +72,27 @@ const verifyHash = async (enteredPassword: string, hashPassword: string): Promis
   }
 };
 
-export { verifyToken, generateHash, tokenGenerator, verifyHash };
+const generateTokenHash = (token: string): string => {
+  return crypto.createHash("sha256").update(token, "utf8").digest("hex");
+};
+const verifyTokenHash = (token: string, storedHash: string): boolean => {
+  const incomingHash = generateTokenHash(token);
 
+  const incomingBuffer = Buffer.from(incomingHash, "hex");
+
+  const storedBuffer = Buffer.from(storedHash, "hex");
+
+  if (incomingBuffer.length !== storedBuffer.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(incomingBuffer, storedBuffer);
+};
+export {
+  verifyToken,
+  generateHashPassword,
+  tokenGenerator,
+  verifyHashPassword,
+  generateTokenHash,
+  verifyTokenHash,
+};

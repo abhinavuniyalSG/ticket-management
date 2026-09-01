@@ -18,6 +18,7 @@ export class UserSchema {
         .min(1, "First name cannot be empty")
         .max(50, "First name must not exceed 50 characters")
         .optional(),
+
       lastName: z
         .string({
           error: "Last name must be a string",
@@ -26,11 +27,13 @@ export class UserSchema {
         .min(0)
         .max(50, "Last name must not exceed 50 characters")
         .optional(),
+
       departmentId: z
         .string({ error: "Department id must be string" })
         .pipe(z.uuidv7("Invalid department ID format"))
         .nullable()
         .optional(),
+
       contacts: z
         .array(
           z.object({
@@ -53,7 +56,18 @@ export class UserSchema {
         )
         .optional(),
     })
-    .strict();
+    .strict()
+    .refine(
+      (data) =>
+        data.firstName !== undefined ||
+        data.lastName !== undefined ||
+        data.departmentId !== undefined ||
+        data.contacts !== undefined,
+      {
+        message:
+          "At least one field (firstName, lastName, departmentId, or contacts) must be provided",
+      },
+    );
 
   public contactIdParamSchema = z
     .object({
@@ -70,6 +84,7 @@ export class UserSchema {
         ContactType.whatsapp,
         ContactType.linkedin,
       ]),
+
       contactDetail: z
         .string({
           error: (issue) =>
@@ -88,6 +103,7 @@ export class UserSchema {
       contactType: z
         .enum([ContactType.phone, ContactType.whatsapp, ContactType.linkedin])
         .optional(),
+
       contactDetail: z
         .string({ error: "Contact detail must be a string" })
         .trim()

@@ -1,0 +1,365 @@
+tags:
+  - name: Users
+    description: >
+      User management endpoints.
+      All routes require a valid **Bearer token**.
+
+      **Permission Matrix:**
+      | Action | user | admin | super_admin |
+      |---|---|---|---|
+      | Get all users | ✗ | own dept | ✓ all |
+      | Get user by ID | own only | own dept + self | ✓ any |
+      | Update user | own contact/password | own + dept users' dept | ✓ any |
+      | Delete user | own only | own dept + self | ✓ any |
+      | Add contact | own only | own only | own only |
+      | Update contact | own only | own only | own only |
+      | Delete contact | own only | own only | own only |
+
+paths:
+  /users:
+    get:
+      tags:
+        - Users
+      summary: Get all users
+      description: >
+        - **super_admin**: returns all users in the system.
+        - **admin**: returns only users in the same department.
+        - **user**: `403 Forbidden`.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Users fetched successfully
+                  users:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/UserPublic"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /users/{id}:
+    get:
+      tags:
+        - Users
+      summary: Get a user by ID
+      description: >
+        - **user**: can only view their own profile.
+        - **admin**: can view their own profile and any user in the same department.
+        - **super_admin**: can view any user.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      responses:
+        "200":
+          description: User details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User details fetched successfully
+                  user:
+                    $ref: "#/components/schemas/UserPublic"
+        "400":
+          $ref: "#/components/responses/InvalidId"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    patch:
+      tags:
+        - Users
+      summary: Update a user
+      description: >
+        **Fields allowed per role:**
+
+        | Field | user | admin | super_admin |
+        |---|---|---|---|
+        | `firstName` / `lastName` | ✓ (own) | ✓ (own + same dept) | ✓ (any) |
+        | `departmentId` | ✗ | ✓ (for others in dept, not self) | ✓ (any) |
+        | `contacts` | ✓ (own) | ✓ (own + same dept) | ✓ (any) |
+
+        > Admins **cannot** change their own `departmentId`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserRequest"
+            example:
+              firstName: "jane"
+              departmentId: "01906c26-1234-7abc-adef-000000000020"
+              contacts:
+                - contactType: phone
+                  contactDetail: "+91-9999999999"
+      responses:
+        "200":
+          description: User updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User updated successfully
+                  user:
+                    $ref: "#/components/schemas/UserPublic"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    delete:
+      tags:
+        - Users
+      summary: Delete a user
+      description: >
+        - **user**: can only delete their own account.
+        - **admin**: can delete their own account and accounts of users in the same department.
+        - **super_admin**: can delete any account.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      responses:
+        "200":
+          description: User deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User deleted successfully
+        "400":
+          $ref: "#/components/responses/InvalidId"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /users/contacts:
+    post:
+      tags:
+        - Users
+      summary: Add a contact for the authenticated user
+      description: >
+        Adds a new contact (phone, WhatsApp, or LinkedIn) to the currently
+        authenticated user's profile. Each `contactType` + `contactDetail`
+        combination must be globally unique.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddContactRequest"
+            example:
+              contactType: phone
+              contactDetail: "+91-9876543210"
+      responses:
+        "201":
+          description: Contact added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Contact added successfully
+                  contact:
+                    $ref: "#/components/schemas/Contact"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /users/contacts/{contactId}:
+    patch:
+      tags:
+        - Users
+      summary: Update a contact
+      description: >
+        Updates an existing contact belonging to the authenticated user.
+        At least one of `contactType` or `contactDetail` must be provided.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ContactId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateContactRequest"
+            example:
+              contactDetail: "+91-9000000000"
+      responses:
+        "200":
+          description: Contact updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Contact updated successfully
+                  contact:
+                    $ref: "#/components/schemas/Contact"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+    delete:
+      tags:
+        - Users
+      summary: Delete a contact
+      description: Deletes a specific contact belonging to the authenticated user.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ContactId"
+      responses:
+        "200":
+          description: Contact deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Contact deleted successfully
+        "400":
+          $ref: "#/components/responses/InvalidId"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+components:
+  schemas:
+    UpdateUserRequest:
+      type: object
+      description: At least one field must be provided.
+      properties:
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 50
+          example: jane
+        lastName:
+          type: string
+          maxLength: 50
+          example: doe
+        departmentId:
+          type: string
+          format: uuid
+          nullable: true
+          example: "01906c26-1234-7abc-adef-000000000020"
+        contacts:
+          type: array
+          items:
+            type: object
+            required:
+              - contactType
+              - contactDetail
+            properties:
+              contactType:
+                type: string
+                enum: [phone, whatsapp, linkedin]
+              contactDetail:
+                type: string
+                maxLength: 500
+
+    AddContactRequest:
+      type: object
+      required:
+        - contactType
+        - contactDetail
+      properties:
+        contactType:
+          type: string
+          enum: [phone, whatsapp, linkedin]
+          example: phone
+        contactDetail:
+          type: string
+          minLength: 1
+          maxLength: 500
+          example: "+91-9876543210"
+
+    UpdateContactRequest:
+      type: object
+      description: At least one field (contactType or contactDetail) must be provided.
+      properties:
+        contactType:
+          type: string
+          enum: [phone, whatsapp, linkedin]
+        contactDetail:
+          type: string
+          minLength: 1
+          maxLength: 500
+          example: "+91-9000000000"
+
+  parameters:
+    UserId:
+      name: id
+      in: path
+      required: true
+      description: UUIDv7 identifier of the user
+      schema:
+        type: string
+        format: uuid
+      example: "01906c26-1234-7abc-adef-000000000001"
+
+    ContactId:
+      name: contactId
+      in: path
+      required: true
+      description: UUIDv7 identifier of the contact
+      schema:
+        type: string
+        format: uuid
+      example: "01906c26-1234-7abc-adef-000000000010"

@@ -3,6 +3,7 @@ import { AuthenticationController } from "../controllers/authentication.controll
 import { requestValidator } from "../middleware/requestValidator.middleware.js";
 import { AuthenticationSchema } from "../validationSchema/authentication.schema.js";
 import { RateLimiterMiddleware } from "../middleware/rateLimiter.middleware.js";
+import { authMiddleware } from "../middleware/authentication.middleware.js";
 
 class AuthenticationRoutes {
   public router = express.Router();
@@ -26,7 +27,7 @@ class AuthenticationRoutes {
       this.validator("body", this.requestSchema.refreshTokenSchema),
       AuthenticationController.refreshController,
     );
-    this.router.post("/logout", AuthenticationController.logoutController);
+    this.router.post("/logout", authMiddleware, AuthenticationController.logoutController);
   };
   constructor() {
     this.initialize();

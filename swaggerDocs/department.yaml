@@ -1,0 +1,269 @@
+tags:
+  - name: Departments
+    description: >
+      Department management endpoints.
+      All routes require a valid **Bearer token**.
+
+      **Permission Matrix:**
+      | Action | user | admin | super_admin |
+      |---|---|---|---|
+      | Get all departments | ✓ | ✓ | ✓ |
+      | Get department details | ✓ | ✓ | ✓ |
+      | Create department | ✗ | ✗ | ✓ |
+      | Update department | ✗ | ✗ | ✓ |
+      | Delete department | ✗ | ✗ | ✓ |
+
+      > The `managedBy` field must reference a user with role `admin` or `super_admin`.
+
+paths:
+  /departments:
+    get:
+      tags:
+        - Departments
+      summary: Get all departments
+      description: Returns a list of all departments. Accessible by all authenticated users.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of departments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Departments fetched successfully
+                  departments:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Department"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+    post:
+      tags:
+        - Departments
+      summary: Create a new department
+      description: >
+        Creates a new department. **Only super_admin** can perform this action.
+
+        The `managedBy` field is optional at creation and can be set later via PATCH.
+        If provided, it must reference a user with role `admin` or `super_admin`.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDepartmentRequest"
+            example:
+              departmentName: "Engineering"
+              departmentEmail: "engineering@company.com"
+              managedBy: "01906c26-1234-7abc-adef-000000000001"
+      responses:
+        "201":
+          description: Department created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Department created successfully
+                  department:
+                    $ref: "#/components/schemas/Department"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Manager user not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                message: "Manager user not found"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /departments/{id}:
+    get:
+      tags:
+        - Departments
+      summary: Get department details by ID
+      description: Returns full details of a department. Accessible by all authenticated users.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/DepartmentId"
+      responses:
+        "200":
+          description: Department details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Department details fetched successfully
+                  department:
+                    $ref: "#/components/schemas/Department"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    patch:
+      tags:
+        - Departments
+      summary: Update a department
+      description: >
+        Updates one or more fields of a department. **Only super_admin** can perform this action.
+
+        At least one field must be provided.
+        When updating `managedBy`, the referenced user must have role `admin` or `super_admin`.
+        Set `managedBy` to `null` to unset the manager.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/DepartmentId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateDepartmentRequest"
+            examples:
+              rename:
+                summary: Rename a department
+                value:
+                  departmentName: "Platform Engineering"
+              changeManager:
+                summary: Change the manager
+                value:
+                  managedBy: "01906c26-1234-7abc-adef-000000000002"
+              clearManager:
+                summary: Remove the manager
+                value:
+                  managedBy: null
+      responses:
+        "200":
+          description: Department updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Department updated successfully
+                  department:
+                    $ref: "#/components/schemas/Department"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+    delete:
+      tags:
+        - Departments
+      summary: Delete a department
+      description: >
+        Permanently deletes a department. **Only super_admin** can perform this action.
+
+        > **Warning:** Tickets belonging to this department cannot be deleted while the department exists
+        > (enforced by a `RESTRICT` foreign key). Ensure all tickets are removed or reassigned first.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/DepartmentId"
+      responses:
+        "200":
+          description: Department deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Department deleted successfully
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+components:
+  schemas:
+    CreateDepartmentRequest:
+      type: object
+      required:
+        - departmentName
+        - departmentEmail
+      properties:
+        departmentName:
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: Engineering
+        departmentEmail:
+          type: string
+          format: email
+          maxLength: 254
+          example: engineering@company.com
+        managedBy:
+          type: string
+          format: uuid
+          nullable: true
+          description: >
+            ID of the user who will manage this department.
+            Must have role `admin` or `super_admin`. Optional at creation.
+          example: "01906c26-1234-7abc-adef-000000000001"
+
+    UpdateDepartmentRequest:
+      type: object
+      description: At least one field must be provided.
+      properties:
+        departmentName:
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: Platform Engineering
+        departmentEmail:
+          type: string
+          format: email
+          maxLength: 254
+          example: platform@company.com
+        managedBy:
+          type: string
+          format: uuid
+          nullable: true
+          description: Set to `null` to remove the current manager.
+          example: "01906c26-1234-7abc-adef-000000000002"
+
+  parameters:
+    DepartmentId:
+      name: id
+      in: path
+      required: true
+      description: UUIDv7 identifier of the department
+      schema:
+        type: string
+        format: uuid
+      example: "01906c26-1234-7abc-adef-000000000020"

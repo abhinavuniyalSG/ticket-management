@@ -4,10 +4,12 @@ import jwt from "jsonwebtoken";
 import { JWT_VARIABLES } from "../config/secrets.js";
 import { HttpError } from "../utils/httpError.utils.js";
 import {
-  generateHash,
+  generateHashPassword,
+  generateTokenHash,
   tokenGenerator,
-  verifyHash,
+  verifyHashPassword,
   verifyToken,
+  verifyTokenHash,
 } from "../utils/auth.util.js";
 import { UserRepository } from "../database/repositry/user.repository.js";
 
@@ -29,7 +31,7 @@ export class AuthenticationService {
       throw new HttpError(409, "User already exists");
     }
 
-    const hashedPassword = await generateHash(userDetails.password);
+    const hashedPassword = await generateHashPassword(userDetails.password);
 
     const user = await UserRepository.createUser({
       ...userDetails,
@@ -45,7 +47,7 @@ export class AuthenticationService {
       { id: user.id, email: user.email, role: user.role },
       "REFRESH",
     );
-    const safeRefreshToken = await generateHash(refreshToken);
+    const safeRefreshToken = generateTokenHash(refreshToken);
     await UserRepository.updateRefreshToken(user.id, safeRefreshToken);
 
     const {
@@ -54,7 +56,10 @@ export class AuthenticationService {
       ...userWithoutSensitiveData
     } = user as any;
 
-    logger.info("User registered successfully", { userId: user.id, email: user.email });
+    logger.info("User registered successfully", {
+      userId: user.id,
+      email: user.email,
+    });
 
     return {
       message: "User registered successfully",
@@ -71,7 +76,7 @@ export class AuthenticationService {
       throw new HttpError(401, "Invalid email or password");
     }
 
-    const isPasswordValid = await verifyHash(
+    const isPasswordValid = await verifyHashPassword(
       loginInput.password,
       user.password,
     );
@@ -89,12 +94,15 @@ export class AuthenticationService {
       { id: user.id, email: user.email, role: user.role },
       "REFRESH",
     );
-    const safeRefreshToken = await generateHash(refreshToken);
+    const safeRefreshToken = generateTokenHash(refreshToken);
     await UserRepository.updateRefreshToken(user.id, safeRefreshToken);
 
     const { password, refreshToken: _, ...userWithoutSensitiveData } = user;
 
-    logger.info("User logged in successfully", { userId: user.id, email: user.email });
+    logger.info("User logged in successfully", {
+      userId: user.id,
+      email: user.email,
+    });
 
     return {
       message: "Login successful",
@@ -108,12 +116,12 @@ export class AuthenticationService {
     let decoded: any;
     try {
       decoded = verifyToken(token, JWT_VARIABLES.JWT_REFRESH_SECRET);
-      if (!decoded?.id) {
+      if (!decoded?.id || decoded?.typ !== "refresh") {
         throw new HttpError(401, "Invalid refresh token payload");
       }
       const user = await UserRepository.findByIdWithRefreshToken(decoded.id);
 
-      const isVlaidRefreshtoken = await verifyHash(
+      const isVlaidRefreshtoken = verifyTokenHash(
         token,
         user?.refreshToken ?? "",
       );
@@ -129,7 +137,7 @@ export class AuthenticationService {
         { id: user.id, email: user.email, role: user.role },
         "REFRESH",
       );
-      const safeRefreshToken = await generateHash(refreshToken);
+      const safeRefreshToken = generateTokenHash(refreshToken);
 
       await UserRepository.updateRefreshToken(user.id, safeRefreshToken);
 
