@@ -6,6 +6,7 @@ import { UserRepository } from "../database/repositry/user.repository.js";
 import { DepartmentRepository } from "../database/repositry/department.repository.js";
 import { TicketRepository } from "../database/repositry/ticket.repository.js";
 import { EmailService } from "./email.service.js";
+import { logger } from "../core/logger.js";
 
 const details = (ticket: Ticket) =>
   `Title: ${ticket.title}\nDescription: ${ticket.description}\nPriority: ${ticket.priority}\nStatus: ${ticket.status}\nTicket ID: ${ticket.ticketId}`;
@@ -21,6 +22,15 @@ export class NotificationService {
         subject: `Ticket assigned: ${ticket.title}`,
         text: `You have been assigned a ticket.\n\n${details(ticket)}`,
       });
+    else
+      logger.warn("Assignment notification skipped: assignee has no email", {
+        ticketId: ticket.ticketId,
+        assigneeId: ticket.assignedToId,
+      });
+    logger.info("Assignment notification processed", {
+      ticketId: ticket.ticketId,
+      assigneeId: ticket.assignedToId,
+    });
   }
 
   public static async ticketReadyForReview(ticket: Ticket): Promise<void> {
@@ -31,6 +41,15 @@ export class NotificationService {
         subject: `Ticket ready for review: ${ticket.title}`,
         text: `Your ticket is completed and ready for review.\n\n${details(ticket)}`,
       });
+    else
+      logger.warn("Review notification skipped: ticket creator has no email", {
+        ticketId: ticket.ticketId,
+        creatorId: ticket.createdById,
+      });
+    logger.info("Review notification processed", {
+      ticketId: ticket.ticketId,
+      creatorId: ticket.createdById,
+    });
   }
 
   private static async departmentRecipients(
@@ -60,6 +79,11 @@ export class NotificationService {
         subject: `${ticket.priority.toUpperCase()} priority ticket created`,
         text: `A ${ticket.priority} priority ticket requires attention.\n\n${details(ticket)}`,
       });
+    logger.info("Priority notification processed", {
+      ticketId: ticket.ticketId,
+      priority: ticket.priority,
+      recipientCount: to.length,
+    });
   }
 
   public static async sendDepartmentReminders(): Promise<void> {
@@ -69,9 +93,19 @@ export class NotificationService {
         department.departmentId,
         [TicketStatus.open, TicketStatus.review],
       );
-      if (!tickets.length) continue;
+      if (!tickets.length) {
+        logger.debug("Department reminder skipped: no open or review tickets", {
+          departmentId: department.departmentId,
+        });
+        continue;
+      }
       const to = await this.departmentRecipients(department);
-      if (!to.length) continue;
+      if (!to.length) {
+        logger.warn("Department reminder skipped: no admin recipient email", {
+          departmentId: department.departmentId,
+        });
+        continue;
+      }
       const open = tickets.filter(
         (ticket) => ticket.status === TicketStatus.open,
       ).length;
@@ -83,18 +117,31 @@ export class NotificationService {
         subject: `Department ticket reminder: ${department.departmentName}`,
         text: `Please work on the department tickets.\nOpen: ${open}\nReview: ${review}\nTotal requiring attention: ${tickets.length}`,
       });
+      logger.info("Department reminder processed", {
+        departmentId: department.departmentId,
+        open,
+        review,
+        recipientCount: to.length,
+      });
     }
   }
 
   public static async sendSuperAdminSummary(): Promise<void> {
     const recipients = await UserRepository.findByRole(roleEnum.superAdmin);
-    if (!recipients.length) return;
+    if (!recipients.length) {
+      logger.debug("Super-admin summary skipped: no recipients found");
+      return;
+    }
     const summary = await TicketRepository.getSummary();
     const to = recipients.map((user) => user.email);
     await EmailService.send({
       to,
       subject: "Daily ticket summary",
       text: `Live tickets: ${summary.live}\nCreated today: ${summary.createdToday}\nClosed today: ${summary.closedToday}\nOpen high/urgent tickets: ${summary.openHighOrUrgent}`,
+    });
+    logger.info("Super-admin summary processed", {
+      ...summary,
+      recipientCount: to.length,
     });
   }
 }
