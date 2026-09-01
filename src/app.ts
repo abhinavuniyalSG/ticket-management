@@ -6,6 +6,7 @@ import { registerSwagger } from "./docs/swagger.js";
 
 class App {
   public app = express();
+  public ready: Promise<void>;
   private kernel = new Kernel();
   private appRouter = new Routes();
 
@@ -20,7 +21,7 @@ class App {
     this.kernel.errorMiddleware(this.app);
   };
   constructor() {
-    this.initlaize().catch((e) => {
+    this.ready = this.initlaize().catch((e) => {
       logger.error(
         "Fatal error during application initialization — shutting down",
         { error: e },
@@ -29,4 +30,6 @@ class App {
     });
   }
 }
-export default new App().app;
+const appInstance = new App();
+export const appReady = appInstance.ready;
+export default appInstance.app;

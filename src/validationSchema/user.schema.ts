@@ -1,5 +1,6 @@
 import z from "zod";
 import { ContactType } from "../types/contact.js";
+import { roleEnum } from "../types/user.js";
 
 export class UserSchema {
   public userIdParamSchema = z
@@ -34,6 +35,8 @@ export class UserSchema {
         .nullable()
         .optional(),
 
+      role: z.enum([roleEnum.user, roleEnum.admin, roleEnum.superAdmin]).optional(),
+
       contacts: z
         .array(
           z.object({
@@ -62,6 +65,7 @@ export class UserSchema {
         data.firstName !== undefined ||
         data.lastName !== undefined ||
         data.departmentId !== undefined ||
+        data.role !== undefined ||
         data.contacts !== undefined,
       {
         message:

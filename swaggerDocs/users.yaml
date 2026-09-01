@@ -93,6 +93,7 @@ paths:
         |---|---|---|---|
         | `firstName` / `lastName` | ✓ (own) | ✓ (own + same dept) | ✓ (any) |
         | `departmentId` | ✗ | ✓ (for others in dept, not self) | ✓ (any) |
+        | `role` | ✗ | ✗ | ✓ (any) |
         | `contacts` | ✓ (own) | ✓ (own + same dept) | ✓ (any) |
 
         > Admins **cannot** change their own `departmentId`.
@@ -301,6 +302,10 @@ components:
           format: uuid
           nullable: true
           example: "01906c26-1234-7abc-adef-000000000020"
+        role:
+          type: string
+          enum: [user, admin, super_admin]
+          description: Only super_admin may change a user role.
         contacts:
           type: array
           items:

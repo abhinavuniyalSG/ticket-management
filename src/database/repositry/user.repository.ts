@@ -2,6 +2,7 @@ import { AppDataSource } from "../dbConnection.js";
 import { User } from "../models/user.model.js";
 import { Contact } from "../models/contact.model.js";
 import type { ContactType } from "../../types/contact.js";
+import { roleEnum } from "../../types/user.js";
 
 export class UserRepository {
   public static repository = AppDataSource.getRepository(User);
@@ -52,6 +53,24 @@ export class UserRepository {
       .leftJoinAndSelect("user.contacts", "contacts")
       .where("user.id = :id", { id })
       .getOne();
+  }
+
+  public static async findByRole(role: roleEnum): Promise<User[]> {
+    return this.repository
+      .createQueryBuilder("user")
+      .where("user.role = :role", { role })
+      .getMany();
+  }
+
+  public static async findByRoleAndDepartment(
+    role: roleEnum,
+    departmentId: string,
+  ): Promise<User[]> {
+    return this.repository
+      .createQueryBuilder("user")
+      .where("user.role = :role", { role })
+      .andWhere("user.departmentId = :departmentId", { departmentId })
+      .getMany();
   }
 
   public static async createUser(userDetails: Partial<User>): Promise<User> {
@@ -106,4 +125,3 @@ export class UserRepository {
     return (result.affected ?? 0) > 0;
   }
 }
-

@@ -123,4 +123,49 @@ export class TicketRepository {
     const result = await this.repository.delete({ ticketId: id });
     return (result.affected ?? 0) > 0;
   }
+
+  public static async findByDepartmentStatuses(
+    departmentId: string,
+    statuses: TicketStatus[],
+  ): Promise<Ticket[]> {
+    return this.repository
+      .createQueryBuilder("ticket")
+      .where("ticket.departmentId = :departmentId", { departmentId })
+      .andWhere("ticket.status IN (:...statuses)", { statuses })
+      .getMany();
+  }
+
+  public static async getSummary(): Promise<{
+    live: number;
+    createdToday: number;
+    closedToday: number;
+    openHighOrUrgent: number;
+  }> {
+    const result = await this.repository
+      .createQueryBuilder("ticket")
+      .select([
+        "COUNT(*) FILTER (WHERE ticket.status <> :closed)::int AS live",
+        "COUNT(*) FILTER (WHERE ticket.createdAt >= CURRENT_DATE)::int AS created_today",
+        "COUNT(*) FILTER (WHERE ticket.status = :closed AND ticket.closedAt >= CURRENT_DATE)::int AS closed_today",
+        "COUNT(*) FILTER (WHERE ticket.status IN (:...liveStatuses) AND ticket.priority IN (:...priorities))::int AS open_high_or_urgent",
+      ])
+      .setParameters({
+        closed: TicketStatus.closed,
+        liveStatuses: [
+          TicketStatus.open,
+          TicketStatus.assigned,
+          TicketStatus.inProgress,
+          TicketStatus.review,
+          TicketStatus.completed,
+        ],
+        priorities: [TicketPriority.high, TicketPriority.urgent],
+      })
+      .getRawOne();
+    return {
+      live: Number(result.live),
+      createdToday: Number(result.created_today),
+      closedToday: Number(result.closed_today),
+      openHighOrUrgent: Number(result.open_high_or_urgent),
+    };
+  }
 }

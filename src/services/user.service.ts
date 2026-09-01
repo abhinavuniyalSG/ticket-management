@@ -20,6 +20,7 @@ export interface UpdateUserInput {
   firstName?: string;
   lastName?: string;
   departmentId?: string | null;
+  role?: roleEnum;
   contacts?: Array<{
     contactType: ContactType;
     contactDetail: string;
@@ -163,6 +164,9 @@ export class UserService {
           );
         }
       }
+      if (updateData.role !== undefined) {
+        throw new HttpError(403, "Forbidden: only super_admin can modify roles");
+      }
     } else if (requester.role !== roleEnum.superAdmin) {
       throw new HttpError(403, "Forbidden: insufficient permissions");
     }
@@ -177,6 +181,9 @@ export class UserService {
     }
     if (updateData.departmentId !== undefined) {
       userUpdates.departmentId = updateData.departmentId;
+    }
+    if (updateData.role !== undefined) {
+      userUpdates.role = updateData.role;
     }
 
     const updatedUser = await UserRepository.updateUserWithContacts(
@@ -341,4 +348,3 @@ export class UserService {
     };
   }
 }
-

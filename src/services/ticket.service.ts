@@ -6,6 +6,7 @@ import { roleEnum } from "../types/user.js";
 import { TicketPriority, TicketStatus } from "../types/ticket.js";
 import { Ticket } from "../database/models/ticket.model.js";
 import { logger } from "../core/logger.js";
+import { NotificationService } from "./notification.service.js";
 
 export interface CreateTicketInput {
   title: string;
@@ -289,6 +290,11 @@ export class TicketService {
     });
 
     const fullTicket = await TicketRepository.findById(newTicket.ticketId);
+    if (fullTicket) {
+      if (fullTicket.assignedToId)
+        void NotificationService.ticketAssigned(fullTicket);
+      void NotificationService.notifyPriorityTicket(fullTicket);
+    }
 
     return {
       message: "Ticket created successfully",
@@ -497,6 +503,26 @@ export class TicketService {
       updatedBy: requester.id,
       fields: Object.keys(updatePayload),
     });
+
+    if (
+      updatedTicket.assignedToId &&
+      updatedTicket.assignedToId !== ticket.assignedToId
+    ) {
+      void NotificationService.ticketAssigned(updatedTicket);
+    }
+    if (
+      updatedTicket.status === TicketStatus.completed &&
+      ticket.status !== TicketStatus.completed
+    ) {
+      void NotificationService.ticketReadyForReview(updatedTicket);
+    }
+    if (
+      updatePayload.priority &&
+      (updatePayload.priority === TicketPriority.high ||
+        updatePayload.priority === TicketPriority.urgent)
+    ) {
+      void NotificationService.notifyPriorityTicket(updatedTicket);
+    }
 
     return {
       message: "Ticket updated successfully",

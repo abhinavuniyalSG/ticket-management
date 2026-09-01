@@ -24,6 +24,13 @@ const JWT_REFRESH_EXPIRES_IN = (process.env.JWT_REFRESH_EXPIRES_IN ||
 
 const SALT_ROUND = Number(process.env.SALT_ROUND) || 10;
 
+const SMTP_HOST = process.env.SMTP_HOST || "smtp.gmail.com";
+const SMTP_PORT = Number(process.env.SMTP_PORT) || 465;
+const SMTP_SECURE = Boolean(process.env.SMTP_SECURE) || true;
+const SMTP_USER = process.env.SMTP_USER || "";
+const SMTP_PASSWORD = process.env.SMTP_PASSWORD || "";
+const MAIL_FROM = process.env.MAIL_FROM || "";
+
 export const DB_VARIABLES = {
   DB_HOST,
   DB_USER,
@@ -45,3 +52,12 @@ export const LOGGER_VARIABLES = { NODE_ENV, LOG_LEVEL };
 export const PORT = process.env.PORT || 3000;
 
 export const HASH_VARIABLES = { SALT_ROUND };
+
+export const SMTP_VARIABLES = {
+  SMTP_HOST,
+  SMTP_PORT,
+  SMTP_SECURE,
+  SMTP_USER,
+  SMTP_PASSWORD,
+  MAIL_FROM,
+};
