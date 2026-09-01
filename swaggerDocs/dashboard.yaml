@@ -80,6 +80,8 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
                 message: Department not found
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
 
   /dashboard/overview:
     get:
@@ -112,6 +114,8 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
 
 components:
   schemas:

@@ -2,7 +2,9 @@ tags:
   - name: Authentication
     description: >
       Endpoints for user registration, login, token refresh, and logout.
-      Login is rate-limited to **5 requests per minute** per IP.
+      `/auth/login` is additionally rate-limited to **5 requests per minute** per IP
+      (all four routes, like every route in this API, are also subject to the global
+      **100 requests per minute** per-IP limiter).
 
 paths:
   /auth/register:
@@ -35,6 +37,8 @@ paths:
           $ref: "#/components/responses/Conflict"
         "400":
           $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
 
   /auth/login:
     post:
@@ -43,7 +47,7 @@ paths:
       summary: Log in with email and password
       description: >
         Authenticates a user and returns a new JWT access token and refresh token.
-        **Rate limited** – 5 requests per minute per IP.
+        **Rate limited** – 5 requests per minute per IP (stricter than the global 100/min limiter).
       requestBody:
         required: true
         content:
@@ -63,7 +67,7 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
         "429":
-          $ref: "#/components/responses/TooManyRequests"
+          $ref: "#/components/responses/LoginTooManyRequests"
         "400":
           $ref: "#/components/responses/ValidationError"
 
@@ -99,6 +103,8 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "400":
           $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
 
   /auth/logout:
     post:
@@ -123,6 +129,8 @@ paths:
                     example: Logout successful
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
 
 components:
   schemas:
@@ -169,10 +177,12 @@ components:
         email:
           type: string
           format: email
+          maxLength: 255
           example: john.doe@example.com
         password:
           type: string
           format: password
+          maxLength: 255
           example: "Secret@123"
 
     RefreshRequest:
@@ -205,7 +215,12 @@ components:
 
     UserPublic:
       type: object
-      description: Safe user object (no password or refreshToken)
+      description: >
+        Safe user object (no `password` or `refreshToken`). The `department` and `contacts` fields are
+        only populated on endpoints whose repository query joins those relations
+        (`GET /users`, `GET /users/{id}`, `PATCH /users/{id}`, and a department's `manager`). They are
+        **absent entirely** (not an empty array/null) on `POST /auth/register` and `POST /auth/login`
+        responses, and a department's `manager` never includes `contacts`.
       properties:
         id:
           type: string
@@ -230,8 +245,14 @@ components:
           format: uuid
           nullable: true
           example: null
+        department:
+          nullable: true
+          description: Nested department entity, only present when the endpoint joins it (see above).
+          allOf:
+            - $ref: "#/components/schemas/Department"
         contacts:
           type: array
+          description: Only present when the endpoint joins it (see above).
           items:
             $ref: "#/components/schemas/Contact"
         createdAt:
@@ -248,6 +269,10 @@ components:
           type: string
           format: uuid
           example: "01906c26-1234-7abc-adef-000000000010"
+        userId:
+          type: string
+          format: uuid
+          example: "01906c26-1234-7abc-adef-000000000001"
         contactType:
           type: string
           enum: [phone, whatsapp, linkedin]
@@ -255,6 +280,12 @@ components:
         contactDetail:
           type: string
           example: "+91-9876543210"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
 
     Department:
       type: object
@@ -311,15 +342,28 @@ components:
           type: string
           format: uuid
           example: "01906c26-1234-7abc-adef-000000000020"
+        department:
+          description: Nested department entity, always joined and returned by the ticket endpoints.
+          allOf:
+            - $ref: "#/components/schemas/Department"
         assignedToId:
           type: string
           format: uuid
           nullable: true
           example: null
+        assignedTo:
+          nullable: true
+          description: Nested assignee (safe user object), always joined and returned by the ticket endpoints.
+          allOf:
+            - $ref: "#/components/schemas/UserPublic"
         createdById:
           type: string
           format: uuid
           example: "01906c26-1234-7abc-adef-000000000001"
+        createdBy:
+          description: Nested creator (safe user object), always joined and returned by the ticket endpoints.
+          allOf:
+            - $ref: "#/components/schemas/UserPublic"
         createdAt:
           type: string
           format: date-time
@@ -395,13 +439,35 @@ components:
             message: "User already exists"
 
     TooManyRequests:
-      description: Rate limit exceeded
+      description: >
+        Rate limit exceeded. Note: `express-rate-limit` sends this via `res.send(<plain string>)`, so the
+        body is plain text (`text/html` content-type), not the JSON `ErrorResponse` shape used elsewhere.
       content:
-        application/json:
+        text/html:
           schema:
-            $ref: "#/components/schemas/ErrorResponse"
-          example:
-            message: "Too many requests, please try again later."
+            type: string
+          examples:
+            global:
+              summary: Global limiter (100 requests/minute/IP, applied to every route)
+              value: "Too many requests from this IP, please try again after 1 minutes"
+
+    LoginTooManyRequests:
+      description: >
+        Login rate limit exceeded. `express-rate-limit` sends this as plain text
+        (`text/html` content-type), not the JSON `ErrorResponse` shape used elsewhere.
+        `POST /auth/login` sits behind both the global limiter and this stricter,
+        login-specific limiter, so either body can be returned here.
+      content:
+        text/html:
+          schema:
+            type: string
+          examples:
+            global:
+              summary: Global limiter (100 requests/minute/IP, applied to every route)
+              value: "Too many requests from this IP, please try again after 1 minutes"
+            login:
+              summary: Login limiter (5 requests/minute/IP, applied only to POST /auth/login)
+              value: "Too many login attempts from this IP, please try again after 1 minute"
 
     InvalidId:
       description: Invalid UUIDv7 identifier

@@ -119,7 +119,7 @@ paths:
             default: desc
       responses:
         "200":
-          description: Paginated list of tickets
+          description: List of tickets matching the filters (not paginated — every matching ticket is returned)
           content:
             application/json:
               schema:
@@ -136,6 +136,8 @@ paths:
           $ref: "#/components/responses/ValidationError"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
 
     post:
       tags:
@@ -204,6 +206,8 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
                 message: Department not found
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
 
   /tickets/{id}:
     get:
@@ -241,6 +245,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
 
     patch:
       tags:
@@ -262,7 +268,7 @@ paths:
         |---|---|
         | **creator** | `completed` → `open`, `completed` → `review` |
         | **assignee** | `assigned` → `in_progress`, `in_progress` → `completed`, `completed` → `in_progress` |
-        | **admin (same dept)** | Any transition, except closing requires `review` → `closed` |
+        | **admin (same dept)** | Any transition, except closing requires `review` → `closed`, and a **manual** (non-assignment) move away from `open` is rejected (see assignment rules below) |
         | **super_admin** | Any transition |
 
         > ⚠️ Setting status to `open` **always forces `assignedToId` to `null`**, regardless of role.
@@ -270,8 +276,14 @@ paths:
         #### Assignment (assignedToId)
         - Only **admin (same dept)** or **super_admin** can set or unset `assignedToId`.
         - The assignee must belong to the ticket's department.
-        - When assigning an `open` ticket without explicitly passing a status, the status automatically changes to `assigned`.
-        - Setting `assignedToId` to `null` on an `assigned` ticket automatically changes status back to `open`.
+        - Setting `assignedToId` to a non-null value **always** forces status to `assigned`, regardless of
+          the ticket's current status (e.g. reassigning a `review` or `in_progress` ticket also resets it
+          to `assigned`) — not only for previously-`open` tickets.
+        - Setting `assignedToId` to `null` **always** forces status back to `open`, regardless of the
+          ticket's current status beforehand (not only from `assigned`).
+        - This is also why an **admin (same dept)** cannot manually change status away from `open` without
+          also assigning the ticket in the same request: an unassigned `open` ticket can only leave `open`
+          via the assignment flow above.
       security:
         - bearerAuth: []
       parameters:
@@ -306,7 +318,10 @@ paths:
                   status: open
       responses:
         "200":
-          description: Ticket updated
+          description: >
+            Ticket updated. If the computed update payload turned out empty (e.g. all provided values
+            already matched the current ticket), `message` is `"No changes detected"` instead, with the
+            same `ticket` shape returned unchanged.
           content:
             application/json:
               schema:
@@ -317,6 +332,15 @@ paths:
                     example: Ticket updated successfully
                   ticket:
                     $ref: "#/components/schemas/Ticket"
+              examples:
+                updated:
+                  summary: Ticket updated
+                  value:
+                    message: Ticket updated successfully
+                noChanges:
+                  summary: No effective change was made
+                  value:
+                    message: No changes detected
         "400":
           $ref: "#/components/responses/ValidationError"
         "401":
@@ -325,6 +349,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
 
     delete:
       tags:
@@ -359,6 +385,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
 
 components:
   schemas:

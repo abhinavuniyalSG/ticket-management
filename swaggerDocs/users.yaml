@@ -9,7 +9,7 @@ tags:
       |---|---|---|---|
       | Get all users | ✗ | own dept | ✓ all |
       | Get user by ID | own only | own dept + self | ✓ any |
-      | Update user | own contact/password | own + dept users' dept | ✓ any |
+      | Update user | own (firstName/lastName/contacts only; no password field exists anywhere in this API) | own + dept users | ✓ any |
       | Delete user | own only | own dept + self | ✓ any |
       | Add contact | own only | own only | own only |
       | Update contact | own only | own only | own only |
@@ -46,6 +46,8 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
 
   /users/{id}:
     get:
@@ -81,6 +83,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
 
     patch:
       tags:
@@ -134,6 +138,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
 
     delete:
       tags:
@@ -166,6 +172,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
 
   /users/contacts:
     post:
@@ -206,6 +214,8 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "409":
           $ref: "#/components/responses/Conflict"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
 
   /users/contacts/{contactId}:
     patch:
@@ -250,6 +260,8 @@ paths:
           $ref: "#/components/responses/NotFound"
         "409":
           $ref: "#/components/responses/Conflict"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
 
     delete:
       tags:
@@ -279,6 +291,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
 
 components:
   schemas:
