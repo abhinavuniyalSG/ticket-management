@@ -4,6 +4,13 @@ import { Contact } from "../models/contact.model.js";
 import type { ContactType } from "../../types/contact.js";
 import { roleEnum } from "../../types/user.js";
 
+export interface UserFilterOptions {
+  departmentId?: string | null | undefined;
+  department?: string | undefined;
+  role?: roleEnum | undefined;
+  firstName?: string | undefined;
+}
+
 export class UserRepository {
   public static repository = AppDataSource.getRepository(User);
 
@@ -25,9 +32,7 @@ export class UserRepository {
       .getOne();
   }
 
-  public static async findAll(filter?: {
-    departmentId?: string | null;
-  }): Promise<User[]> {
+  public static async findAll(filter?: UserFilterOptions): Promise<User[]> {
     const query = this.repository
       .createQueryBuilder("user")
       .leftJoinAndSelect("user.department", "department")
@@ -35,12 +40,28 @@ export class UserRepository {
 
     if (filter?.departmentId !== undefined) {
       if (filter.departmentId === null) {
-        query.where("user.departmentId IS NULL");
+        query.andWhere("user.departmentId IS NULL");
       } else {
-        query.where("user.departmentId = :departmentId", {
+        query.andWhere("user.departmentId = :departmentId", {
           departmentId: filter.departmentId,
         });
       }
+    }
+
+    if (filter?.department) {
+      query.andWhere("department.departmentName ILIKE :departmentName", {
+        departmentName: filter.department,
+      });
+    }
+
+    if (filter?.role) {
+      query.andWhere("user.role = :role", { role: filter.role });
+    }
+
+    if (filter?.firstName) {
+      query.andWhere("user.firstName ILIKE :firstName", {
+        firstName: `%${filter.firstName}%`,
+      });
     }
 
     return query.getMany();

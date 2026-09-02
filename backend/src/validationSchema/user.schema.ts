@@ -35,7 +35,9 @@ export class UserSchema {
         .nullable()
         .optional(),
 
-      role: z.enum([roleEnum.user, roleEnum.admin, roleEnum.superAdmin]).optional(),
+      role: z
+        .enum([roleEnum.user, roleEnum.admin, roleEnum.superAdmin])
+        .optional(),
 
       contacts: z
         .array(
@@ -72,6 +74,28 @@ export class UserSchema {
           "At least one field (firstName, lastName, departmentId, or contacts) must be provided",
       },
     );
+
+  public userQuerySchema = z
+    .object({
+      department: z
+        .string({ error: "Department must be a string" })
+        .trim()
+        .min(1, "Department cannot be empty")
+        .max(100, "Department must not exceed 100 characters")
+        .optional(),
+
+      firstName: z
+        .string({ error: "First name must be a string" })
+        .trim()
+        .min(1, "First name cannot be empty")
+        .max(50, "First name must not exceed 50 characters")
+        .optional(),
+
+      role: z
+        .enum([roleEnum.user, roleEnum.admin, roleEnum.superAdmin])
+        .optional(),
+    })
+    .strict();
 
   public contactIdParamSchema = z
     .object({

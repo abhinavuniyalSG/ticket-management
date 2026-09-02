@@ -6,7 +6,15 @@ import {
   type RequesterInfo,
   type UpdateContactInput,
   type UpdateUserInput,
+  type UserQueryInput,
 } from "../services/user.service.js";
+import type { roleEnum } from "../types/user.js";
+
+interface UserListQueryParams {
+  department?: string;
+  firstName?: string;
+  role?: roleEnum;
+}
 
 export class UserController {
   public static getAllUsersController = catchAsync(async (
@@ -15,7 +23,15 @@ export class UserController {
     next: NextFunction,
   ) => {
       const requester = req.user as RequesterInfo;
-      const result = await UserService.getAllUsers(requester);
+      const rawQuery =
+        (req.normalized?.query as UserListQueryParams) ??
+        (req.query as UserListQueryParams);
+      const query: UserQueryInput = {
+        department: rawQuery.department,
+        firstName: rawQuery.firstName,
+        role: rawQuery.role,
+      };
+      const result = await UserService.getAllUsers(requester, query);
       return res.status(200).json(result);
   });
 

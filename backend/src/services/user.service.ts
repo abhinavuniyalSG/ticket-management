@@ -33,15 +33,28 @@ export interface RequesterInfo {
   role: string;
 }
 
+export interface UserQueryInput {
+  department?: string | undefined;
+  firstName?: string | undefined;
+  role?: roleEnum | undefined;
+}
+
 export class UserService {
   private static sanitizeUser(user: User): Partial<User> {
     const { password, refreshToken, ...sanitized } = user;
     return sanitized;
   }
 
-  public static async getAllUsers(requester: RequesterInfo) {
+  public static async getAllUsers(
+    requester: RequesterInfo,
+    query: UserQueryInput,
+  ) {
     if (requester.role === roleEnum.superAdmin) {
-      const users = await UserRepository.findAll();
+      const users = await UserRepository.findAll({
+        department: query.department,
+        firstName: query.firstName,
+        role: query.role,
+      });
       return {
         message: "Users fetched successfully",
         users: users.map((u) => UserService.sanitizeUser(u)),
@@ -59,6 +72,9 @@ export class UserService {
 
       const users = await UserRepository.findAll({
         departmentId: adminUser.departmentId,
+        department: query.department,
+        firstName: query.firstName,
+        role: query.role,
       });
       return {
         message: "Users fetched successfully",

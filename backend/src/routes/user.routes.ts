@@ -13,7 +13,11 @@ class UserRoutes {
   private initialize = () => {
     this.router.use(authMiddleware, requireVerifiedEmail);
 
-    this.router.get("/", UserController.getAllUsersController);
+    this.router.get(
+      "/",
+      this.validator("query", this.requestSchema.userQuerySchema),
+      UserController.getAllUsersController,
+    );
 
     // Contact routes for authenticated user
     this.router.post(
