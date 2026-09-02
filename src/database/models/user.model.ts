@@ -14,7 +14,7 @@ import { Department } from "./department.model.js";
 import { Contact } from "./contact.model.js";
 import { Ticket } from "./ticket.model.js";
 
-@Entity()
+@Entity("users")
 export class User {
   @PrimaryColumn({ type: "uuid", default: () => "uuidv7()" })
   id!: string;
