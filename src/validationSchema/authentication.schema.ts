@@ -11,7 +11,6 @@ export class AuthenticationSchema {
               : "First name must be a string",
         })
         .trim()
-        .toLowerCase()
         .min(1, "First name is required")
         .max(50, "First name must not exceed 50 characters"),
 
@@ -23,7 +22,6 @@ export class AuthenticationSchema {
               : "Last name must be a string",
         })
         .trim()
-        .toLowerCase()
         .min(0, "Last name is required")
         .max(50, "Last must not exceed 50 characters"),
 
@@ -38,7 +36,7 @@ export class AuthenticationSchema {
         .min(1, "Email is required")
         .max(255, "Email must not exceed 255 characters")
         .toLowerCase()
-        .pipe(z.email()),
+        .pipe(z.email("Invalid email address")),
 
       password: z
         .string({
@@ -69,10 +67,10 @@ export class AuthenticationSchema {
               : "Email must be a string",
         })
         .trim()
-        .email("Invalid email address")
         .min(1, "Email is required")
         .max(255, "Email must not exceed 255 characters")
-        .toLowerCase(),
+        .toLowerCase()
+        .pipe(z.email("Invalid email address")),
 
       password: z
         .string({

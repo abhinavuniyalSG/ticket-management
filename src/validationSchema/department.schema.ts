@@ -35,6 +35,7 @@ export class DepartmentSchema {
         })
         .trim()
         .max(254, "Email must not exceed 254 characters")
+        .toLowerCase()
         .pipe(z.email("Invalid email format")),
 
       managedBy: z
@@ -63,6 +64,7 @@ export class DepartmentSchema {
         })
         .trim()
         .max(254, "Email must not exceed 254 characters")
+        .toLowerCase()
         .pipe(z.email("Invalid email format"))
         .optional(),
 
