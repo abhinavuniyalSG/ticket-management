@@ -1,6 +1,9 @@
 import { catchAsync } from "../utils/catchAsync.js";
 import type { Request, Response, NextFunction } from "express";
 import { AuthenticationService } from "../services/authentication.service.js";
+import { HttpError } from "../utils/httpError.utils.js";
+import { extractToken } from "../utils/auth.util.js";
+import { clearAuthCookies, setAuthCookies } from "../utils/cookie.util.js";
 
 export class AuthenticationController {
   public static registerController = catchAsync(async (
@@ -12,7 +15,10 @@ export class AuthenticationController {
 
       const result = await AuthenticationService.register(data);
 
-      return res.status(201).json(result);
+      setAuthCookies(res, result.accessToken, result.refreshToken);
+
+      const { accessToken, refreshToken, ...responseBody } = result;
+      return res.status(201).json(responseBody);
   });
 
   public static loginController = catchAsync(async (
@@ -22,7 +28,11 @@ export class AuthenticationController {
   ) => {
       const data = req.normalized?.body ?? req.body;
       const result = await AuthenticationService.login(data);
-      return res.status(200).json(result);
+
+      setAuthCookies(res, result.accessToken, result.refreshToken);
+
+      const { accessToken, refreshToken, ...responseBody } = result;
+      return res.status(200).json(responseBody);
   });
 
   public static refreshController = catchAsync(async (
@@ -30,9 +40,17 @@ export class AuthenticationController {
     res: Response,
     next: NextFunction,
   ) => {
-      const data = req.normalized?.body ?? req.body;
-      const result = await AuthenticationService.refresh(data.refreshToken);
-      return res.status(200).json(result);
+      const token = extractToken(req, "refreshToken");
+
+      if (!token) {
+        return next(new HttpError(400, "Refresh token is required"));
+      }
+
+      const result = await AuthenticationService.refresh(token);
+
+      setAuthCookies(res, result.accessToken, result.refreshToken);
+
+      return res.status(200).json({ message: "Token refreshed successfully" });
   });
 
   public static logoutController = catchAsync(async (
@@ -45,6 +63,9 @@ export class AuthenticationController {
         return res.status(401).json({ message: "Unauthorized" });
       }
       const result = await AuthenticationService.logout(userId);
+
+      clearAuthCookies(res);
+
       return res.status(200).json(result);
   });
 

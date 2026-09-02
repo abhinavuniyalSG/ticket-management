@@ -1,6 +1,7 @@
 import type { Application } from "express";
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import { DatabaseConnection } from "../database/dbConnection.js";
 import { ErrorMiddleware } from "../middleware/errorHandling.middleware.js";
 import { RequestLoggerMiddleware } from "../middleware/requestLogger.middleware.js";
@@ -14,8 +15,11 @@ export class Kernel {
   public toJsonParser = (app: Application) => {
     return app.use(express.json());
   };
+  public cookieParser = (app: Application) => {
+    return app.use(cookieParser());
+  };
   public preFlight = (app: Application) => {
-    return app.use(cors());
+    return app.use(cors({ origin: true, credentials: true }));
   };
   public dbConnect = async () => {
     return await this.database.connectDB();

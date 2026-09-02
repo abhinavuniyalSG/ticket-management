@@ -13,6 +13,7 @@ class App {
   private initlaize = async () => {
     await this.kernel.dbConnect();
     this.kernel.toJsonParser(this.app);
+    this.kernel.cookieParser(this.app);
     this.kernel.requestLimiter(this.app);
     this.kernel.preFlight(this.app);
     this.kernel.httpLogger(this.app);

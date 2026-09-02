@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import { JWT_VARIABLES } from "../config/secrets.js";
 import { HttpError } from "../utils/httpError.utils.js";
 import type { TokenPayload } from "../types/jwtToken.type.js";
-import { verifyToken } from "../utils/auth.util.js";
+import { extractToken, verifyToken } from "../utils/auth.util.js";
 
 export const authMiddleware = (
   req: Request,
@@ -11,12 +11,7 @@ export const authMiddleware = (
   next: NextFunction,
 ) => {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      throw new HttpError(401, "Unauthorized");
-    }
-
-    const token = authHeader.split(" ")[1];
+    const token = extractToken(req, "accessToken");
 
     if (!token) {
       throw new HttpError(401, "Unauthorized");

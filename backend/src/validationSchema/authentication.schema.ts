@@ -84,19 +84,6 @@ export class AuthenticationSchema {
     })
     .strict();
 
-  public refreshTokenSchema = z
-    .object({
-      refreshToken: z
-        .string({
-          error: (issue) =>
-            issue.input === undefined
-              ? "Refresh token is required"
-              : "Refresh token must be a string",
-        })
-        .min(1, "Refresh token is required"),
-    })
-    .strict();
-
   public changePasswordSchema = z
     .object({
       email: z

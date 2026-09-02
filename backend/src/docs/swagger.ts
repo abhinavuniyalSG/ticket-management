@@ -14,13 +14,18 @@ const swaggerSpec = swaggerJSDoc({
 A role-based ticket management REST API built with Express, TypeORM, and PostgreSQL.
 
 ## Authentication
-All endpoints (except \`/auth/register\`, \`/auth/login\`, \`/auth/refresh\`,
-\`/auth/verify-email/{token}\`, and \`/auth/resend-verification\`) require a
-**Bearer token** in the \`Authorization\` header:
+Tokens are never sent or accepted in the request/response body. All endpoints
+(except \`/auth/register\`, \`/auth/login\`, \`/auth/refresh\`, \`/auth/verify-email/{token}\`,
+and \`/auth/resend-verification\`) require an access token, supplied via (in order of
+precedence) the \`Authorization\` header, or the \`accessToken\` httpOnly cookie:
 \`\`\`
 Authorization: Bearer <accessToken>
 \`\`\`
-Obtain tokens by calling \`POST /api/auth/login\`.
+\`POST /api/auth/login\`, \`/register\`, and \`/refresh\` set the tokens as httpOnly
+cookies (\`accessToken\`, \`refreshToken\`) on the response. \`POST /api/auth/refresh\`
+reads the refresh token from (in order of precedence) an \`Authorization: Bearer
+<refreshToken>\` header, or the \`refreshToken\` cookie. \`POST /api/auth/logout\`
+clears both cookies.
 
 ## Email verification
 New accounts are created with \`isVerified: false\` and receive a verification email
@@ -57,6 +62,12 @@ authenticated user to have a verified email, and returns **403** with
           scheme: "bearer",
           bearerFormat: "JWT",
           description: "Enter your JWT access token obtained from POST /api/auth/login",
+        },
+        cookieAuth: {
+          type: "apiKey",
+          in: "cookie",
+          name: "accessToken",
+          description: "httpOnly accessToken cookie set by /auth/login, /auth/register, or /auth/refresh",
         },
       },
     },

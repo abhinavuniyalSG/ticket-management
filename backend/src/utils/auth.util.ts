@@ -1,3 +1,4 @@
+import type { Request } from "express";
 import jwt, { type JwtPayload } from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { HttpError } from "./httpError.utils.js";
@@ -33,6 +34,27 @@ const tokenGenerator = (payload: TokenPayload, generateType: string) => {
   }
 
   return token;
+};
+
+const extractBearerToken = (authHeader?: string): string | undefined => {
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return undefined;
+  }
+  const token = authHeader.split(" ")[1];
+  return token && token.length > 0 ? token : undefined;
+};
+
+//extract token from either header or cookie access or refresh token
+const extractToken = (req: Request, cookieName: string): string | undefined => {
+  const headerToken = extractBearerToken(req.headers.authorization);
+  if (headerToken) {
+    return headerToken;
+  }
+
+  const cookieToken = req.cookies?.[cookieName];
+  return typeof cookieToken === "string" && cookieToken.length > 0
+    ? cookieToken
+    : undefined;
 };
 
 const verifyToken = (token: string, key: string) => {
@@ -94,6 +116,7 @@ const verifyTokenHash = (token: string, storedHash: string): boolean => {
 };
 export {
   verifyToken,
+  extractToken,
   generateHashPassword,
   tokenGenerator,
   verifyHashPassword,

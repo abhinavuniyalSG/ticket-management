@@ -22,11 +22,7 @@ class AuthenticationRoutes {
       this.validator("body", this.requestSchema.loginSchema),
       AuthenticationController.loginController,
     );
-    this.router.post(
-      "/refresh",
-      this.validator("body", this.requestSchema.refreshTokenSchema),
-      AuthenticationController.refreshController,
-    );
+    this.router.post("/refresh", AuthenticationController.refreshController);
     this.router.post("/logout", authMiddleware, AuthenticationController.logoutController);
     this.router.post(
       "/change-password",

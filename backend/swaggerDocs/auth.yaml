@@ -14,7 +14,9 @@ paths:
       summary: Register a new user
       description: >
         Creates a new user account with the role `user` by default.
-        Returns a pair of JWT tokens (access + refresh) on success.
+        On success, sets a pair of JWT tokens (access + refresh) as `httpOnly`
+        cookies (`accessToken`, `refreshToken`) on the response. Tokens are never
+        included in the response body.
       requestBody:
         required: true
         content:
@@ -46,7 +48,9 @@ paths:
         - Authentication
       summary: Log in with email and password
       description: >
-        Authenticates a user and returns a new JWT access token and refresh token.
+        Authenticates a user and sets a new JWT access token and refresh token as
+        `httpOnly` cookies (`accessToken`, `refreshToken`) on the response. Tokens
+        are never included in the response body.
         **Rate limited** – 5 requests per minute per IP (stricter than the global 100/min limiter).
       requestBody:
         required: true
@@ -78,13 +82,11 @@ paths:
       summary: Refresh access token
       description: >
         Exchanges a valid refresh token for a new access token and a new refresh token
-        (token rotation). The old refresh token is invalidated.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/RefreshRequest"
+        (token rotation). The old refresh token is invalidated. No request body is
+        accepted; the refresh token must be supplied either as an `Authorization: Bearer
+        <refreshToken>` header, or via the `refreshToken` httpOnly cookie (checked in that
+        order). Sets the new tokens as `httpOnly` cookies on the response; tokens are
+        never included in the response body.
       responses:
         "200":
           description: Tokens refreshed successfully
@@ -93,12 +95,9 @@ paths:
               schema:
                 type: object
                 properties:
-                  accessToken:
+                  message:
                     type: string
-                    description: New JWT access token
-                  refreshToken:
-                    type: string
-                    description: New JWT refresh token
+                    example: Token refreshed successfully
         "401":
           $ref: "#/components/responses/Unauthorized"
         "400":
@@ -112,10 +111,13 @@ paths:
         - Authentication
       summary: Log out the current user
       description: >
-        Invalidates the stored refresh token for the requesting user.
-        The caller must be authenticated via Bearer token.
+        Invalidates the stored refresh token for the requesting user, and clears the
+        `accessToken`/`refreshToken` cookies on the response. The caller must be
+        authenticated via an `Authorization: Bearer <accessToken>` header or the
+        `accessToken` httpOnly cookie.
       security:
         - bearerAuth: []
+        - cookieAuth: []
       responses:
         "200":
           description: Logout successful
@@ -303,17 +305,6 @@ components:
           maxLength: 255
           example: "Secret@123"
 
-    RefreshRequest:
-      type: object
-      additionalProperties: false
-      required:
-        - refreshToken
-      properties:
-        refreshToken:
-          type: string
-          description: A valid, unexpired refresh token previously issued by this API.
-          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-
     ChangePasswordRequest:
       type: object
       additionalProperties: false
@@ -356,18 +347,13 @@ components:
 
     AuthResponse:
       type: object
+      description: >
+        Tokens are never returned in the body. The `accessToken` and `refreshToken`
+        are set as httpOnly cookies on the response instead.
       properties:
         message:
           type: string
           example: Login successful
-        accessToken:
-          type: string
-          description: Short-lived JWT for authenticating API requests (Bearer token)
-          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-        refreshToken:
-          type: string
-          description: Long-lived token used only to obtain new access tokens
-          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
         user:
           $ref: "#/components/schemas/UserPublic"
 
@@ -649,3 +635,8 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: accessToken
+      description: httpOnly `accessToken` cookie set by /auth/login, /auth/register, or /auth/refresh.
