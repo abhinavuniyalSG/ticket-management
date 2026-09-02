@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { PageContainer } from "../../components/layout/PageContainer";
 import { PageHeader } from "../../components/layout/PageHeader";
@@ -43,6 +44,15 @@ const EMPTY_FILTERS: FilterState = {
   sortBy: "createdAt",
   sortOrder: "desc",
 };
+
+function FilterField({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <label className="flex flex-col gap-1 text-xs font-medium text-slate-500">
+      <span>{label}</span>
+      {children}
+    </label>
+  );
+}
 
 function toIsoStart(date: string): string | undefined {
   return date ? new Date(`${date}T00:00:00.000Z`).toISOString() : undefined;
@@ -134,76 +144,81 @@ export function TicketsListPage() {
 
       <div className="mb-5 rounded-xl border border-slate-200 bg-white p-4">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          <Select
-            aria-label="Filter by status"
-            placeholder="All statuses"
-            value={filters.status}
-            options={TICKET_STATUSES.map((s) => ({ value: s, label: STATUS_LABELS[s] }))}
-            onChange={(e) => setFilter("status")(e.target.value)}
-          />
-          <Select
-            aria-label="Filter by priority"
-            placeholder="All priorities"
-            value={filters.priority}
-            options={TICKET_PRIORITIES.map((p) => ({ value: p, label: PRIORITY_LABELS[p] }))}
-            onChange={(e) => setFilter("priority")(e.target.value)}
-          />
-          <Select
-            aria-label="Filter by department"
-            placeholder="All departments"
-            value={filters.departmentId}
-            options={departments.map((d) => ({ value: d.departmentId, label: d.departmentName }))}
-            onChange={(e) => setFilter("departmentId")(e.target.value)}
-          />
-          {canSeeUserFilters && (
+          <FilterField label="Status">
             <Select
-              aria-label="Filter by assignee"
-              placeholder="All assignees"
-              value={filters.assignedToId}
-              options={users.map((u) => ({ value: u.id, label: fullName(u) }))}
-              onChange={(e) => setFilter("assignedToId")(e.target.value)}
+              placeholder="All statuses"
+              value={filters.status}
+              options={TICKET_STATUSES.map((s) => ({ value: s, label: STATUS_LABELS[s] }))}
+              onChange={(e) => setFilter("status")(e.target.value)}
             />
+          </FilterField>
+          <FilterField label="Priority">
+            <Select
+              placeholder="All priorities"
+              value={filters.priority}
+              options={TICKET_PRIORITIES.map((p) => ({ value: p, label: PRIORITY_LABELS[p] }))}
+              onChange={(e) => setFilter("priority")(e.target.value)}
+            />
+          </FilterField>
+          <FilterField label="Department">
+            <Select
+              placeholder="All departments"
+              value={filters.departmentId}
+              options={departments.map((d) => ({ value: d.departmentId, label: d.departmentName }))}
+              onChange={(e) => setFilter("departmentId")(e.target.value)}
+            />
+          </FilterField>
+          {canSeeUserFilters && (
+            <FilterField label="Assignee">
+              <Select
+                placeholder="All assignees"
+                value={filters.assignedToId}
+                options={users.map((u) => ({ value: u.id, label: fullName(u) }))}
+                onChange={(e) => setFilter("assignedToId")(e.target.value)}
+              />
+            </FilterField>
           )}
           {canSeeUserFilters && (
-            <Select
-              aria-label="Filter by creator"
-              placeholder="All creators"
-              value={filters.createdById}
-              options={users.map((u) => ({ value: u.id, label: fullName(u) }))}
-              onChange={(e) => setFilter("createdById")(e.target.value)}
-            />
+            <FilterField label="Creator">
+              <Select
+                placeholder="All creators"
+                value={filters.createdById}
+                options={users.map((u) => ({ value: u.id, label: fullName(u) }))}
+                onChange={(e) => setFilter("createdById")(e.target.value)}
+              />
+            </FilterField>
           )}
-          <label className="flex flex-col gap-1 text-xs text-slate-500">
-            Created from
+          <FilterField label="Created from">
             <Input
               type="date"
               value={filters.createdFrom}
               onChange={(e) => setFilter("createdFrom")(e.target.value)}
             />
-          </label>
-          <label className="flex flex-col gap-1 text-xs text-slate-500">
-            Created to
+          </FilterField>
+          <FilterField label="Created to">
             <Input
               type="date"
               value={filters.createdTo}
               onChange={(e) => setFilter("createdTo")(e.target.value)}
             />
-          </label>
-          <Select
-            aria-label="Sort by"
-            value={filters.sortBy}
-            options={Object.entries(SORT_BY_LABELS).map(([value, label]) => ({ value, label }))}
-            onChange={(e) => setFilter("sortBy")(e.target.value)}
-          />
-          <Select
-            aria-label="Sort order"
-            value={filters.sortOrder}
-            options={[
-              { value: "desc", label: "Descending" },
-              { value: "asc", label: "Ascending" },
-            ]}
-            onChange={(e) => setFilter("sortOrder")(e.target.value)}
-          />
+          </FilterField>
+          <FilterField label="Sort by">
+            <Select
+              value={filters.sortBy}
+              options={Object.entries(SORT_BY_LABELS).map(([value, label]) => ({ value, label }))}
+              onChange={(e) => setFilter("sortBy")(e.target.value)}
+            />
+          </FilterField>
+          <FilterField label="Sort order">
+            <Select
+              value={filters.sortOrder}
+              options={[
+                { value: "desc", label: "Descending" },
+                { value: "asc", label: "Ascending" },
+              ]}
+              onChange={(e) => setFilter("sortOrder")(e.target.value)}
+            />
+          </FilterField>
         </div>
         {hasActiveFilters && (
           <div className="mt-3">
