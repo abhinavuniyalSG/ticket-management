@@ -11,6 +11,7 @@ import { ErrorState } from "../../components/molecules/ErrorState";
 import { ConfirmDialog } from "../../components/molecules/ConfirmDialog";
 import { UserTable } from "../../components/organisms/UserTable";
 import { userService } from "../../services/userService";
+import type { UserQueryParams } from "../../services/userService";
 import { departmentService } from "../../services/departmentService";
 import { useAuth } from "../../hooks/useAuth";
 import { ApiError } from "../../types/api";
@@ -34,11 +35,20 @@ export function UsersListPage() {
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const query = useMemo<UserQueryParams>(
+    () => ({
+      firstName: search.trim() || undefined,
+      role: (roleFilter || undefined) as UserQueryParams["role"],
+      department: departmentFilter || undefined,
+    }),
+    [search, roleFilter, departmentFilter],
+  );
+
   const loadUsers = () => {
     setIsLoading(true);
     setError(null);
     userService
-      .list()
+      .list(query)
       .then((res) => setUsers(res.users))
       .catch((err: unknown) => {
         setError(err instanceof ApiError ? err.message : "Unable to load users.");
@@ -48,28 +58,17 @@ export function UsersListPage() {
 
   useEffect(() => {
     loadUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query]);
+
+  useEffect(() => {
     if (isSuperAdmin) {
       departmentService
         .list()
         .then((res) => setDepartments(res.departments))
         .catch(() => undefined);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSuperAdmin]);
-
-  const filteredUsers = useMemo(() => {
-    if (!users) return [];
-    const term = search.trim().toLowerCase();
-    return users.filter((u) => {
-      const matchesSearch =
-        !term ||
-        `${u.firstName} ${u.lastName}`.toLowerCase().includes(term) ||
-        u.email.toLowerCase().includes(term);
-      const matchesRole = !roleFilter || u.role === roleFilter;
-      const matchesDepartment = !departmentFilter || u.departmentId === departmentFilter;
-      return matchesSearch && matchesRole && matchesDepartment;
-    });
-  }, [users, search, roleFilter, departmentFilter]);
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
@@ -93,7 +92,7 @@ export function UsersListPage() {
       <div className="mb-5 flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 sm:flex-row sm:items-center">
         <SearchInput
           label="Search users"
-          placeholder="Search by name or email"
+          placeholder="Search by first name"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="sm:max-w-xs"
@@ -111,7 +110,7 @@ export function UsersListPage() {
             aria-label="Filter by department"
             placeholder="All departments"
             value={departmentFilter}
-            options={departments.map((d) => ({ value: d.departmentId, label: d.departmentName }))}
+            options={departments.map((d) => ({ value: d.departmentName, label: d.departmentName }))}
             onChange={(e) => setDepartmentFilter(e.target.value)}
             className="sm:max-w-[200px]"
           />
@@ -126,16 +125,16 @@ export function UsersListPage() {
 
       {!isLoading && error && <ErrorState message={error} onRetry={loadUsers} />}
 
-      {!isLoading && !error && filteredUsers.length === 0 && (
+      {!isLoading && !error && users && users.length === 0 && (
         <EmptyState
           title="No users found"
           description="Try adjusting your search or filters."
         />
       )}
 
-      {!isLoading && !error && filteredUsers.length > 0 && actor && (
+      {!isLoading && !error && users && users.length > 0 && actor && (
         <UserTable
-          users={filteredUsers}
+          users={users}
           renderActions={(target) =>
             canDeleteUser(actor, target) ? (
               <IconButton

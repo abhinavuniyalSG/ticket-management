@@ -1,10 +1,16 @@
 import { apiRequest } from "./apiClient";
-import type { User, UpdateUserPayload } from "../types/user";
+import type { User, UserRole, UpdateUserPayload } from "../types/user";
 import type { AddContactPayload, Contact, UpdateContactPayload } from "../types/contact";
 
 interface UserListResponse {
   message: string;
   users: User[];
+}
+
+export interface UserQueryParams {
+  department?: string;
+  firstName?: string;
+  role?: UserRole;
 }
 
 interface UserResponse {
@@ -22,7 +28,14 @@ interface MessageResponse {
 }
 
 export const userService = {
-  list: () => apiRequest<UserListResponse>("/users"),
+  list: (params: UserQueryParams = {}) =>
+    apiRequest<UserListResponse>("/users", {
+      query: {
+        department: params.department,
+        firstName: params.firstName,
+        role: params.role,
+      },
+    }),
 
   getById: (id: string) => apiRequest<UserResponse>(`/users/${id}`),
 
