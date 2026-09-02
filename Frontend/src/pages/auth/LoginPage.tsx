@@ -4,6 +4,7 @@ import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { AuthLayout } from "../../components/templates/AuthLayout";
 import { FormField } from "../../components/molecules/FormField";
+import { PasswordField } from "../../components/molecules/PasswordField";
 import { Input } from "../../components/atoms/Input";
 import { Button } from "../../components/atoms/Button";
 import { useAuth } from "../../hooks/useAuth";
@@ -80,17 +81,16 @@ export function LoginPage() {
             disabled={isSubmitting}
           />
         </FormField>
-        <FormField label="Password" htmlFor="login-password" error={errors.password} required>
-          <Input
-            id="login-password"
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            invalid={Boolean(errors.password)}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={isSubmitting}
-          />
-        </FormField>
+        <PasswordField
+          label="Password"
+          id="login-password"
+          autoComplete="current-password"
+          value={password}
+          error={errors.password}
+          required
+          onChange={setPassword}
+          disabled={isSubmitting}
+        />
         <Button type="submit" isLoading={isSubmitting} className="w-full">
           Sign in
         </Button>

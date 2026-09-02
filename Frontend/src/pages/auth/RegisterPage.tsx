@@ -4,6 +4,7 @@ import { Link, Navigate, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { AuthLayout } from "../../components/templates/AuthLayout";
 import { FormField } from "../../components/molecules/FormField";
+import { PasswordField } from "../../components/molecules/PasswordField";
 import { Input } from "../../components/atoms/Input";
 import { Button } from "../../components/atoms/Button";
 import { useAuth } from "../../hooks/useAuth";
@@ -136,39 +137,27 @@ export function RegisterPage() {
             disabled={isSubmitting}
           />
         </FormField>
-        <FormField
+        <PasswordField
           label="Password"
-          htmlFor="register-password"
+          id="register-password"
+          autoComplete="new-password"
+          value={values.password}
           error={errors.password}
           hint="At least 8 characters, with uppercase, lowercase, a number and a special character."
           required
-        >
-          <Input
-            id="register-password"
-            type="password"
-            autoComplete="new-password"
-            value={values.password}
-            invalid={Boolean(errors.password)}
-            onChange={(e) => setField("password")(e.target.value)}
-            disabled={isSubmitting}
-          />
-        </FormField>
-        <FormField
+          onChange={setField("password")}
+          disabled={isSubmitting}
+        />
+        <PasswordField
           label="Confirm password"
-          htmlFor="register-confirm-password"
+          id="register-confirm-password"
+          autoComplete="new-password"
+          value={values.confirmPassword}
           error={errors.confirmPassword}
           required
-        >
-          <Input
-            id="register-confirm-password"
-            type="password"
-            autoComplete="new-password"
-            value={values.confirmPassword}
-            invalid={Boolean(errors.confirmPassword)}
-            onChange={(e) => setField("confirmPassword")(e.target.value)}
-            disabled={isSubmitting}
-          />
-        </FormField>
+          onChange={setField("confirmPassword")}
+          disabled={isSubmitting}
+        />
         <Button type="submit" isLoading={isSubmitting} className="w-full">
           Create account
         </Button>

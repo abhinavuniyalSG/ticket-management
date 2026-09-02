@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import { AuthLayout } from "../../components/templates/AuthLayout";
 import { FormField } from "../../components/molecules/FormField";
+import { PasswordField } from "../../components/molecules/PasswordField";
 import { Input } from "../../components/atoms/Input";
 import { Button } from "../../components/atoms/Button";
 import { authService } from "../../services/authService";
@@ -98,34 +99,27 @@ export function ChangePasswordPage() {
               disabled={isSubmitting}
             />
           </FormField>
-          <FormField label="Current password" htmlFor="cp-old-password" error={errors.oldPassword} required>
-            <Input
-              id="cp-old-password"
-              type="password"
-              autoComplete="current-password"
-              value={values.oldPassword}
-              invalid={Boolean(errors.oldPassword)}
-              onChange={(e) => setField("oldPassword")(e.target.value)}
-              disabled={isSubmitting}
-            />
-          </FormField>
-          <FormField
+          <PasswordField
+            label="Current password"
+            id="cp-old-password"
+            autoComplete="current-password"
+            value={values.oldPassword}
+            error={errors.oldPassword}
+            required
+            onChange={setField("oldPassword")}
+            disabled={isSubmitting}
+          />
+          <PasswordField
             label="New password"
-            htmlFor="cp-new-password"
+            id="cp-new-password"
+            autoComplete="new-password"
+            value={values.newPassword}
             error={errors.newPassword}
             hint="At least 8 characters, with uppercase, lowercase, a number and a special character."
             required
-          >
-            <Input
-              id="cp-new-password"
-              type="password"
-              autoComplete="new-password"
-              value={values.newPassword}
-              invalid={Boolean(errors.newPassword)}
-              onChange={(e) => setField("newPassword")(e.target.value)}
-              disabled={isSubmitting}
-            />
-          </FormField>
+            onChange={setField("newPassword")}
+            disabled={isSubmitting}
+          />
           <Button type="submit" isLoading={isSubmitting} className="w-full">
             Change password
           </Button>
