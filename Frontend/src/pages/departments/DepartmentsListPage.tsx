@@ -17,6 +17,7 @@ import { DepartmentTable } from "../../components/organisms/DepartmentTable";
 import { departmentService } from "../../services/departmentService";
 import type { DepartmentQueryParams } from "../../services/departmentService";
 import { userService } from "../../services/userService";
+import { useDebouncedValue } from "../../hooks/useDebouncedValue";
 import { ApiError } from "../../types/api";
 import type { Department } from "../../types/department";
 import type { User } from "../../types/user";
@@ -39,9 +40,11 @@ export function DepartmentsListPage() {
   const [deleteTarget, setDeleteTarget] = useState<Department | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const debouncedSearch = useDebouncedValue(search);
+
   const query = useMemo<DepartmentQueryParams>(
-    () => ({ departmentName: search.trim() || undefined }),
-    [search],
+    () => ({ departmentName: debouncedSearch.trim() || undefined }),
+    [debouncedSearch],
   );
 
   const loadDepartments = () => {

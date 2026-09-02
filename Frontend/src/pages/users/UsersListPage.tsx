@@ -13,6 +13,7 @@ import { UserTable } from "../../components/organisms/UserTable";
 import { userService } from "../../services/userService";
 import type { UserQueryParams } from "../../services/userService";
 import { departmentService } from "../../services/departmentService";
+import { useDebouncedValue } from "../../hooks/useDebouncedValue";
 import { useAuth } from "../../hooks/useAuth";
 import { ApiError } from "../../types/api";
 import type { User } from "../../types/user";
@@ -35,13 +36,15 @@ export function UsersListPage() {
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const debouncedSearch = useDebouncedValue(search);
+
   const query = useMemo<UserQueryParams>(
     () => ({
-      firstName: search.trim() || undefined,
+      firstName: debouncedSearch.trim() || undefined,
       role: (roleFilter || undefined) as UserQueryParams["role"],
       department: departmentFilter || undefined,
     }),
-    [search, roleFilter, departmentFilter],
+    [debouncedSearch, roleFilter, departmentFilter],
   );
 
   const loadUsers = () => {

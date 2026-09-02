@@ -11,6 +11,7 @@ import { EmptyState } from "../../components/molecules/EmptyState";
 import { ErrorState } from "../../components/molecules/ErrorState";
 import { TicketTable } from "../../components/organisms/TicketTable";
 import { ticketService } from "../../services/ticketService";
+import { useDebouncedValue } from "../../hooks/useDebouncedValue";
 import { departmentService } from "../../services/departmentService";
 import { userService } from "../../services/userService";
 import { useAuth } from "../../hooks/useAuth";
@@ -90,9 +91,11 @@ export function TicketsListPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canSeeUserFilters]);
 
+  const debouncedTitle = useDebouncedValue(filters.title);
+
   const query = useMemo<TicketQueryParams>(
     () => ({
-      title: filters.title.trim() || undefined,
+      title: debouncedTitle.trim() || undefined,
       status: (filters.status || undefined) as TicketStatus | undefined,
       priority: (filters.priority || undefined) as TicketPriority | undefined,
       departmentId: filters.departmentId || undefined,
@@ -103,7 +106,18 @@ export function TicketsListPage() {
       sortBy: filters.sortBy as TicketQueryParams["sortBy"],
       sortOrder: filters.sortOrder as TicketQueryParams["sortOrder"],
     }),
-    [filters],
+    [
+      debouncedTitle,
+      filters.status,
+      filters.priority,
+      filters.departmentId,
+      filters.assignedToId,
+      filters.createdById,
+      filters.createdFrom,
+      filters.createdTo,
+      filters.sortBy,
+      filters.sortOrder,
+    ],
   );
 
   const loadTickets = () => {
