@@ -145,6 +145,9 @@ export class UserService {
       if (updateData.departmentId !== undefined) {
         throw new HttpError(403, "Forbidden: users cannot modify department");
       }
+      if (updateData.role !== undefined) {
+        throw new HttpError(403, "Forbidden: users cannot modify role");
+      }
     } else if (requester.role === roleEnum.admin) {
       if (requester.id === targetUser.id) {
         if (updateData.departmentId !== undefined) {
