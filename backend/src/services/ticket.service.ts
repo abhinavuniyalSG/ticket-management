@@ -25,6 +25,7 @@ export interface UpdateTicketInput {
 }
 
 export interface TicketQueryInput {
+  title?: string;
   status?: TicketStatus;
   priority?: TicketPriority;
   departmentId?: string;
@@ -162,6 +163,7 @@ export class TicketService {
       requesterRole: requester.role as roleEnum,
       requesterId: requester.id,
       requesterDepartmentId,
+      title: query.title,
       status: query.status,
       priority: query.priority,
       departmentId: query.departmentId,

@@ -22,6 +22,7 @@ import { SORT_BY_LABELS, STATUS_LABELS, PRIORITY_LABELS, TICKET_STATUSES, TICKET
 import { fullName } from "../../utils/format";
 
 interface FilterState {
+  title: string;
   status: string;
   priority: string;
   departmentId: string;
@@ -34,6 +35,7 @@ interface FilterState {
 }
 
 const EMPTY_FILTERS: FilterState = {
+  title: "",
   status: "",
   priority: "",
   departmentId: "",
@@ -90,6 +92,7 @@ export function TicketsListPage() {
 
   const query = useMemo<TicketQueryParams>(
     () => ({
+      title: filters.title.trim() || undefined,
       status: (filters.status || undefined) as TicketStatus | undefined,
       priority: (filters.priority || undefined) as TicketPriority | undefined,
       departmentId: filters.departmentId || undefined,
@@ -144,6 +147,14 @@ export function TicketsListPage() {
 
       <div className="mb-5 rounded-xl border border-slate-200 bg-white p-4">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          <FilterField label="Title">
+            <Input
+              type="text"
+              placeholder="Search by title"
+              value={filters.title}
+              onChange={(e) => setFilter("title")(e.target.value)}
+            />
+          </FilterField>
           <FilterField label="Status">
             <Select
               placeholder="All statuses"

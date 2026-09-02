@@ -7,6 +7,7 @@ export interface TicketFilterOptions {
   requesterRole: roleEnum;
   requesterId: string;
   requesterDepartmentId?: string | null | undefined;
+  title?: string | undefined;
   status?: TicketStatus | undefined;
   priority?: TicketPriority | undefined;
   departmentId?: string | undefined;
@@ -59,6 +60,12 @@ export class TicketRepository {
         );
       }
     }
+    if (options.title) {
+      query.andWhere("ticket.title ILIKE :title", {
+        title: `%${options.title}%`,
+      });
+    }
+
     if (options.status) {
       query.andWhere("ticket.status = :status", { status: options.status });
     }

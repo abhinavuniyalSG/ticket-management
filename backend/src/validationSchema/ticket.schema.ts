@@ -119,6 +119,12 @@ export class TicketSchema {
 
   public ticketQuerySchema = z
     .object({
+      title: z
+        .string({ error: "Title must be a string" })
+        .trim()
+        .min(1, "Title cannot be empty")
+        .max(200, "Title must not exceed 200 characters")
+        .optional(),
       status: z
         .enum([
           TicketStatus.open,

@@ -48,6 +48,7 @@ export type TicketSortBy = "createdAt" | "updatedAt" | "priority" | "status";
 export type SortOrder = "asc" | "desc";
 
 export interface TicketQueryParams {
+  title?: string;
   status?: TicketStatus;
   priority?: TicketPriority;
   departmentId?: string;

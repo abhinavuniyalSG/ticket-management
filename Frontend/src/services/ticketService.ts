@@ -22,6 +22,7 @@ interface MessageResponse {
 
 function toQuery(params: TicketQueryParams): Record<string, string | undefined> {
   return {
+    title: params.title,
     status: params.status,
     priority: params.priority,
     departmentId: params.departmentId,
