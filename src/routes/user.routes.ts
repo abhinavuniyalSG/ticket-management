@@ -1,6 +1,7 @@
 import express from "express";
 import { UserController } from "../controllers/user.controller.js";
 import { authMiddleware } from "../middleware/authentication.middleware.js";
+import { requireVerifiedEmail } from "../middleware/emailVerification.middleware.js";
 import { requestValidator } from "../middleware/requestValidator.middleware.js";
 import { UserSchema } from "../validationSchema/user.schema.js";
 
@@ -10,7 +11,7 @@ class UserRoutes {
   private requestSchema = new UserSchema();
 
   private initialize = () => {
-    this.router.use(authMiddleware);
+    this.router.use(authMiddleware, requireVerifiedEmail);
 
     this.router.get("/", UserController.getAllUsersController);
 

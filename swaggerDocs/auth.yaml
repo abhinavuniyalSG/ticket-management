@@ -179,6 +179,77 @@ paths:
         "429":
           $ref: "#/components/responses/LoginTooManyRequests"
 
+  /auth/verify-email/{token}:
+    get:
+      tags:
+        - Authentication
+      summary: Verify a user's email address
+      description: >
+        Verifies the email address associated with the given token (sent to the user's inbox on
+        registration or via `POST /auth/resend-verification`). On success, sets `isVerified: true`
+        on the user and consumes the token. No Bearer token required.
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The raw verification token from the emailed link.
+      responses:
+        "200":
+          description: Email verified successfully (or was already verified)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Email verified successfully
+        "400":
+          description: Verification token is missing, invalid, or expired
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                message: "Invalid or expired verification token"
+
+  /auth/resend-verification:
+    post:
+      tags:
+        - Authentication
+      summary: Resend the email verification link
+      description: >
+        Issues a new verification token and emails it to the given address, invalidating any
+        previously issued token. Always returns a generic success message, whether or not an
+        account exists for that email, to avoid leaking account existence.
+
+        **Rate limited** – 5 requests per minute per IP (the same limiter as `POST /auth/login`).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResendVerificationRequest"
+            example:
+              email: "john.doe@example.com"
+      responses:
+        "200":
+          description: Generic confirmation message
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: If an account with that email exists, a verification email has been sent
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/LoginTooManyRequests"
+
 components:
   schemas:
     RegisterRequest:
@@ -271,6 +342,18 @@ components:
             character. Must differ from `oldPassword`.
           example: "NewSecret@456"
 
+    ResendVerificationRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 255
+          example: john.doe@example.com
+
     AuthResponse:
       type: object
       properties:
@@ -315,6 +398,12 @@ components:
           type: string
           enum: [user, admin, super_admin]
           example: user
+        isVerified:
+          type: boolean
+          description: >
+            Whether the user has verified their email address. Non-`/auth/*` endpoints return
+            403 (`Please verify your email first`) for users where this is `false`.
+          example: false
         departmentId:
           type: string
           format: uuid

@@ -37,6 +37,25 @@ export class User {
   @Column({ type: "varchar", nullable: true, select: false })
   refreshToken!: string | null;
 
+  @Column({ name: "is_verified", type: "boolean", default: false })
+  isVerified!: boolean;
+
+  @Column({
+    name: "verification_token",
+    type: "varchar",
+    nullable: true,
+    select: false,
+  })
+  verificationToken!: string | null;
+
+  @Column({
+    name: "verification_token_expires",
+    type: "timestamp with time zone",
+    nullable: true,
+    select: false,
+  })
+  verificationTokenExpires!: Date | null;
+
   @Column({ name: "department_id", type: "uuid", nullable: true })
   departmentId!: string | null;
 

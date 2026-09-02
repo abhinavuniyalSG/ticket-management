@@ -31,6 +31,11 @@ const SMTP_USER = process.env.SMTP_USER || "";
 const SMTP_PASSWORD = process.env.SMTP_PASSWORD || "";
 const MAIL_FROM = process.env.MAIL_FROM || "";
 
+const APP_URL = process.env.APP_URL || `http://localhost:${process.env.PORT || 3000}`;
+const EMAIL_VERIFICATION_TOKEN_EXPIRES_IN_MS =
+  Number(process.env.EMAIL_VERIFICATION_TOKEN_EXPIRES_IN_MS) ||
+  24 * 60 * 60 * 1000;
+
 export const DB_VARIABLES = {
   DB_HOST,
   DB_USER,
@@ -60,4 +65,9 @@ export const SMTP_VARIABLES = {
   SMTP_USER,
   SMTP_PASSWORD,
   MAIL_FROM,
+};
+
+export const APP_VARIABLES = {
+  APP_URL,
+  EMAIL_VERIFICATION_TOKEN_EXPIRES_IN_MS,
 };

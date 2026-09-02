@@ -57,4 +57,28 @@ export class AuthenticationController {
       const result = await AuthenticationService.changePassword(data);
       return res.status(200).json(result);
   });
+
+  public static verifyEmailController = catchAsync(async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) => {
+      const params = (req.normalized?.params ?? req.params) as {
+        token: string;
+      };
+      const result = await AuthenticationService.verifyEmail(params.token);
+      return res.status(200).json(result);
+  });
+
+  public static resendVerificationController = catchAsync(async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) => {
+      const data = req.normalized?.body ?? req.body;
+      const result = await AuthenticationService.resendVerification(
+        data.email,
+      );
+      return res.status(200).json(result);
+  });
 }

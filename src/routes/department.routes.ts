@@ -1,6 +1,7 @@
 import express from "express";
 import { DepartmentController } from "../controllers/department.controller.js";
 import { authMiddleware } from "../middleware/authentication.middleware.js";
+import { requireVerifiedEmail } from "../middleware/emailVerification.middleware.js";
 import { requestValidator } from "../middleware/requestValidator.middleware.js";
 import { DepartmentSchema } from "../validationSchema/department.schema.js";
 
@@ -10,7 +11,7 @@ class DepartmentRoutes {
   private requestSchema = new DepartmentSchema();
 
   private initialize = () => {
-    this.router.use(authMiddleware);
+    this.router.use(authMiddleware, requireVerifiedEmail);
 
     this.router.get("/", DepartmentController.getAllDepartmentsController);
 

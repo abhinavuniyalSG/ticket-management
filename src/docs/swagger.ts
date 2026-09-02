@@ -14,12 +14,20 @@ const swaggerSpec = swaggerJSDoc({
 A role-based ticket management REST API built with Express, TypeORM, and PostgreSQL.
 
 ## Authentication
-All endpoints (except \`/auth/register\`, \`/auth/login\`, and \`/auth/refresh\`) require a
+All endpoints (except \`/auth/register\`, \`/auth/login\`, \`/auth/refresh\`,
+\`/auth/verify-email/{token}\`, and \`/auth/resend-verification\`) require a
 **Bearer token** in the \`Authorization\` header:
 \`\`\`
 Authorization: Bearer <accessToken>
 \`\`\`
 Obtain tokens by calling \`POST /api/auth/login\`.
+
+## Email verification
+New accounts are created with \`isVerified: false\` and receive a verification email
+(link valid for 24 hours). Every endpoint **other than the \`/auth/*\` routes** requires the
+authenticated user to have a verified email, and returns **403** with
+\`{ "message": "Please verify your email first" }\` otherwise. \`/auth/*\` endpoints
+(login, logout, change-password, etc.) remain usable while unverified.
 
 ## Roles
 | Role | Description |

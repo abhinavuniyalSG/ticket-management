@@ -152,4 +152,34 @@ export class AuthenticationSchema {
       message: "New password must be different from the old password",
       path: ["newPassword"],
     });
+
+  public verifyEmailParamSchema = z
+    .object({
+      token: z
+        .string({
+          error: (issue) =>
+            issue.input === undefined
+              ? "Verification token is required"
+              : "Verification token must be a string",
+        })
+        .min(1, "Verification token is required"),
+    })
+    .strict();
+
+  public resendVerificationSchema = z
+    .object({
+      email: z
+        .string({
+          error: (issue) =>
+            issue.input === undefined
+              ? "Email is required"
+              : "Email must be a string",
+        })
+        .trim()
+        .min(1, "Email is required")
+        .max(255, "Email must not exceed 255 characters")
+        .toLowerCase()
+        .pipe(z.email("Invalid email address")),
+    })
+    .strict();
 }

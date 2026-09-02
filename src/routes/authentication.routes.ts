@@ -34,6 +34,17 @@ class AuthenticationRoutes {
       this.validator("body", this.requestSchema.changePasswordSchema),
       AuthenticationController.changePasswordController,
     );
+    this.router.get(
+      "/verify-email/:token",
+      this.validator("params", this.requestSchema.verifyEmailParamSchema),
+      AuthenticationController.verifyEmailController,
+    );
+    this.router.post(
+      "/resend-verification",
+      this.limiter,
+      this.validator("body", this.requestSchema.resendVerificationSchema),
+      AuthenticationController.resendVerificationController,
+    );
   };
   constructor() {
     this.initialize();

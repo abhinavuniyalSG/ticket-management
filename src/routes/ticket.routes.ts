@@ -1,6 +1,7 @@
 import express from "express";
 import { TicketController } from "../controllers/ticket.controller.js";
 import { authMiddleware } from "../middleware/authentication.middleware.js";
+import { requireVerifiedEmail } from "../middleware/emailVerification.middleware.js";
 import { requestValidator } from "../middleware/requestValidator.middleware.js";
 import { TicketSchema } from "../validationSchema/ticket.schema.js";
 
@@ -10,7 +11,7 @@ class TicketRoutes {
   private requestSchema = new TicketSchema();
 
   private initialize = () => {
-    this.router.use(authMiddleware);
+    this.router.use(authMiddleware, requireVerifiedEmail);
 
     this.router.get(
       "/",

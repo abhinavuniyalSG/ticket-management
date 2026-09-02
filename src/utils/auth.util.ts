@@ -72,6 +72,10 @@ const verifyHashPassword = async (
   }
 };
 
+const generateRandomToken = (bytes = 32): string => {
+  return crypto.randomBytes(bytes).toString("hex");
+};
+
 const generateTokenHash = (token: string): string => {
   return crypto.createHash("sha256").update(token, "utf8").digest("hex");
 };
@@ -93,6 +97,7 @@ export {
   generateHashPassword,
   tokenGenerator,
   verifyHashPassword,
+  generateRandomToken,
   generateTokenHash,
   verifyTokenHash,
 };

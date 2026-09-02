@@ -92,6 +92,38 @@ export class UserRepository {
     await this.repository.update(id, { password: hashedPassword });
   }
 
+  public static async findByVerificationTokenHash(
+    tokenHash: string,
+  ): Promise<User | null> {
+    return this.repository
+      .createQueryBuilder("user")
+      .addSelect([
+        "user.verificationToken",
+        "user.verificationTokenExpires",
+      ])
+      .where("user.verificationToken = :tokenHash", { tokenHash })
+      .getOne();
+  }
+
+  public static async setVerificationToken(
+    id: string,
+    tokenHash: string,
+    expiresAt: Date,
+  ): Promise<void> {
+    await this.repository.update(id, {
+      verificationToken: tokenHash,
+      verificationTokenExpires: expiresAt,
+    });
+  }
+
+  public static async markEmailVerified(id: string): Promise<void> {
+    await this.repository.update(id, {
+      isVerified: true,
+      verificationToken: null,
+      verificationTokenExpires: null,
+    });
+  }
+
   public static async updateUserWithContacts(
     id: string,
     userUpdates: Partial<User>,
