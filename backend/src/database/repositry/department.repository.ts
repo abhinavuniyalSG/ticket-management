@@ -1,14 +1,27 @@
 import { AppDataSource } from "../dbConnection.js";
 import { Department } from "../models/department.model.js";
 
+export interface DepartmentFilterOptions {
+  departmentName?: string | undefined;
+}
+
 export class DepartmentRepository {
   private static repository = AppDataSource.getRepository(Department);
 
-  public static async findAll(): Promise<Department[]> {
-    return this.repository
+  public static async findAll(
+    filter?: DepartmentFilterOptions,
+  ): Promise<Department[]> {
+    const query = this.repository
       .createQueryBuilder("department")
-      .leftJoinAndSelect("department.manager", "manager")
-      .getMany();
+      .leftJoinAndSelect("department.manager", "manager");
+
+    if (filter?.departmentName) {
+      query.andWhere("department.departmentName ILIKE :departmentName", {
+        departmentName: `%${filter.departmentName}%`,
+      });
+    }
+
+    return query.getMany();
   }
 
   public static async findById(id: string): Promise<Department | null> {

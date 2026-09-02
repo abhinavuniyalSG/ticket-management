@@ -15,6 +15,7 @@ import { ErrorState } from "../../components/molecules/ErrorState";
 import { ConfirmDialog } from "../../components/molecules/ConfirmDialog";
 import { DepartmentTable } from "../../components/organisms/DepartmentTable";
 import { departmentService } from "../../services/departmentService";
+import type { DepartmentQueryParams } from "../../services/departmentService";
 import { userService } from "../../services/userService";
 import { ApiError } from "../../types/api";
 import type { Department } from "../../types/department";
@@ -38,11 +39,16 @@ export function DepartmentsListPage() {
   const [deleteTarget, setDeleteTarget] = useState<Department | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const load = () => {
+  const query = useMemo<DepartmentQueryParams>(
+    () => ({ departmentName: search.trim() || undefined }),
+    [search],
+  );
+
+  const loadDepartments = () => {
     setIsLoading(true);
     setError(null);
     departmentService
-      .list()
+      .list(query)
       .then((res) => setDepartments(res.departments))
       .catch((err: unknown) => {
         setError(err instanceof ApiError ? err.message : "Unable to load departments.");
@@ -51,23 +57,16 @@ export function DepartmentsListPage() {
   };
 
   useEffect(() => {
-    load();
+    loadDepartments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query]);
+
+  useEffect(() => {
     userService
       .list()
       .then((res) => setManagers(res.users.filter((u) => u.role === "admin" || u.role === "super_admin")))
       .catch(() => undefined);
   }, []);
-
-  const filteredDepartments = useMemo(() => {
-    if (!departments) return [];
-    const term = search.trim().toLowerCase();
-    if (!term) return departments;
-    return departments.filter(
-      (d) =>
-        d.departmentName.toLowerCase().includes(term) ||
-        d.departmentEmail.toLowerCase().includes(term),
-    );
-  }, [departments, search]);
 
   const handleCreate = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -85,7 +84,7 @@ export function DepartmentsListPage() {
         managedBy: managedBy || undefined,
       });
       toast.success(res.message);
-      setDepartments((prev) => (prev ? [...prev, res.department] : [res.department]));
+      loadDepartments();
       setName("");
       setEmail("");
       setManagedBy("");
@@ -174,7 +173,7 @@ export function DepartmentsListPage() {
       <div className="mb-5">
         <SearchInput
           label="Search departments"
-          placeholder="Search by name or email"
+          placeholder="Search by department name"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="max-w-xs"
@@ -187,15 +186,15 @@ export function DepartmentsListPage() {
         </div>
       )}
 
-      {!isLoading && error && <ErrorState message={error} onRetry={load} />}
+      {!isLoading && error && <ErrorState message={error} onRetry={loadDepartments} />}
 
-      {!isLoading && !error && filteredDepartments.length === 0 && (
+      {!isLoading && !error && departments && departments.length === 0 && (
         <EmptyState title="No departments found" description="Try adjusting your search, or create one." />
       )}
 
-      {!isLoading && !error && filteredDepartments.length > 0 && (
+      {!isLoading && !error && departments && departments.length > 0 && (
         <DepartmentTable
-          departments={filteredDepartments}
+          departments={departments}
           renderActions={(department) => (
             <IconButton
               label={`Delete ${department.departmentName}`}

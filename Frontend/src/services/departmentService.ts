@@ -19,8 +19,15 @@ interface MessageResponse {
   message: string;
 }
 
+export interface DepartmentQueryParams {
+  departmentName?: string;
+}
+
 export const departmentService = {
-  list: () => apiRequest<DepartmentListResponse>("/departments"),
+  list: (params: DepartmentQueryParams = {}) =>
+    apiRequest<DepartmentListResponse>("/departments", {
+      query: { departmentName: params.departmentName },
+    }),
 
   getById: (id: string) => apiRequest<DepartmentResponse>(`/departments/${id}`),
 

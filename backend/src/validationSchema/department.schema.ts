@@ -1,6 +1,17 @@
 import z from "zod";
 
 export class DepartmentSchema {
+  public departmentQuerySchema = z
+    .object({
+      departmentName: z
+        .string({ error: "Department name must be a string" })
+        .trim()
+        .min(1, "Department name cannot be empty")
+        .max(100, "Department name must not exceed 100 characters")
+        .optional(),
+    })
+    .strict();
+
   public departmentIdParamSchema = z
     .object({
       id: z

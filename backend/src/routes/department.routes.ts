@@ -13,7 +13,11 @@ class DepartmentRoutes {
   private initialize = () => {
     this.router.use(authMiddleware, requireVerifiedEmail);
 
-    this.router.get("/", DepartmentController.getAllDepartmentsController);
+    this.router.get(
+      "/",
+      this.validator("query", this.requestSchema.departmentQuerySchema),
+      DepartmentController.getAllDepartmentsController,
+    );
 
     this.router.get(
       "/:id",

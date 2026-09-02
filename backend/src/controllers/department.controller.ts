@@ -4,6 +4,7 @@ import {
   DepartmentService,
   type CreateDepartmentInput,
   type UpdateDepartmentInput,
+  type DepartmentQueryInput,
 } from "../services/department.service.js";
 import type { RequesterInfo } from "../services/user.service.js";
 
@@ -13,7 +14,9 @@ export class DepartmentController {
     res: Response,
     next: NextFunction,
   ) => {
-      const result = await DepartmentService.getAllDepartments();
+      const query =
+        (req.normalized?.query as DepartmentQueryInput) ?? req.query;
+      const result = await DepartmentService.getAllDepartments(query);
       return res.status(200).json(result);
   });
 

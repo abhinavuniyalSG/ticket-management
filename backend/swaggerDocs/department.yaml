@@ -21,9 +21,21 @@ paths:
       tags:
         - Departments
       summary: Get all departments
-      description: Returns a list of all departments. Accessible by all authenticated users.
+      description: >
+        Returns a list of all departments. Accessible by all authenticated users.
+
+        Optionally filter by department name (case-insensitive partial match).
       security:
         - bearerAuth: []
+      parameters:
+        - name: departmentName
+          in: query
+          required: false
+          description: Filter by department name (case-insensitive partial match)
+          schema:
+            type: string
+            maxLength: 100
+          example: Engineering
       responses:
         "200":
           description: List of departments
@@ -39,6 +51,8 @@ paths:
                     type: array
                     items:
                       $ref: "#/components/schemas/Department"
+        "400":
+          $ref: "#/components/responses/ValidationError"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "429":

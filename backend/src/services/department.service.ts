@@ -18,6 +18,10 @@ export interface UpdateDepartmentInput {
   managedBy?: string | null;
 }
 
+export interface DepartmentQueryInput {
+  departmentName?: string;
+}
+
 export class DepartmentService {
   private static sanitizeDepartment(department: Department) {
     const { manager, ...rest } = department;
@@ -115,8 +119,10 @@ export class DepartmentService {
   /**
    * Any authenticated role can view all departments.
    */
-  public static async getAllDepartments() {
-    const departments = await DepartmentRepository.findAll();
+  public static async getAllDepartments(query: DepartmentQueryInput = {}) {
+    const departments = await DepartmentRepository.findAll({
+      departmentName: query.departmentName,
+    });
 
     return {
       message: "Departments fetched successfully",
