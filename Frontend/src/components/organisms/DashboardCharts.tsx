@@ -77,16 +77,24 @@ function TrendChart({ data }: { data: TicketsOverTimeEntry[] }) {
   const gridLines = [0, 0.25, 0.5, 0.75, 1];
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
+    <div className="relative rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-slate-900">Tickets over time (7 days)</h3>
+        <h3 className="text-sm font-semibold text-slate-900">
+          Tickets over time (7 days)
+        </h3>
         <div className="flex items-center gap-3 text-xs text-slate-600">
           <span className="flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-blue-500" aria-hidden="true" />
+            <span
+              className="h-2.5 w-2.5 rounded-full bg-blue-500"
+              aria-hidden="true"
+            />
             Created
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-green-500" aria-hidden="true" />
+            <span
+              className="h-2.5 w-2.5 rounded-full bg-green-500"
+              aria-hidden="true"
+            />
             Closed
           </span>
         </div>
@@ -116,7 +124,11 @@ function TrendChart({ data }: { data: TicketsOverTimeEntry[] }) {
           <text x={4} y={12} className="fill-slate-400 text-[9px]">
             {max}
           </text>
-          <text x={4} y={height - paddingBottom + 4} className="fill-slate-400 text-[9px]">
+          <text
+            x={4}
+            y={height - paddingBottom + 4}
+            className="fill-slate-400 text-[9px]"
+          >
             0
           </text>
 
@@ -127,6 +139,7 @@ function TrendChart({ data }: { data: TicketsOverTimeEntry[] }) {
             const label = new Date(entry.date).toLocaleDateString(undefined, {
               month: "short",
               day: "numeric",
+              timeZone: "UTC",
             });
 
             return (
@@ -161,25 +174,29 @@ function TrendChart({ data }: { data: TicketsOverTimeEntry[] }) {
         </svg>
       </div>
 
-      <table className="sr-only">
-        <caption>Tickets created and closed per day over the last 7 days</caption>
-        <thead>
-          <tr>
-            <th scope="col">Date</th>
-            <th scope="col">Created</th>
-            <th scope="col">Closed</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((entry) => (
-            <tr key={entry.date}>
-              <td>{entry.date}</td>
-              <td>{entry.created}</td>
-              <td>{entry.closed}</td>
+      <div className="sr-only">
+        <table>
+          <caption>
+            Tickets created and closed per day over the last 7 days
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Date</th>
+              <th scope="col">Created</th>
+              <th scope="col">Closed</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {data.map((entry) => (
+              <tr key={entry.date}>
+                <td>{entry.date}</td>
+                <td>{entry.created}</td>
+                <td>{entry.closed}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -201,13 +218,19 @@ export function DashboardCharts({
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <DistributionBars
           title="Status distribution"
-          entries={statusDistribution.map((e) => ({ key: e.status, count: e.count }))}
+          entries={statusDistribution.map((e) => ({
+            key: e.status,
+            count: e.count,
+          }))}
           colors={STATUS_COLORS}
           labels={STATUS_LABELS}
         />
         <DistributionBars
           title="Priority distribution"
-          entries={priorityDistribution.map((e) => ({ key: e.priority, count: e.count }))}
+          entries={priorityDistribution.map((e) => ({
+            key: e.priority,
+            count: e.count,
+          }))}
           colors={PRIORITY_COLORS}
           labels={PRIORITY_LABELS}
         />
