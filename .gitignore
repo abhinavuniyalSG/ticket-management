@@ -7,3 +7,9 @@ node_modules/
 
 dist
 *.log
+
+# Test artifacts
+coverage/
+playwright-report/
+test-results/
+blob-report/
