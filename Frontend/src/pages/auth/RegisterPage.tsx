@@ -38,6 +38,7 @@ export function RegisterPage() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   if (status === "authenticated" && user) {
     return (
@@ -147,6 +148,7 @@ export function RegisterPage() {
           required
           onChange={setField("password")}
           disabled={isSubmitting}
+          isVisible={showPassword}
         />
         <PasswordField
           label="Confirm password"
@@ -157,7 +159,22 @@ export function RegisterPage() {
           required
           onChange={setField("confirmPassword")}
           disabled={isSubmitting}
+          isVisible={showPassword}
         />
+        <label
+          htmlFor="register-show-password"
+          className="-mt-3 inline-flex select-none items-center gap-2 text-xs text-slate-600"
+        >
+          <input
+            id="register-show-password"
+            type="checkbox"
+            checked={showPassword}
+            onChange={(e) => setShowPassword(e.target.checked)}
+            disabled={isSubmitting}
+            className="h-3.5 w-3.5 rounded border-slate-300 accent-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
+          />
+          Show passwords
+        </label>
         <Button type="submit" isLoading={isSubmitting} className="w-full">
           Create account
         </Button>

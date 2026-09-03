@@ -11,8 +11,15 @@ import { dashboardService } from "../services/dashboardService";
 import { departmentService } from "../services/departmentService";
 import { useAuth } from "../hooks/useAuth";
 import { ApiError } from "../types/api";
-import { DASHBOARD_PERIODS, DASHBOARD_PERIOD_LABELS } from "../constants/options";
-import type { DashboardMetrics, DashboardPeriod, DepartmentBreakdown } from "../types/dashboard";
+import {
+  DASHBOARD_PERIODS,
+  DASHBOARD_PERIOD_LABELS,
+} from "../constants/options";
+import type {
+  DashboardMetrics,
+  DashboardPeriod,
+  DepartmentBreakdown,
+} from "../types/dashboard";
 import type { Department } from "../types/department";
 
 function PeriodToggle({
@@ -35,7 +42,9 @@ function PeriodToggle({
           onClick={() => onChange(option)}
           aria-pressed={value === option}
           className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-            value === option ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100"
+            value === option
+              ? "bg-slate-900 text-white"
+              : "text-slate-600 hover:bg-slate-100"
           }`}
         >
           {DASHBOARD_PERIOD_LABELS[option]}
@@ -53,7 +62,9 @@ export function DashboardPage() {
   const [departmentId, setDepartmentId] = useState("");
   const [period, setPeriod] = useState<DashboardPeriod>("week");
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
-  const [breakdown, setBreakdown] = useState<DepartmentBreakdown[] | null>(null);
+  const [breakdown, setBreakdown] = useState<DepartmentBreakdown[] | null>(
+    null,
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -93,7 +104,11 @@ export function DashboardPage() {
     Promise.all(requests)
       .catch((err: unknown) => {
         if (!cancelled) {
-          setError(err instanceof ApiError ? err.message : "Unable to load dashboard data.");
+          setError(
+            err instanceof ApiError
+              ? err.message
+              : "Unable to load dashboard data.",
+          );
         }
       })
       .finally(() => {
@@ -109,7 +124,11 @@ export function DashboardPage() {
     <PageContainer>
       <PageHeader
         title="Dashboard"
-        description={isSuperAdmin ? "System-wide ticket overview." : "Your department's ticket overview."}
+        description={
+          isSuperAdmin
+            ? "System-wide ticket overview."
+            : "Your department's ticket overview."
+        }
         actions={
           <>
             <PeriodToggle value={period} onChange={setPeriod} />
@@ -118,9 +137,12 @@ export function DashboardPage() {
                 aria-label="Filter dashboard by department"
                 placeholder="All departments"
                 value={departmentId}
-                options={departments.map((d) => ({ value: d.departmentId, label: d.departmentName }))}
+                options={departments.map((d) => ({
+                  value: d.departmentId,
+                  label: d.departmentName,
+                }))}
                 onChange={(e) => setDepartmentId(e.target.value)}
-                className="min-w-[200px]"
+                className="min-w-[100px]"
               />
             )}
           </>
@@ -147,18 +169,29 @@ export function DashboardPage() {
 
           {breakdown && breakdown.length > 0 && (
             <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
-              <h2 className="mb-3 text-sm font-semibold text-slate-900">Department comparison</h2>
+              <h2 className="mb-3 text-sm font-semibold text-slate-900">
+                Department comparison
+              </h2>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-slate-200 text-sm">
                   <thead className="bg-slate-50">
                     <tr>
-                      <th scope="col" className="px-3 py-2 text-left font-medium text-slate-600">
+                      <th
+                        scope="col"
+                        className="px-3 py-2 text-left font-medium text-slate-600"
+                      >
                         Department
                       </th>
-                      <th scope="col" className="px-3 py-2 text-right font-medium text-slate-600">
+                      <th
+                        scope="col"
+                        className="px-3 py-2 text-right font-medium text-slate-600"
+                      >
                         Total tickets
                       </th>
-                      <th scope="col" className="px-3 py-2 text-right font-medium text-slate-600">
+                      <th
+                        scope="col"
+                        className="px-3 py-2 text-right font-medium text-slate-600"
+                      >
                         Avg. completion
                       </th>
                     </tr>
@@ -174,9 +207,14 @@ export function DashboardPage() {
                             {row.departmentName}
                           </Link>
                         </td>
-                        <td className="px-3 py-2 text-right text-slate-700">{row.totalTickets}</td>
                         <td className="px-3 py-2 text-right text-slate-700">
-                          {row.productivity.averageCompletionTimeHours.toFixed(1)}h
+                          {row.totalTickets}
+                        </td>
+                        <td className="px-3 py-2 text-right text-slate-700">
+                          {row.productivity.averageCompletionTimeHours.toFixed(
+                            1,
+                          )}
+                          h
                         </td>
                       </tr>
                     ))}
