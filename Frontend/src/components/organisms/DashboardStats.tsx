@@ -1,10 +1,12 @@
-import type { DashboardMetrics } from "../../types/dashboard";
+import type { DashboardMetrics, DashboardPeriod } from "../../types/dashboard";
+import { DASHBOARD_PERIOD_WINDOW_LABELS } from "../../constants/options";
 
 interface DashboardStatsProps {
   metrics: DashboardMetrics;
+  period: DashboardPeriod;
 }
 
-export function DashboardStats({ metrics }: DashboardStatsProps) {
+export function DashboardStats({ metrics, period }: DashboardStatsProps) {
   const tiles: Array<{ label: string; value: string }> = [
     { label: "Total tickets", value: String(metrics.totalTickets) },
     { label: "Open", value: String(metrics.openTickets) },
@@ -14,7 +16,7 @@ export function DashboardStats({ metrics }: DashboardStatsProps) {
     { label: "Completed", value: String(metrics.completedTickets) },
     { label: "Closed", value: String(metrics.closedTickets) },
     {
-      label: "Avg. completion time",
+      label: `Avg. completion time (${DASHBOARD_PERIOD_WINDOW_LABELS[period]})`,
       value: `${metrics.productivity.averageCompletionTimeHours.toFixed(1)}h`,
     },
   ];

@@ -1,6 +1,7 @@
 import type { TicketPriority, TicketStatus } from "../types/ticket";
 import type { UserRole } from "../types/user";
 import type { ContactType } from "../types/contact";
+import type { DashboardPeriod } from "../types/dashboard";
 
 export const TICKET_STATUSES: TicketStatus[] = [
   "open",
@@ -48,6 +49,20 @@ export const CONTACT_TYPE_LABELS: Record<ContactType, string> = {
   phone: "Phone",
   whatsapp: "WhatsApp",
   linkedin: "LinkedIn",
+};
+
+export const DASHBOARD_PERIODS: DashboardPeriod[] = ["week", "month", "year"];
+
+export const DASHBOARD_PERIOD_LABELS: Record<DashboardPeriod, string> = {
+  week: "Week",
+  month: "Month",
+  year: "Year",
+};
+
+export const DASHBOARD_PERIOD_WINDOW_LABELS: Record<DashboardPeriod, string> = {
+  week: "7 days",
+  month: "30 days",
+  year: "12 months",
 };
 
 export const SORT_BY_LABELS: Record<string, string> = {

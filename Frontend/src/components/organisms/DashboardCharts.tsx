@@ -1,10 +1,33 @@
-import { PRIORITY_LABELS, STATUS_LABELS } from "../../constants/options";
+import { DASHBOARD_PERIOD_WINDOW_LABELS, PRIORITY_LABELS, STATUS_LABELS } from "../../constants/options";
 import type {
+  DashboardPeriod,
   PriorityDistributionEntry,
   StatusDistributionEntry,
   TicketsOverTimeEntry,
 } from "../../types/dashboard";
 import type { TicketPriority, TicketStatus } from "../../types/ticket";
+
+const PERIOD_RANGE_PHRASE: Record<DashboardPeriod, string> = {
+  week: "per day over the last 7 days",
+  month: "per day over the last 30 days",
+  year: "per month over the last 12 months",
+};
+
+function formatBucketLabel(dateStr: string, period: DashboardPeriod): string {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString(
+    undefined,
+    period === "year"
+      ? { month: "short", timeZone: "UTC" }
+      : { month: "short", day: "numeric", timeZone: "UTC" },
+  );
+}
+
+function formatAccessibleBucketLabel(dateStr: string, period: DashboardPeriod): string {
+  if (period !== "year") return dateStr;
+  const date = new Date(dateStr);
+  return date.toLocaleDateString(undefined, { month: "long", year: "numeric", timeZone: "UTC" });
+}
 
 const STATUS_COLORS: Record<TicketStatus, string> = {
   open: "#64748b",
@@ -63,7 +86,7 @@ function DistributionBars<T extends string>({
   );
 }
 
-function TrendChart({ data }: { data: TicketsOverTimeEntry[] }) {
+function TrendChart({ data, period }: { data: TicketsOverTimeEntry[]; period: DashboardPeriod }) {
   const max = Math.max(1, ...data.flatMap((d) => [d.created, d.closed]));
   const width = 560;
   const height = 200;
@@ -73,6 +96,8 @@ function TrendChart({ data }: { data: TicketsOverTimeEntry[] }) {
   const chartHeight = height - paddingBottom - 8;
   const groupWidth = chartWidth / data.length;
   const barWidth = Math.min(18, groupWidth / 3);
+  const minLabelWidth = period === "year" ? 24 : 40;
+  const labelStep = Math.max(1, Math.ceil(minLabelWidth / groupWidth));
 
   const gridLines = [0, 0.25, 0.5, 0.75, 1];
 
@@ -80,7 +105,7 @@ function TrendChart({ data }: { data: TicketsOverTimeEntry[] }) {
     <div className="relative rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-sm font-semibold text-slate-900">
-          Tickets over time (7 days)
+          Tickets over time ({DASHBOARD_PERIOD_WINDOW_LABELS[period]})
         </h3>
         <div className="flex items-center gap-3 text-xs text-slate-600">
           <span className="flex items-center gap-1.5">
@@ -103,7 +128,7 @@ function TrendChart({ data }: { data: TicketsOverTimeEntry[] }) {
       <div className="overflow-x-auto">
         <svg
           role="img"
-          aria-label="Bar chart of tickets created and closed per day over the last 7 days"
+          aria-label={`Bar chart of tickets created and closed ${PERIOD_RANGE_PHRASE[period]}`}
           viewBox={`0 0 ${width} ${height}`}
           className="w-full min-w-[420px]"
         >
@@ -136,11 +161,8 @@ function TrendChart({ data }: { data: TicketsOverTimeEntry[] }) {
             const groupX = paddingLeft + index * groupWidth;
             const createdHeight = (entry.created / max) * chartHeight;
             const closedHeight = (entry.closed / max) * chartHeight;
-            const label = new Date(entry.date).toLocaleDateString(undefined, {
-              month: "short",
-              day: "numeric",
-              timeZone: "UTC",
-            });
+            const showLabel = index === data.length - 1 || index % labelStep === 0;
+            const label = showLabel ? formatBucketLabel(entry.date, period) : null;
 
             return (
               <g key={entry.date}>
@@ -160,14 +182,16 @@ function TrendChart({ data }: { data: TicketsOverTimeEntry[] }) {
                   rx={3}
                   fill="#22c55e"
                 />
-                <text
-                  x={groupX + groupWidth / 2}
-                  y={height - 6}
-                  textAnchor="middle"
-                  className="fill-slate-500 text-[9px]"
-                >
-                  {label}
-                </text>
+                {label !== null && (
+                  <text
+                    x={groupX + groupWidth / 2}
+                    y={height - 6}
+                    textAnchor="middle"
+                    className="fill-slate-500 text-[9px]"
+                  >
+                    {label}
+                  </text>
+                )}
               </g>
             );
           })}
@@ -177,11 +201,11 @@ function TrendChart({ data }: { data: TicketsOverTimeEntry[] }) {
       <div className="sr-only">
         <table>
           <caption>
-            Tickets created and closed per day over the last 7 days
+            Tickets created and closed {PERIOD_RANGE_PHRASE[period]}
           </caption>
           <thead>
             <tr>
-              <th scope="col">Date</th>
+              <th scope="col">{period === "year" ? "Month" : "Date"}</th>
               <th scope="col">Created</th>
               <th scope="col">Closed</th>
             </tr>
@@ -189,7 +213,7 @@ function TrendChart({ data }: { data: TicketsOverTimeEntry[] }) {
           <tbody>
             {data.map((entry) => (
               <tr key={entry.date}>
-                <td>{entry.date}</td>
+                <td>{formatAccessibleBucketLabel(entry.date, period)}</td>
                 <td>{entry.created}</td>
                 <td>{entry.closed}</td>
               </tr>
@@ -205,16 +229,18 @@ interface DashboardChartsProps {
   statusDistribution: StatusDistributionEntry[];
   priorityDistribution: PriorityDistributionEntry[];
   ticketsOverTime: TicketsOverTimeEntry[];
+  period: DashboardPeriod;
 }
 
 export function DashboardCharts({
   statusDistribution,
   priorityDistribution,
   ticketsOverTime,
+  period,
 }: DashboardChartsProps) {
   return (
     <div className="flex flex-col gap-4">
-      <TrendChart data={ticketsOverTime} />
+      <TrendChart data={ticketsOverTime} period={period} />
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <DistributionBars
           title="Status distribution"

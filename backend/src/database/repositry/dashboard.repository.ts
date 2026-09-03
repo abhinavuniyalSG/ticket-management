@@ -1,5 +1,6 @@
 import { AppDataSource } from "../dbConnection.js";
 import { Ticket } from "../models/ticket.model.js";
+import { Department } from "../models/department.model.js";
 import { TicketPriority, TicketStatus } from "../../types/ticket.js";
 
 export interface DashboardStatusCounts {
@@ -25,6 +26,12 @@ export interface TicketsOverTimeEntry {
   closed: number;
 }
 
+export enum DashboardPeriod {
+  week = "week",
+  month = "month",
+  year = "year",
+}
+
 export interface DepartmentBreakdownRow {
   departmentId: string;
   departmentName: string;
@@ -37,6 +44,7 @@ const TREND_WINDOW_DAYS = 7;
 
 export class DashboardRepository {
   private static repository = AppDataSource.getRepository(Ticket);
+  private static departmentRepository = AppDataSource.getRepository(Department);
 
   public static async getStatusCounts(
     departmentId?: string,
@@ -44,10 +52,7 @@ export class DashboardRepository {
     const query = this.repository
       .createQueryBuilder("ticket")
       .select("COUNT(*)::int", "total")
-      .addSelect(
-        "COUNT(*) FILTER (WHERE ticket.status = :open)::int",
-        "open",
-      )
+      .addSelect("COUNT(*) FILTER (WHERE ticket.status = :open)::int", "open")
       .addSelect(
         "COUNT(*) FILTER (WHERE ticket.status = :assigned)::int",
         "assigned",
@@ -99,18 +104,12 @@ export class DashboardRepository {
   ): Promise<DashboardPriorityCounts> {
     const query = this.repository
       .createQueryBuilder("ticket")
-      .select(
-        "COUNT(*) FILTER (WHERE ticket.priority = :low)::int",
-        "low",
-      )
+      .select("COUNT(*) FILTER (WHERE ticket.priority = :low)::int", "low")
       .addSelect(
         "COUNT(*) FILTER (WHERE ticket.priority = :medium)::int",
         "medium",
       )
-      .addSelect(
-        "COUNT(*) FILTER (WHERE ticket.priority = :high)::int",
-        "high",
-      )
+      .addSelect("COUNT(*) FILTER (WHERE ticket.priority = :high)::int", "high")
       .addSelect(
         "COUNT(*) FILTER (WHERE ticket.priority = :urgent)::int",
         "urgent",
@@ -136,9 +135,23 @@ export class DashboardRepository {
     };
   }
 
+  private static getCompletionWindowInterval(period: DashboardPeriod): string {
+    switch (period) {
+      case DashboardPeriod.month:
+        return "29 days";
+      case DashboardPeriod.year:
+        return "12 months";
+      case DashboardPeriod.week:
+      default:
+        return "6 days";
+    }
+  }
+
   public static async getAverageCompletionTimeHours(
     departmentId?: string,
+    period: DashboardPeriod = DashboardPeriod.week,
   ): Promise<number> {
+    const windowInterval = this.getCompletionWindowInterval(period);
     const query = this.repository
       .createQueryBuilder("ticket")
       .select(
@@ -149,7 +162,7 @@ export class DashboardRepository {
       .andWhere("ticket.closedAt IS NOT NULL")
       .andWhere("ticket.createdAt IS NOT NULL")
       .andWhere(
-        `ticket.closedAt >= CURRENT_DATE - INTERVAL '${TREND_WINDOW_DAYS - 1} days'`,
+        `ticket.closedAt >= CURRENT_DATE - INTERVAL '${windowInterval}'`,
       );
 
     if (departmentId) {
@@ -167,83 +180,167 @@ export class DashboardRepository {
     return Number.isFinite(avg) ? Math.round(avg * 100) / 100 : 0;
   }
 
-  public static async getTicketsOverTime(
-    departmentId?: string,
-  ): Promise<TicketsOverTimeEntry[]> {
-    const params: string[] = [];
-    let departmentFilter = "";
+  /** UTC bucket keys for the period, oldest first, always 'YYYY-MM-DD' (first-of-month for `year`). */
+  private static bucketKeysForPeriod(period: DashboardPeriod): string[] {
+    const now = new Date();
+    const todayUtc = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+    );
 
-    if (departmentId) {
-      departmentFilter = "AND department_id = $1";
-      params.push(departmentId);
+    if (period === DashboardPeriod.year) {
+      const keys: string[] = [];
+      for (let i = 11; i >= 0; i--) {
+        const bucket = new Date(
+          Date.UTC(todayUtc.getUTCFullYear(), todayUtc.getUTCMonth() - i, 1),
+        );
+        keys.push(bucket.toISOString().slice(0, 10));
+      }
+      return keys;
     }
 
-    const sql = `
-      SELECT
-        to_char(d.day, 'YYYY-MM-DD') AS date,
-        COALESCE(created.count, 0)::int AS created,
-        COALESCE(closed.count, 0)::int AS closed
-      FROM generate_series(
-        CURRENT_DATE - INTERVAL '${TREND_WINDOW_DAYS - 1} days',
-        CURRENT_DATE,
-        INTERVAL '1 day'
-      ) AS d(day)
-      LEFT JOIN (
-        SELECT DATE(created_at) AS day, COUNT(*) AS count
-        FROM ticket
-        WHERE created_at >= CURRENT_DATE - INTERVAL '${TREND_WINDOW_DAYS - 1} days'
-        ${departmentFilter}
-        GROUP BY DATE(created_at)
-      ) created ON created.day = d.day
-      LEFT JOIN (
-        SELECT DATE(closed_at) AS day, COUNT(*) AS count
-        FROM ticket
-        WHERE status = 'closed' AND closed_at >= CURRENT_DATE - INTERVAL '${TREND_WINDOW_DAYS - 1} days'
-        ${departmentFilter}
-        GROUP BY DATE(closed_at)
-      ) closed ON closed.day = d.day
-      ORDER BY d.day ASC
-    `;
+    const windowDays =
+      period === DashboardPeriod.month ? 30 : TREND_WINDOW_DAYS;
+    const keys: string[] = [];
+    for (let i = windowDays - 1; i >= 0; i--) {
+      const bucket = new Date(todayUtc);
+      bucket.setUTCDate(bucket.getUTCDate() - i);
+      keys.push(bucket.toISOString().slice(0, 10));
+    }
+    return keys;
+  }
 
-    return this.repository.query(sql, params);
+  /** SQL expression bucketing a timestamptz column into a UTC 'YYYY-MM-DD' string, matching bucketKeysForPeriod. */
+  private static bucketExpression(
+    column: string,
+    period: DashboardPeriod,
+  ): string {
+    const utcColumn = `${column} AT TIME ZONE 'UTC'`;
+    return period === DashboardPeriod.year
+      ? `to_char(date_trunc('month', ${utcColumn}), 'YYYY-MM-DD')`
+      : `to_char(${utcColumn}, 'YYYY-MM-DD')`;
+  }
+
+  public static async getTicketsOverTime(
+    departmentId?: string,
+    period: DashboardPeriod = DashboardPeriod.week,
+  ): Promise<TicketsOverTimeEntry[]> {
+    const bucketKeys = this.bucketKeysForPeriod(period);
+    const rangeStart = new Date(`${bucketKeys[0]}T00:00:00.000Z`);
+
+    const createdBucket = this.bucketExpression("ticket.createdAt", period);
+    const closedBucket = this.bucketExpression("ticket.closedAt", period);
+
+    const createdQuery = this.repository
+      .createQueryBuilder("ticket")
+      .select(createdBucket, "bucket")
+      .addSelect("COUNT(*)", "count")
+      .where("ticket.createdAt >= :rangeStart", { rangeStart })
+      .groupBy(createdBucket);
+
+    const closedQuery = this.repository
+      .createQueryBuilder("ticket")
+      .select(closedBucket, "bucket")
+      .addSelect("COUNT(*)", "count")
+      .where("ticket.status = :closed", { closed: TicketStatus.closed })
+      .andWhere("ticket.closedAt >= :rangeStart", { rangeStart })
+      .groupBy(closedBucket);
+
+    if (departmentId) {
+      createdQuery.andWhere("ticket.departmentId = :departmentId", {
+        departmentId,
+      });
+      closedQuery.andWhere("ticket.departmentId = :departmentId", {
+        departmentId,
+      });
+    }
+
+    const [createdRows, closedRows] = await Promise.all([
+      createdQuery.getRawMany<{ bucket: string; count: string }>(),
+      closedQuery.getRawMany<{ bucket: string; count: string }>(),
+    ]);
+
+    const createdMap = new Map(
+      createdRows.map((row) => [row.bucket, Number(row.count)]),
+    );
+    const closedMap = new Map(
+      closedRows.map((row) => [row.bucket, Number(row.count)]),
+    );
+
+    return bucketKeys.map((date) => ({
+      date,
+      created: createdMap.get(date) ?? 0,
+      closed: closedMap.get(date) ?? 0,
+    }));
   }
 
   public static async getDepartmentBreakdown(): Promise<
     DepartmentBreakdownRow[]
   > {
-    const sql = `
-      SELECT
-        dep.department_id AS department_id,
-        dep.department_name AS department_name,
-        COUNT(t.ticket_id)::int AS total,
-        COUNT(*) FILTER (WHERE t.status = 'open')::int AS open,
-        COUNT(*) FILTER (WHERE t.status = 'assigned')::int AS assigned,
-        COUNT(*) FILTER (WHERE t.status = 'in_progress')::int AS in_progress,
-        COUNT(*) FILTER (WHERE t.status = 'review')::int AS review,
-        COUNT(*) FILTER (WHERE t.status = 'completed')::int AS completed,
-        COUNT(*) FILTER (WHERE t.status = 'closed')::int AS closed,
-        COUNT(*) FILTER (WHERE t.priority = 'low')::int AS priority_low,
-        COUNT(*) FILTER (WHERE t.priority = 'medium')::int AS priority_medium,
-        COUNT(*) FILTER (WHERE t.priority = 'high')::int AS priority_high,
-        COUNT(*) FILTER (WHERE t.priority = 'urgent')::int AS priority_urgent,
-        AVG(EXTRACT(EPOCH FROM (t.closed_at - t.created_at)) / 3600.0) FILTER (
-          WHERE t.status = 'closed'
-            AND t.closed_at IS NOT NULL
-            AND t.closed_at >= CURRENT_DATE - INTERVAL '${TREND_WINDOW_DAYS - 1} days'
-        ) AS avg_completion_hours
-      FROM department dep
-      LEFT JOIN ticket t ON t.department_id = dep.department_id
-      GROUP BY dep.department_id, dep.department_name
-      ORDER BY dep.department_name ASC
-    `;
-
-    const rows: Array<Record<string, string | number | null>> =
-      await this.repository.query(sql);
+    const rows = await this.departmentRepository
+      .createQueryBuilder("dep")
+      .leftJoin("dep.tickets", "t")
+      .select("dep.departmentId", "department_id")
+      .addSelect("dep.departmentName", "department_name")
+      .addSelect("COUNT(t.ticketId)::int", "total")
+      .addSelect("COUNT(*) FILTER (WHERE t.status = :open)::int", "open")
+      .addSelect(
+        "COUNT(*) FILTER (WHERE t.status = :assigned)::int",
+        "assigned",
+      )
+      .addSelect(
+        "COUNT(*) FILTER (WHERE t.status = :inProgress)::int",
+        "in_progress",
+      )
+      .addSelect("COUNT(*) FILTER (WHERE t.status = :review)::int", "review")
+      .addSelect(
+        "COUNT(*) FILTER (WHERE t.status = :completed)::int",
+        "completed",
+      )
+      .addSelect("COUNT(*) FILTER (WHERE t.status = :closed)::int", "closed")
+      .addSelect(
+        "COUNT(*) FILTER (WHERE t.priority = :low)::int",
+        "priority_low",
+      )
+      .addSelect(
+        "COUNT(*) FILTER (WHERE t.priority = :medium)::int",
+        "priority_medium",
+      )
+      .addSelect(
+        "COUNT(*) FILTER (WHERE t.priority = :high)::int",
+        "priority_high",
+      )
+      .addSelect(
+        "COUNT(*) FILTER (WHERE t.priority = :urgent)::int",
+        "priority_urgent",
+      )
+      .addSelect(
+        `AVG(EXTRACT(EPOCH FROM (t.closedAt - t.createdAt)) / 3600.0) FILTER (
+          WHERE t.status = :closed
+            AND t.closedAt IS NOT NULL
+            AND t.closedAt >= CURRENT_DATE - INTERVAL '${TREND_WINDOW_DAYS - 1} days'
+        )`,
+        "avg_completion_hours",
+      )
+      .setParameters({
+        open: TicketStatus.open,
+        assigned: TicketStatus.assigned,
+        inProgress: TicketStatus.inProgress,
+        review: TicketStatus.review,
+        completed: TicketStatus.completed,
+        closed: TicketStatus.closed,
+        low: TicketPriority.low,
+        medium: TicketPriority.medium,
+        high: TicketPriority.high,
+        urgent: TicketPriority.urgent,
+      })
+      .groupBy("dep.departmentId")
+      .addGroupBy("dep.departmentName")
+      .orderBy("dep.departmentName", "ASC")
+      .getRawMany<Record<string, string | number | null>>();
 
     return rows.map((row) => {
       const rawAvg = row.avg_completion_hours;
-      const avg =
-        rawAvg === null || rawAvg === undefined ? 0 : Number(rawAvg);
+      const avg = rawAvg === null || rawAvg === undefined ? 0 : Number(rawAvg);
 
       return {
         departmentId: String(row.department_id),

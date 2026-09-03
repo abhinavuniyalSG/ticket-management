@@ -11,8 +11,39 @@ import { dashboardService } from "../services/dashboardService";
 import { departmentService } from "../services/departmentService";
 import { useAuth } from "../hooks/useAuth";
 import { ApiError } from "../types/api";
-import type { DashboardMetrics, DepartmentBreakdown } from "../types/dashboard";
+import { DASHBOARD_PERIODS, DASHBOARD_PERIOD_LABELS } from "../constants/options";
+import type { DashboardMetrics, DashboardPeriod, DepartmentBreakdown } from "../types/dashboard";
 import type { Department } from "../types/department";
+
+function PeriodToggle({
+  value,
+  onChange,
+}: {
+  value: DashboardPeriod;
+  onChange: (period: DashboardPeriod) => void;
+}) {
+  return (
+    <div
+      role="group"
+      aria-label="Select time range"
+      className="inline-flex rounded-lg border border-slate-300 bg-white p-0.5"
+    >
+      {DASHBOARD_PERIODS.map((option) => (
+        <button
+          key={option}
+          type="button"
+          onClick={() => onChange(option)}
+          aria-pressed={value === option}
+          className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+            value === option ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100"
+          }`}
+        >
+          {DASHBOARD_PERIOD_LABELS[option]}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export function DashboardPage() {
   const { user } = useAuth();
@@ -20,6 +51,7 @@ export function DashboardPage() {
 
   const [departments, setDepartments] = useState<Department[]>([]);
   const [departmentId, setDepartmentId] = useState("");
+  const [period, setPeriod] = useState<DashboardPeriod>("week");
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [breakdown, setBreakdown] = useState<DepartmentBreakdown[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,9 +73,11 @@ export function DashboardPage() {
     setError(null);
 
     const requests: Promise<unknown>[] = [
-      dashboardService.get(isSuperAdmin ? departmentId || undefined : undefined).then((res) => {
-        if (!cancelled) setMetrics(res);
-      }),
+      dashboardService
+        .get(isSuperAdmin ? departmentId || undefined : undefined, period)
+        .then((res) => {
+          if (!cancelled) setMetrics(res);
+        }),
     ];
 
     if (isSuperAdmin && !departmentId) {
@@ -69,7 +103,7 @@ export function DashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [isSuperAdmin, departmentId]);
+  }, [isSuperAdmin, departmentId, period]);
 
   return (
     <PageContainer>
@@ -77,16 +111,19 @@ export function DashboardPage() {
         title="Dashboard"
         description={isSuperAdmin ? "System-wide ticket overview." : "Your department's ticket overview."}
         actions={
-          isSuperAdmin ? (
-            <Select
-              aria-label="Filter dashboard by department"
-              placeholder="All departments"
-              value={departmentId}
-              options={departments.map((d) => ({ value: d.departmentId, label: d.departmentName }))}
-              onChange={(e) => setDepartmentId(e.target.value)}
-              className="min-w-[200px]"
-            />
-          ) : undefined
+          <>
+            <PeriodToggle value={period} onChange={setPeriod} />
+            {isSuperAdmin && (
+              <Select
+                aria-label="Filter dashboard by department"
+                placeholder="All departments"
+                value={departmentId}
+                options={departments.map((d) => ({ value: d.departmentId, label: d.departmentName }))}
+                onChange={(e) => setDepartmentId(e.target.value)}
+                className="min-w-[200px]"
+              />
+            )}
+          </>
         }
       />
 
@@ -100,11 +137,12 @@ export function DashboardPage() {
 
       {!isLoading && !error && metrics && (
         <div className="flex flex-col gap-6">
-          <DashboardStats metrics={metrics} />
+          <DashboardStats metrics={metrics} period={period} />
           <DashboardCharts
             statusDistribution={metrics.statusDistribution}
             priorityDistribution={metrics.priorityDistribution}
             ticketsOverTime={metrics.ticketsOverTime}
+            period={period}
           />
 
           {breakdown && breakdown.length > 0 && (

@@ -1,5 +1,7 @@
 import type { TicketPriority, TicketStatus } from "./ticket";
 
+export type DashboardPeriod = "week" | "month" | "year";
+
 export interface StatusDistributionEntry {
   status: TicketStatus;
   count: number;

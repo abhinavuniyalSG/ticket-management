@@ -1,4 +1,5 @@
 import {
+  DashboardPeriod,
   DashboardRepository,
   type DashboardPriorityCounts,
   type DashboardStatusCounts,
@@ -13,6 +14,7 @@ import type { RequesterInfo } from "./ticket.service.js";
 
 export interface DashboardQueryInput {
   departmentId?: string;
+  period?: DashboardPeriod;
 }
 
 interface DashboardMetrics {
@@ -56,13 +58,14 @@ function buildPriorityDistribution(
 export class DashboardService {
   private static async buildMetrics(
     departmentId?: string,
+    period: DashboardPeriod = DashboardPeriod.week,
   ): Promise<DashboardMetrics> {
     const [statusCounts, priorityCounts, averageCompletionTimeHours, ticketsOverTime] =
       await Promise.all([
         DashboardRepository.getStatusCounts(departmentId),
         DashboardRepository.getPriorityCounts(departmentId),
-        DashboardRepository.getAverageCompletionTimeHours(departmentId),
-        DashboardRepository.getTicketsOverTime(departmentId),
+        DashboardRepository.getAverageCompletionTimeHours(departmentId, period),
+        DashboardRepository.getTicketsOverTime(departmentId, period),
       ]);
 
     return {
@@ -130,7 +133,7 @@ export class DashboardService {
       query,
     );
 
-    const metrics = await this.buildMetrics(departmentId);
+    const metrics = await this.buildMetrics(departmentId, query.period);
 
     return {
       message: "Dashboard statistics fetched successfully",
