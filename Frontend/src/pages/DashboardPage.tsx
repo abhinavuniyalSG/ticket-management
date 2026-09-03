@@ -35,24 +35,40 @@ export function DashboardPage() {
   }, [isSuperAdmin]);
 
   useEffect(() => {
+    let cancelled = false;
+
     setIsLoading(true);
     setError(null);
 
     const requests: Promise<unknown>[] = [
-      dashboardService.get(isSuperAdmin ? departmentId || undefined : undefined).then(setMetrics),
+      dashboardService.get(isSuperAdmin ? departmentId || undefined : undefined).then((res) => {
+        if (!cancelled) setMetrics(res);
+      }),
     ];
 
     if (isSuperAdmin && !departmentId) {
-      requests.push(dashboardService.getOverview().then((res) => setBreakdown(res.departments)));
+      requests.push(
+        dashboardService.getOverview().then((res) => {
+          if (!cancelled) setBreakdown(res.departments);
+        }),
+      );
     } else {
       setBreakdown(null);
     }
 
     Promise.all(requests)
       .catch((err: unknown) => {
-        setError(err instanceof ApiError ? err.message : "Unable to load dashboard data.");
+        if (!cancelled) {
+          setError(err instanceof ApiError ? err.message : "Unable to load dashboard data.");
+        }
       })
-      .finally(() => setIsLoading(false));
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [isSuperAdmin, departmentId]);
 
   return (
