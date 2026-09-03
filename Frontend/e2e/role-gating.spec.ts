@@ -31,7 +31,7 @@ async function mockDashboard(page: import("@playwright/test").Page) {
     openTickets: 0,
     assignedTickets: 0,
     inProgressTickets: 0,
-    reviewTickets: 0,
+    reviewedTickets: 0,
     completedTickets: 0,
     closedTickets: 0,
     statusDistribution: [],

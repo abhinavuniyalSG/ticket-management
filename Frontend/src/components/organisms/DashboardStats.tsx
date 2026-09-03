@@ -12,7 +12,7 @@ export function DashboardStats({ metrics, period }: DashboardStatsProps) {
     { label: "Open", value: String(metrics.openTickets) },
     { label: "Assigned", value: String(metrics.assignedTickets) },
     { label: "In progress", value: String(metrics.inProgressTickets) },
-    { label: "In review", value: String(metrics.reviewTickets) },
+    { label: "Reviewed", value: String(metrics.reviewedTickets) },
     { label: "Completed", value: String(metrics.completedTickets) },
     { label: "Closed", value: String(metrics.closedTickets) },
     {

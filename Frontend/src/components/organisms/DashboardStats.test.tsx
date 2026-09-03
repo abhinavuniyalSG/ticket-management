@@ -10,7 +10,7 @@ function makeMetrics(overrides: Partial<DashboardMetrics> = {}): DashboardMetric
     openTickets: 10,
     assignedTickets: 8,
     inProgressTickets: 6,
-    reviewTickets: 4,
+    reviewedTickets: 4,
     completedTickets: 9,
     closedTickets: 5,
     statusDistribution: [],
@@ -33,7 +33,7 @@ describe("DashboardStats", () => {
     expect(screen.getByText("8")).toBeInTheDocument();
     expect(screen.getByText("In progress")).toBeInTheDocument();
     expect(screen.getByText("6")).toBeInTheDocument();
-    expect(screen.getByText("In review")).toBeInTheDocument();
+    expect(screen.getByText("Reviewed")).toBeInTheDocument();
     expect(screen.getByText("4")).toBeInTheDocument();
     expect(screen.getByText("Completed")).toBeInTheDocument();
     expect(screen.getByText("9")).toBeInTheDocument();

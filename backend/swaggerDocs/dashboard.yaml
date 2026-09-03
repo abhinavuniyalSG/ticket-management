@@ -124,7 +124,7 @@ components:
       properties:
         status:
           type: string
-          enum: [open, assigned, in_progress, review, completed, closed]
+          enum: [open, assigned, in_progress, reviewed, completed, closed]
         count:
           type: integer
           minimum: 0
@@ -178,7 +178,7 @@ components:
         inProgressTickets:
           type: integer
           minimum: 0
-        reviewTickets:
+        reviewedTickets:
           type: integer
           minimum: 0
         completedTickets:

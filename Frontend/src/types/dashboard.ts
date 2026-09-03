@@ -24,7 +24,7 @@ export interface DashboardMetrics {
   openTickets: number;
   assignedTickets: number;
   inProgressTickets: number;
-  reviewTickets: number;
+  reviewedTickets: number;
   completedTickets: number;
   closedTickets: number;
   statusDistribution: StatusDistributionEntry[];

@@ -482,7 +482,7 @@ components:
           example: "Users on Safari 17+ cannot log in due to a cookie-handling regression."
         status:
           type: string
-          enum: [open, assigned, in_progress, review, completed, closed]
+          enum: [open, assigned, in_progress, reviewed, completed, closed]
           example: open
         priority:
           type: string

@@ -164,7 +164,7 @@ describe("notifyPriorityTicket", () => {
 });
 
 describe("sendDepartmentReminders", () => {
-  it("skips a department with no open or review tickets", async () => {
+  it("skips a department with no open or reviewed tickets", async () => {
     vi.mocked(DepartmentRepository.findAll).mockResolvedValue([{ departmentId: "dept-1" } as any]);
     vi.mocked(TicketRepository.findByDepartmentStatuses).mockResolvedValue([]);
 
@@ -185,13 +185,13 @@ describe("sendDepartmentReminders", () => {
     expect(EmailService.send).not.toHaveBeenCalled();
   });
 
-  it("emails recipients with open/review counts for a department that has both", async () => {
+  it("emails recipients with open/reviewed counts for a department that has both", async () => {
     vi.mocked(DepartmentRepository.findAll).mockResolvedValue([
       { departmentId: "dept-1", departmentName: "Support", manager: null } as any,
     ]);
     vi.mocked(TicketRepository.findByDepartmentStatuses).mockResolvedValue([
       makeTicket({ status: TicketStatus.open }),
-      makeTicket({ status: TicketStatus.review }),
+      makeTicket({ status: TicketStatus.reviewed }),
       makeTicket({ status: TicketStatus.open }),
     ]);
     vi.mocked(UserRepository.findByRoleAndDepartment).mockResolvedValue([{ email: "admin@example.com" } as any]);

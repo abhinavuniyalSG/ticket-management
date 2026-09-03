@@ -141,7 +141,7 @@ describe("canAssignOnCreate", () => {
 });
 
 describe("getAllowedStatusTransitions", () => {
-  it("lets the creator send a completed ticket back to review or reopen it", () => {
+  it("lets the creator send a completed ticket back to reviewed or reopen it", () => {
     const user = makeUser({ id: "creator-1" });
     const ticket = makeTicket({
       createdById: "creator-1",
@@ -149,7 +149,7 @@ describe("getAllowedStatusTransitions", () => {
       assignedToId: "assignee-1",
     });
     const transitions = getAllowedStatusTransitions(ticket, user);
-    expect(transitions).toEqual(expect.arrayContaining(["review", "open"]));
+    expect(transitions).toEqual(expect.arrayContaining(["reviewed", "open"]));
   });
 
   it("lets the assignee move an assigned ticket into progress", () => {
@@ -170,11 +170,11 @@ describe("getAllowedStatusTransitions", () => {
     expect(getAllowedStatusTransitions(ticket, user)).toEqual([]);
   });
 
-  it("only lets a same-department admin close a ticket that is in review", () => {
+  it("only lets a same-department admin close a ticket that is in reviewed", () => {
     const user = makeUser({ role: "admin", departmentId: "dept-1" });
     const ticket = makeTicket({
       departmentId: "dept-1",
-      status: "review",
+      status: "reviewed",
       assignedToId: "assignee-1",
     });
     expect(getAllowedStatusTransitions(ticket, user)).toContain("closed");

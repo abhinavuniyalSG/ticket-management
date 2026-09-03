@@ -29,7 +29,7 @@ import {
 const STATUS_ACTION_LABELS: Partial<Record<TicketStatus, string>> = {
   in_progress: "Start progress",
   completed: "Mark as completed",
-  review: "Submit for review",
+  reviewed: "Mark as reviewed",
   open: "Reopen ticket",
   closed: "Close ticket",
 };

@@ -34,7 +34,7 @@ const statusCounts = {
   open: 2,
   assigned: 2,
   inProgress: 2,
-  review: 2,
+  reviewed: 2,
   completed: 1,
   closed: 1,
 };

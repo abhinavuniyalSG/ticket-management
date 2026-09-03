@@ -5,7 +5,7 @@ export type TicketStatus =
   | "open"
   | "assigned"
   | "in_progress"
-  | "review"
+  | "reviewed"
   | "completed"
   | "closed";
 

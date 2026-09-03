@@ -7,7 +7,7 @@ const STATUS_COLORS: Record<TicketStatus, BadgeColor> = {
   open: "slate",
   assigned: "blue",
   in_progress: "amber",
-  review: "purple",
+  reviewed: "purple",
   completed: "green",
   closed: "gray",
 };

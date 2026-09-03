@@ -21,7 +21,7 @@ const ALL_STATUSES: TicketStatus[] = [
   "open",
   "assigned",
   "in_progress",
-  "review",
+  "reviewed",
   "completed",
   "closed",
 ];
@@ -46,7 +46,7 @@ export function getAllowedStatusTransitions(ticket: Ticket, user: User): TicketS
   if (isSameDeptAdmin) {
     return ALL_STATUSES.filter((status) => {
       if (status === current) return false;
-      if (status === "closed" && current !== "review") return false;
+      if (status === "closed" && current !== "reviewed") return false;
       if (current === "open" && status !== "open") return false;
       if (status !== "open" && !ticket.assignedToId) return false;
       return true;
@@ -55,7 +55,7 @@ export function getAllowedStatusTransitions(ticket: Ticket, user: User): TicketS
 
   const allowed = new Set<TicketStatus>();
   if (isCreator && current === "completed") {
-    allowed.add("review");
+    allowed.add("reviewed");
     allowed.add("open");
   }
   if (isAssignee) {

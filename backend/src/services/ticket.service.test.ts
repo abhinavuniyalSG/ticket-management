@@ -432,20 +432,20 @@ describe("updateTicket status transitions", () => {
     expect(result.ticket.status).toBe(TicketStatus.inProgress);
   });
 
-  it("lets the creator send a completed ticket to review", async () => {
+  it("lets the creator send a completed ticket to reviewed", async () => {
     const ticket = makeTicket({ status: TicketStatus.completed, createdById: "user-1", assignedToId: "assignee-1" });
     vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
     vi.mocked(UserRepository.findById).mockResolvedValue(makeUser({ id: "user-1" }));
-    const updated = { ...ticket, status: TicketStatus.review };
+    const updated = { ...ticket, status: TicketStatus.reviewed };
     vi.mocked(TicketRepository.updateTicket).mockResolvedValue(updated);
 
     const result = await TicketService.updateTicket(
       "ticket-1",
-      { status: TicketStatus.review },
+      { status: TicketStatus.reviewed },
       requester({ id: "user-1" }),
     );
 
-    expect(result.ticket.status).toBe(TicketStatus.review);
+    expect(result.ticket.status).toBe(TicketStatus.reviewed);
   });
 
   it("lets the creator reopen a completed ticket", async () => {
@@ -478,9 +478,9 @@ describe("updateTicket status transitions", () => {
     ).rejects.toMatchObject({ statusCode: 403 });
   });
 
-  it("lets a same-department admin close a ticket that is in review", async () => {
+  it("lets a same-department admin close a ticket that is in reviewed", async () => {
     const ticket = makeTicket({
-      status: TicketStatus.review,
+      status: TicketStatus.reviewed,
       departmentId: DEPT_A,
       createdById: "creator-1",
       assignedToId: "assignee-1",
@@ -505,7 +505,7 @@ describe("updateTicket status transitions", () => {
     );
   });
 
-  it("blocks a same-department admin from closing a ticket that isn't in review", async () => {
+  it("blocks a same-department admin from closing a ticket that isn't in reviewed", async () => {
     const ticket = makeTicket({
       status: TicketStatus.inProgress,
       departmentId: DEPT_A,
@@ -542,7 +542,7 @@ describe("updateTicket status transitions", () => {
     ).rejects.toMatchObject({ statusCode: 400 });
   });
 
-  it("lets a same-department admin move a ticket between any two non-open, non-closed-from-non-review states", async () => {
+  it("lets a same-department admin move a ticket between any two non-open, non-closed-from-non-reviewed states", async () => {
     const ticket = makeTicket({
       status: TicketStatus.assigned,
       departmentId: DEPT_A,
@@ -857,7 +857,7 @@ describe("deleteTicket", () => {
   });
 
   it("blocks the creator from deleting a ticket that isn't open (even if unassigned)", async () => {
-    const ticket = makeTicket({ status: TicketStatus.review, assignedToId: null, createdById: "user-1" });
+    const ticket = makeTicket({ status: TicketStatus.reviewed, assignedToId: null, createdById: "user-1" });
     vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
     vi.mocked(UserRepository.findById).mockResolvedValue(makeUser({ id: "user-1" }));
 

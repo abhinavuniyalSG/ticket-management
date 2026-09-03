@@ -93,7 +93,7 @@ export class TicketSchema {
           TicketStatus.open,
           TicketStatus.assigned,
           TicketStatus.inProgress,
-          TicketStatus.review,
+          TicketStatus.reviewed,
           TicketStatus.completed,
           TicketStatus.closed,
         ])
@@ -130,7 +130,7 @@ export class TicketSchema {
           TicketStatus.open,
           TicketStatus.assigned,
           TicketStatus.inProgress,
-          TicketStatus.review,
+          TicketStatus.reviewed,
           TicketStatus.completed,
           TicketStatus.closed,
         ])

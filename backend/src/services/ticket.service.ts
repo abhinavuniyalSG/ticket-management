@@ -97,10 +97,10 @@ export class TicketService {
     if (roles.isSuperAdmin) return;
 
     if (roles.isSameDeptAdmin) {
-      if (target === TicketStatus.closed && current !== TicketStatus.review) {
+      if (target === TicketStatus.closed && current !== TicketStatus.reviewed) {
         throw new HttpError(
           400,
-          "Tickets can only be closed from the 'review' status",
+          "Tickets can only be closed from the 'reviewed' status",
         );
       }
       if (current === TicketStatus.open && target !== TicketStatus.open) {
@@ -117,7 +117,7 @@ export class TicketService {
     if (roles.isCreator) {
       if (
         current === TicketStatus.completed &&
-        (target === TicketStatus.review || target === TicketStatus.open)
+        (target === TicketStatus.reviewed || target === TicketStatus.open)
       ) {
         allowed = true;
       }

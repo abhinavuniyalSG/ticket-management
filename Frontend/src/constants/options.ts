@@ -7,7 +7,7 @@ export const TICKET_STATUSES: TicketStatus[] = [
   "open",
   "assigned",
   "in_progress",
-  "review",
+  "reviewed",
   "completed",
   "closed",
 ];
@@ -27,7 +27,7 @@ export const STATUS_LABELS: Record<TicketStatus, string> = {
   open: "Open",
   assigned: "Assigned",
   in_progress: "In Progress",
-  review: "Review",
+  reviewed: "Reviewed",
   completed: "Completed",
   closed: "Closed",
 };

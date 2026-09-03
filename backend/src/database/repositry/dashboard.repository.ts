@@ -8,7 +8,7 @@ export interface DashboardStatusCounts {
   open: number;
   assigned: number;
   inProgress: number;
-  review: number;
+  reviewed: number;
   completed: number;
   closed: number;
 }
@@ -62,8 +62,8 @@ export class DashboardRepository {
         "in_progress",
       )
       .addSelect(
-        "COUNT(*) FILTER (WHERE ticket.status = :review)::int",
-        "review",
+        "COUNT(*) FILTER (WHERE ticket.status = :reviewed)::int",
+        "reviewed",
       )
       .addSelect(
         "COUNT(*) FILTER (WHERE ticket.status = :completed)::int",
@@ -77,7 +77,7 @@ export class DashboardRepository {
         open: TicketStatus.open,
         assigned: TicketStatus.assigned,
         inProgress: TicketStatus.inProgress,
-        review: TicketStatus.review,
+        reviewed: TicketStatus.reviewed,
         completed: TicketStatus.completed,
         closed: TicketStatus.closed,
       });
@@ -93,7 +93,7 @@ export class DashboardRepository {
       open: Number(result.open ?? 0),
       assigned: Number(result.assigned ?? 0),
       inProgress: Number(result.in_progress ?? 0),
-      review: Number(result.review ?? 0),
+      reviewed: Number(result.reviewed ?? 0),
       completed: Number(result.completed ?? 0),
       closed: Number(result.closed ?? 0),
     };
@@ -291,7 +291,7 @@ export class DashboardRepository {
         "COUNT(*) FILTER (WHERE t.status = :inProgress)::int",
         "in_progress",
       )
-      .addSelect("COUNT(*) FILTER (WHERE t.status = :review)::int", "review")
+      .addSelect("COUNT(*) FILTER (WHERE t.status = :reviewed)::int", "reviewed")
       .addSelect(
         "COUNT(*) FILTER (WHERE t.status = :completed)::int",
         "completed",
@@ -325,7 +325,7 @@ export class DashboardRepository {
         open: TicketStatus.open,
         assigned: TicketStatus.assigned,
         inProgress: TicketStatus.inProgress,
-        review: TicketStatus.review,
+        reviewed: TicketStatus.reviewed,
         completed: TicketStatus.completed,
         closed: TicketStatus.closed,
         low: TicketPriority.low,
@@ -350,7 +350,7 @@ export class DashboardRepository {
           open: Number(row.open ?? 0),
           assigned: Number(row.assigned ?? 0),
           inProgress: Number(row.in_progress ?? 0),
-          review: Number(row.review ?? 0),
+          reviewed: Number(row.reviewed ?? 0),
           completed: Number(row.completed ?? 0),
           closed: Number(row.closed ?? 0),
         },

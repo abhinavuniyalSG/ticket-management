@@ -162,7 +162,7 @@ export class TicketRepository {
           TicketStatus.open,
           TicketStatus.assigned,
           TicketStatus.inProgress,
-          TicketStatus.review,
+          TicketStatus.reviewed,
           TicketStatus.completed,
         ],
         priorities: [TicketPriority.high, TicketPriority.urgent],

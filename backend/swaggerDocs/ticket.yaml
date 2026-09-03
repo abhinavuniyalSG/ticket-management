@@ -17,7 +17,7 @@ tags:
       Tickets flow through these statuses:
 
       ```
-      open ──(assign)──► assigned ──► in_progress ──► completed ──► review ──► closed
+      open ──(assign)──► assigned ──► in_progress ──► completed ──► reviewed ──► closed
         ▲                                                │
         └──────────────────(creator reopen)─────────────┘
       ```
@@ -25,9 +25,9 @@ tags:
       **Key rules enforced on update:**
       - Setting status to `open` **always** clears `assignedToId` to `null` (for all roles, including super_admin).
       - **Creator** can update title/description/priority only when ticket is `open`.
-      - **Creator** can change status from `completed` → `open` or `completed` → `review`.
+      - **Creator** can change status from `completed` → `open` or `completed` → `reviewed`.
       - **Assignee** can only transition: `assigned` → `in_progress`, `in_progress` → `completed`, `completed` → `in_progress`. **Cannot** go back `in_progress` → `assigned`.
-      - **Admin (same dept)** can manage assignments and close tickets (only from `review` status).
+      - **Admin (same dept)** can manage assignments and close tickets (only from `reviewed` status).
       - **super_admin** can perform any status transition, but the `open` rule still clears the assignee.
       - Only the **creator** can change `title`, `description`, and `priority`.
 
@@ -64,7 +64,7 @@ paths:
           description: Filter by ticket status
           schema:
             type: string
-            enum: [open, assigned, in_progress, review, completed, closed]
+            enum: [open, assigned, in_progress, reviewed, completed, closed]
         - name: priority
           in: query
           required: false
@@ -274,9 +274,9 @@ paths:
         #### Status transitions
         | Actor | Allowed transitions |
         |---|---|
-        | **creator** | `completed` → `open`, `completed` → `review` |
+        | **creator** | `completed` → `open`, `completed` → `reviewed` |
         | **assignee** | `assigned` → `in_progress`, `in_progress` → `completed`, `completed` → `in_progress` |
-        | **admin (same dept)** | Any transition, except closing requires `review` → `closed`, and a **manual** (non-assignment) move away from `open` is rejected (see assignment rules below) |
+        | **admin (same dept)** | Any transition, except closing requires `reviewed` → `closed`, and a **manual** (non-assignment) move away from `open` is rejected (see assignment rules below) |
         | **super_admin** | Any transition |
 
         > ⚠️ Setting status to `open` **always forces `assignedToId` to `null`**, regardless of role.
@@ -285,7 +285,7 @@ paths:
         - Only **admin (same dept)** or **super_admin** can set or unset `assignedToId`.
         - The assignee must belong to the ticket's department.
         - Setting `assignedToId` to a non-null value **always** forces status to `assigned`, regardless of
-          the ticket's current status (e.g. reassigning a `review` or `in_progress` ticket also resets it
+          the ticket's current status (e.g. reassigning a `reviewed` or `in_progress` ticket also resets it
           to `assigned`) — not only for previously-`open` tickets.
         - Setting `assignedToId` to `null` **always** forces status back to `open`, regardless of the
           ticket's current status beforehand (not only from `assigned`).
@@ -317,7 +317,7 @@ paths:
                 value:
                   assignedToId: "01906c26-1234-7abc-adef-000000000005"
               adminCloses:
-                summary: Admin closes a ticket (must be in review status)
+                summary: Admin closes a ticket (must be in reviewed status)
                 value:
                   status: closed
               creatorReopens:
@@ -453,7 +453,7 @@ components:
           example: urgent
         status:
           type: string
-          enum: [open, assigned, in_progress, review, completed, closed]
+          enum: [open, assigned, in_progress, reviewed, completed, closed]
           example: in_progress
         assignedToId:
           type: string

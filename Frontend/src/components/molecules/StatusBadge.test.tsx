@@ -8,7 +8,7 @@ const ALL_STATUSES: TicketStatus[] = [
   "open",
   "assigned",
   "in_progress",
-  "review",
+  "reviewed",
   "completed",
   "closed",
 ];

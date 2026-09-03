@@ -33,7 +33,7 @@ const STATUS_COLORS: Record<TicketStatus, string> = {
   open: "#64748b",
   assigned: "#3b82f6",
   in_progress: "#f59e0b",
-  review: "#8b5cf6",
+  reviewed: "#8b5cf6",
   completed: "#22c55e",
   closed: "#6b7280",
 };

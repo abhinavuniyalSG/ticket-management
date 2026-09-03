@@ -26,7 +26,7 @@ function makeMetrics(overrides: Partial<DashboardMetrics> = {}): DashboardMetric
     openTickets: 3,
     assignedTickets: 2,
     inProgressTickets: 2,
-    reviewTickets: 1,
+    reviewedTickets: 1,
     completedTickets: 1,
     closedTickets: 1,
     statusDistribution: [{ status: "open", count: 3 }],

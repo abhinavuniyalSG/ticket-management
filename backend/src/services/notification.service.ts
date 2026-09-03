@@ -91,10 +91,10 @@ export class NotificationService {
     for (const department of departments) {
       const tickets = await TicketRepository.findByDepartmentStatuses(
         department.departmentId,
-        [TicketStatus.open, TicketStatus.review],
+        [TicketStatus.open, TicketStatus.reviewed],
       );
       if (!tickets.length) {
-        logger.debug("Department reminder skipped: no open or review tickets", {
+        logger.debug("Department reminder skipped: no open or reviewed tickets", {
           departmentId: department.departmentId,
         });
         continue;
@@ -109,18 +109,18 @@ export class NotificationService {
       const open = tickets.filter(
         (ticket) => ticket.status === TicketStatus.open,
       ).length;
-      const review = tickets.filter(
-        (ticket) => ticket.status === TicketStatus.review,
+      const reviewed = tickets.filter(
+        (ticket) => ticket.status === TicketStatus.reviewed,
       ).length;
       await EmailService.send({
         to,
         subject: `Department ticket reminder: ${department.departmentName}`,
-        text: `Please work on the department tickets.\nOpen: ${open}\nReview: ${review}\nTotal requiring attention: ${tickets.length}`,
+        text: `Please work on the department tickets.\nOpen: ${open}\nReviewed: ${reviewed}\nTotal requiring attention: ${tickets.length}`,
       });
       logger.info("Department reminder processed", {
         departmentId: department.departmentId,
         open,
-        review,
+        reviewed,
         recipientCount: to.length,
       });
     }

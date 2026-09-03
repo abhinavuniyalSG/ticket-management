@@ -22,7 +22,7 @@ interface DashboardMetrics {
   openTickets: number;
   assignedTickets: number;
   inProgressTickets: number;
-  reviewTickets: number;
+  reviewedTickets: number;
   completedTickets: number;
   closedTickets: number;
   statusDistribution: Array<{ status: TicketStatus; count: number }>;
@@ -38,7 +38,7 @@ function buildStatusDistribution(
     { status: TicketStatus.open, count: counts.open },
     { status: TicketStatus.assigned, count: counts.assigned },
     { status: TicketStatus.inProgress, count: counts.inProgress },
-    { status: TicketStatus.review, count: counts.review },
+    { status: TicketStatus.reviewed, count: counts.reviewed },
     { status: TicketStatus.completed, count: counts.completed },
     { status: TicketStatus.closed, count: counts.closed },
   ];
@@ -73,7 +73,7 @@ export class DashboardService {
       openTickets: statusCounts.open,
       assignedTickets: statusCounts.assigned,
       inProgressTickets: statusCounts.inProgress,
-      reviewTickets: statusCounts.review,
+      reviewedTickets: statusCounts.reviewed,
       completedTickets: statusCounts.completed,
       closedTickets: statusCounts.closed,
       statusDistribution: buildStatusDistribution(statusCounts),
