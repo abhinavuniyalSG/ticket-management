@@ -7,6 +7,7 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  Index,
   type Relation,
 } from "typeorm";
 import { roleEnum } from "../../types/user.js";
@@ -15,6 +16,7 @@ import { Contact } from "./contact.model.js";
 import { Ticket } from "./ticket.model.js";
 
 @Entity("users")
+@Index("IDX_users_department_id_role", ["departmentId", "role"])
 export class User {
   @PrimaryColumn({ type: "uuid", default: () => "uuidv7()" })
   id!: string;

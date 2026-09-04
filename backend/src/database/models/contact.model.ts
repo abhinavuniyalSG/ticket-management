@@ -5,6 +5,7 @@ import {
   ManyToOne,
   JoinColumn,
   Unique,
+  Index,
   CreateDateColumn,
   UpdateDateColumn,
   type Relation,
@@ -18,6 +19,7 @@ export class Contact {
   @PrimaryColumn({ type: "uuid", default: () => "uuidv7()" })
   id!: string;
 
+  @Index("IDX_contact_user_id")
   @Column({ name: "user_id", type: "uuid" })
   userId!: string;
 

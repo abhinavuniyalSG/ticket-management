@@ -7,6 +7,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   Check,
+  Index,
   type Relation,
 } from "typeorm";
 import { Department } from "./department.model.js";
@@ -27,6 +28,9 @@ const statusCheckConstraint = `
 
 @Entity()
 @Check(statusCheckConstraint)
+@Index("IDX_ticket_closed_at_when_closed", ["closedAt"], {
+  where: `"status" = 'closed'`,
+})
 export class Ticket {
   @PrimaryColumn({ name: "ticket_id", type: "uuid", default: () => "uuidv7()" })
   ticketId!: string;
@@ -52,6 +56,7 @@ export class Ticket {
   })
   priority!: TicketPriority;
 
+  @Index("IDX_ticket_department_id")
   @Column({ name: "department_id", type: "uuid" })
   departmentId!: string;
 
@@ -61,6 +66,7 @@ export class Ticket {
   @JoinColumn({ name: "department_id" })
   department!: Relation<Department>;
 
+  @Index("IDX_ticket_assigned_to")
   @Column({ name: "assigned_to", type: "uuid", nullable: true })
   assignedToId!: string | null;
 
@@ -71,6 +77,7 @@ export class Ticket {
   @JoinColumn({ name: "assigned_to" })
   assignedTo!: Relation<User> | null;
 
+  @Index("IDX_ticket_created_by")
   @Column({ name: "created_by", type: "uuid" })
   createdById!: string;
 
@@ -81,6 +88,7 @@ export class Ticket {
   @JoinColumn({ name: "created_by" })
   createdBy!: Relation<User>;
 
+  @Index("IDX_ticket_created_at")
   @CreateDateColumn({
     name: "created_at",
     type: "timestamp with time zone",
