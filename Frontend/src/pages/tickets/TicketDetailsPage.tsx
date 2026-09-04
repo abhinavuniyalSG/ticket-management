@@ -167,6 +167,8 @@ export function TicketDetailsPage() {
     <PageContainer>
       <PageHeader
         title={ticket.title}
+        backTo="/tickets"
+        backLabel="Back to tickets"
         actions={
           <>
             {canEditContent && (

@@ -125,6 +125,17 @@ describe("TicketDetailsPage", () => {
     await waitFor(() => expect(screen.queryByRole("status")).not.toBeInTheDocument());
   });
 
+  it("navigates back to the tickets list via the back link", async () => {
+    vi.mocked(ticketService.getById).mockResolvedValue({ message: "ok", ticket: makeTicket() });
+    const user = userEvent.setup();
+    renderPage(makeUser());
+
+    await screen.findByText("Printer is on fire");
+    await user.click(screen.getByRole("link", { name: "Back to tickets" }));
+
+    expect(await screen.findByText("Tickets list")).toBeInTheDocument();
+  });
+
   it("fetches the ticket by the id route param", async () => {
     vi.mocked(ticketService.getById).mockResolvedValue({ message: "ok", ticket: makeTicket() });
 

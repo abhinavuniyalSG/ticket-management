@@ -4,6 +4,7 @@ import { PageContainer } from "../../components/layout/PageContainer";
 import { PageHeader } from "../../components/layout/PageHeader";
 import { SearchInput } from "../../components/molecules/SearchInput";
 import { Select } from "../../components/atoms/Select";
+import { Button } from "../../components/atoms/Button";
 import { IconButton } from "../../components/atoms/IconButton";
 import { Spinner } from "../../components/atoms/Spinner";
 import { EmptyState } from "../../components/molecules/EmptyState";
@@ -73,6 +74,14 @@ export function UsersListPage() {
     }
   }, [isSuperAdmin]);
 
+  const hasActiveFilters = search !== "" || roleFilter !== "" || departmentFilter !== "";
+
+  const clearFilters = () => {
+    setSearch("");
+    setRoleFilter("");
+    setDepartmentFilter("");
+  };
+
   const handleDelete = async () => {
     if (!deleteTarget) return;
     setIsDeleting(true);
@@ -118,6 +127,14 @@ export function UsersListPage() {
             className="sm:max-w-[200px]"
           />
         )}
+        <Button
+          variant="secondary"
+          disabled={!hasActiveFilters}
+          onClick={clearFilters}
+          className="border-slate-300 text-slate-600 hover:border-red-300 hover:bg-red-50 hover:text-red-600 disabled:hover:border-slate-300 disabled:hover:bg-white disabled:hover:text-slate-400 sm:ml-auto"
+        >
+          Clear filters
+        </Button>
       </div>
 
       {isLoading && (

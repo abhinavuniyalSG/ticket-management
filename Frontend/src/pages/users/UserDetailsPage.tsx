@@ -120,6 +120,8 @@ export function UserDetailsPage() {
       <PageHeader
         title={`${target.firstName} ${target.lastName}`.trim()}
         description={target.email}
+        backTo="/users"
+        backLabel="Back to users"
         actions={
           canDelete ? (
             <Button variant="danger" onClick={() => setIsDeleteOpen(true)}>

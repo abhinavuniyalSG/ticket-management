@@ -199,6 +199,35 @@ describe("UsersListPage", () => {
     );
   });
 
+  it("enables the clear-filters button once a filter is active, and clears everything on click", async () => {
+    mockedUserService.list.mockResolvedValue({ message: "ok", users: [] });
+    const user = userEvent.setup();
+    renderPage();
+
+    await waitFor(() => expect(mockedUserService.list).toHaveBeenCalledTimes(1));
+
+    const clearButton = screen.getByRole("button", { name: "Clear filters" });
+    expect(clearButton).toBeDisabled();
+
+    await user.type(screen.getByLabelText("Search users"), "Jane");
+    await user.selectOptions(screen.getByRole("combobox", { name: "Filter by role" }), "admin");
+
+    await waitFor(() => expect(clearButton).toBeEnabled());
+
+    await user.click(clearButton);
+
+    expect(screen.getByLabelText("Search users")).toHaveValue("");
+    expect(screen.getByRole("combobox", { name: "Filter by role" })).toHaveValue("");
+    await waitFor(() =>
+      expect(mockedUserService.list).toHaveBeenLastCalledWith({
+        firstName: undefined,
+        role: undefined,
+        department: undefined,
+      }),
+    );
+    expect(clearButton).toBeDisabled();
+  });
+
   it("hides the delete action for a row the actor is not permitted to delete", async () => {
     mockedUserService.list.mockResolvedValue({
       message: "ok",

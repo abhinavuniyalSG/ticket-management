@@ -74,6 +74,17 @@ describe("DepartmentDetailsPage", () => {
     expect(screen.getByRole("status")).toBeInTheDocument();
   });
 
+  it("navigates back to the departments list via the back link", async () => {
+    mockedDepartmentService.getById.mockResolvedValue({ message: "ok", department: makeDepartment() });
+    const user = userEvent.setup();
+    renderPage();
+
+    await screen.findByRole("heading", { name: "Support" });
+    await user.click(screen.getByRole("link", { name: "Back to departments" }));
+
+    expect(await screen.findByText("Departments list page")).toBeInTheDocument();
+  });
+
   it("loads the department and manager list on mount", async () => {
     mockedDepartmentService.getById.mockResolvedValue({ message: "ok", department: makeDepartment() });
     renderPage();

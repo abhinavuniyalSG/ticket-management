@@ -116,6 +116,8 @@ export function DepartmentDetailsPage() {
       <PageHeader
         title={department.departmentName}
         description={department.departmentEmail}
+        backTo="/departments"
+        backLabel="Back to departments"
         actions={
           <Button variant="danger" onClick={() => setIsDeleteOpen(true)}>
             Delete department

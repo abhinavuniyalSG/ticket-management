@@ -93,6 +93,17 @@ describe("UserDetailsPage", () => {
     expect(screen.getByRole("status")).toBeInTheDocument();
   });
 
+  it("navigates back to the users list via the back link", async () => {
+    mockedUserService.getById.mockResolvedValue({ message: "ok", user: makeUser() });
+    const user = userEvent.setup();
+    renderPage();
+
+    await screen.findByRole("heading", { name: "Other Person" });
+    await user.click(screen.getByRole("link", { name: "Back to users" }));
+
+    expect(await screen.findByText("Users list page")).toBeInTheDocument();
+  });
+
   it("loads the user and department list on mount", async () => {
     mockedUserService.getById.mockResolvedValue({ message: "ok", user: makeUser() });
     renderPage();
