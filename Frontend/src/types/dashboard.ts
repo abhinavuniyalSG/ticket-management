@@ -29,21 +29,10 @@ export interface DashboardMetrics {
   closedTickets: number;
   statusDistribution: StatusDistributionEntry[];
   priorityDistribution: PriorityDistributionEntry[];
-  productivity: { averageCompletionTimeHours: number };
   ticketsOverTime: TicketsOverTimeEntry[];
-}
-
-export interface DepartmentBreakdown {
-  departmentId: string;
-  departmentName: string;
-  totalTickets: number;
-  statusDistribution: StatusDistributionEntry[];
-  priorityDistribution: PriorityDistributionEntry[];
-  productivity: { averageCompletionTimeHours: number };
 }
 
 export interface DashboardOverview {
   message: string;
   systemWide: Omit<DashboardMetrics, "message">;
-  departments: DepartmentBreakdown[];
 }

@@ -25,7 +25,13 @@ export class DashboardController {
     next: NextFunction,
   ) => {
     const requester = req.user as RequesterInfo;
-    const result = await DashboardService.getDashboardOverview(requester);
+    const query =
+      (req.normalized?.query as Pick<DashboardQueryInput, "period">) ??
+      req.query;
+    const result = await DashboardService.getDashboardOverview(
+      requester,
+      query,
+    );
     return res.status(200).json(result);
   });
 }

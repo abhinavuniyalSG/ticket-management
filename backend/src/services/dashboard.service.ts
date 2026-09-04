@@ -27,7 +27,6 @@ interface DashboardMetrics {
   closedTickets: number;
   statusDistribution: Array<{ status: TicketStatus; count: number }>;
   priorityDistribution: Array<{ priority: TicketPriority; count: number }>;
-  productivity: { averageCompletionTimeHours: number };
   ticketsOverTime: TicketsOverTimeEntry[];
 }
 
@@ -60,13 +59,11 @@ export class DashboardService {
     departmentId?: string,
     period: DashboardPeriod = DashboardPeriod.week,
   ): Promise<DashboardMetrics> {
-    const [statusCounts, priorityCounts, averageCompletionTimeHours, ticketsOverTime] =
-      await Promise.all([
-        DashboardRepository.getStatusCounts(departmentId),
-        DashboardRepository.getPriorityCounts(departmentId),
-        DashboardRepository.getAverageCompletionTimeHours(departmentId, period),
-        DashboardRepository.getTicketsOverTime(departmentId, period),
-      ]);
+    const [statusCounts, priorityCounts, ticketsOverTime] = await Promise.all([
+      DashboardRepository.getStatusCounts(departmentId),
+      DashboardRepository.getPriorityCounts(departmentId),
+      DashboardRepository.getTicketsOverTime(departmentId, period),
+    ]);
 
     return {
       totalTickets: statusCounts.total,
@@ -78,7 +75,6 @@ export class DashboardService {
       closedTickets: statusCounts.closed,
       statusDistribution: buildStatusDistribution(statusCounts),
       priorityDistribution: buildPriorityDistribution(priorityCounts),
-      productivity: { averageCompletionTimeHours },
       ticketsOverTime,
     };
   }
@@ -141,7 +137,10 @@ export class DashboardService {
     };
   }
 
-  public static async getDashboardOverview(requester: RequesterInfo) {
+  public static async getDashboardOverview(
+    requester: RequesterInfo,
+    query: Pick<DashboardQueryInput, "period">,
+  ) {
     if (requester.role !== roleEnum.superAdmin) {
       throw new HttpError(
         403,
@@ -149,24 +148,11 @@ export class DashboardService {
       );
     }
 
-    const [systemWide, departmentRows] = await Promise.all([
-      this.buildMetrics(undefined),
-      DashboardRepository.getDepartmentBreakdown(),
-    ]);
+    const systemWide = await this.buildMetrics(undefined, query.period);
 
     return {
       message: "Dashboard overview fetched successfully",
       systemWide,
-      departments: departmentRows.map((row) => ({
-        departmentId: row.departmentId,
-        departmentName: row.departmentName,
-        totalTickets: row.statusCounts.total,
-        statusDistribution: buildStatusDistribution(row.statusCounts),
-        priorityDistribution: buildPriorityDistribution(row.priorityCounts),
-        productivity: {
-          averageCompletionTimeHours: row.averageCompletionTimeHours,
-        },
-      })),
     };
   }
 }

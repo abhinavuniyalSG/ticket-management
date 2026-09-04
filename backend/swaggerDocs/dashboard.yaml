@@ -8,17 +8,14 @@ tags:
       |---|---|---|
       | `user` | 403 Forbidden | 403 Forbidden |
       | `admin` | Own department only. Supplying `departmentId` is rejected with 403. | 403 Forbidden |
-      | `super_admin` | `departmentId` query param scopes to that department; omitted = entire system | System-wide stats + per-department breakdown |
+      | `super_admin` | `departmentId` query param scopes to that department; omitted = entire system | System-wide stats only |
 
       ### Notes
-      - `productivity.averageCompletionTimeHours` is the average of `closedAt - createdAt` (in hours) for
-        tickets with status `closed` whose `closedAt` falls within the last 7 calendar days. There is no
-        `completedAt` timestamp in the schema, so tickets that reached `completed` but have not yet been
-        `closed` cannot contribute to this figure. `0` is returned when no ticket qualifies.
-      - `ticketsOverTime` always contains exactly 7 chronological entries (oldest first), one per calendar
-        day of the trailing 7-day window, including days with zero activity.
+      - `period` (`week`, `month`, or `year`, default `week`) controls the window for `ticketsOverTime`:
+        7 daily buckets for `week`, 30 daily buckets for `month`, 12 monthly buckets for `year` (oldest
+        first, including buckets with zero activity).
       - `statusDistribution` and `priorityDistribution` always include every enum value, with `count: 0`
-        for values that have no matching tickets.
+        for values that have no matching tickets, and are not affected by `period`.
 
 paths:
   /dashboard:
@@ -27,7 +24,7 @@ paths:
         - Dashboard
       summary: Get dashboard statistics (role-scoped)
       description: >
-        Returns ticket counts, status/priority distributions, productivity, and a 7-day activity trend.
+        Returns ticket counts, status/priority distributions, and a `period`-windowed activity trend.
 
         - **admin**: always scoped to the caller's own department. Passing `departmentId` is rejected (403).
         - **super_admin**: pass `departmentId` to scope to a department, or omit it for system-wide stats.
@@ -45,6 +42,14 @@ paths:
             type: string
             format: uuid
           example: "01906c26-1234-7abc-adef-000000000020"
+        - name: period
+          in: query
+          required: false
+          description: Window for `ticketsOverTime`. Defaults to `week`.
+          schema:
+            type: string
+            enum: [week, month, year]
+            default: week
       responses:
         "200":
           description: Dashboard statistics
@@ -87,12 +92,21 @@ paths:
     get:
       tags:
         - Dashboard
-      summary: Get system-wide dashboard overview with per-department breakdown
+      summary: Get the system-wide dashboard overview
       description: >
-        `super_admin` only. Returns the same dashboard metrics computed system-wide, plus a per-department
-        breakdown (total tickets, status/priority distribution, productivity) for every existing department.
+        `super_admin` only. Returns the same dashboard metrics as `GET /dashboard`, computed system-wide
+        (never scoped to a department).
       security:
         - bearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          required: false
+          description: Window for `ticketsOverTime`. Defaults to `week`.
+          schema:
+            type: string
+            enum: [week, month, year]
+            default: week
       responses:
         "200":
           description: Dashboard overview
@@ -106,10 +120,8 @@ paths:
                     example: Dashboard overview fetched successfully
                   systemWide:
                     $ref: "#/components/schemas/DashboardMetrics"
-                  departments:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/DepartmentDashboardBreakdown"
+        "400":
+          $ref: "#/components/responses/ValidationError"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -153,16 +165,6 @@ components:
           type: integer
           minimum: 0
 
-    DashboardProductivity:
-      type: object
-      properties:
-        averageCompletionTimeHours:
-          type: number
-          description: >
-            Average hours from ticket creation to closure, for tickets closed within the last 7 calendar
-            days. `0` if no ticket qualifies.
-          example: 18.42
-
     DashboardMetrics:
       type: object
       properties:
@@ -195,35 +197,9 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/PriorityDistributionEntry"
-        productivity:
-          $ref: "#/components/schemas/DashboardProductivity"
         ticketsOverTime:
           type: array
-          minItems: 7
-          maxItems: 7
+          description: >
+            7 entries for `period=week`, 30 for `period=month`, 12 for `period=year`.
           items:
             $ref: "#/components/schemas/TicketsOverTimeEntry"
-
-    DepartmentDashboardBreakdown:
-      type: object
-      properties:
-        departmentId:
-          type: string
-          format: uuid
-          example: "01906c26-1234-7abc-adef-000000000020"
-        departmentName:
-          type: string
-          example: Engineering
-        totalTickets:
-          type: integer
-          minimum: 0
-        statusDistribution:
-          type: array
-          items:
-            $ref: "#/components/schemas/StatusDistributionEntry"
-        priorityDistribution:
-          type: array
-          items:
-            $ref: "#/components/schemas/PriorityDistributionEntry"
-        productivity:
-          $ref: "#/components/schemas/DashboardProductivity"

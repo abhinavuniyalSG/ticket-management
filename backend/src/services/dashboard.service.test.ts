@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { DashboardService } from "./dashboard.service.js";
 import { DashboardRepository } from "../database/repositry/dashboard.repository.js";
+import type { DashboardPeriod } from "../database/repositry/dashboard.repository.js";
 import { DepartmentRepository } from "../database/repositry/department.repository.js";
 import { UserRepository } from "../database/repositry/user.repository.js";
 import { roleEnum } from "../types/user.js";
@@ -11,9 +12,7 @@ vi.mock("../database/repositry/dashboard.repository.js", () => ({
   DashboardRepository: {
     getStatusCounts: vi.fn(),
     getPriorityCounts: vi.fn(),
-    getAverageCompletionTimeHours: vi.fn(),
     getTicketsOverTime: vi.fn(),
-    getDepartmentBreakdown: vi.fn(),
   },
 }));
 
@@ -49,7 +48,6 @@ beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(DashboardRepository.getStatusCounts).mockResolvedValue(statusCounts);
   vi.mocked(DashboardRepository.getPriorityCounts).mockResolvedValue(priorityCounts);
-  vi.mocked(DashboardRepository.getAverageCompletionTimeHours).mockResolvedValue(12.5);
   vi.mocked(DashboardRepository.getTicketsOverTime).mockResolvedValue([]);
 });
 
@@ -110,33 +108,28 @@ describe("getDashboard scoping", () => {
 
     expect(result.statusDistribution).toContainEqual({ status: "open", count: 2 });
     expect(result.priorityDistribution).toContainEqual({ priority: "urgent", count: 1 });
-    expect(result.productivity.averageCompletionTimeHours).toBe(12.5);
   });
 });
 
 describe("getDashboardOverview", () => {
   it("blocks anyone but super_admin", async () => {
     await expect(
-      DashboardService.getDashboardOverview(requester({ role: roleEnum.admin })),
+      DashboardService.getDashboardOverview(requester({ role: roleEnum.admin }), {}),
     ).rejects.toMatchObject({ statusCode: 403 });
   });
 
-  it("returns system-wide metrics plus a per-department breakdown", async () => {
-    vi.mocked(DashboardRepository.getDepartmentBreakdown).mockResolvedValue([
-      {
-        departmentId: "dept-1",
-        departmentName: "Support",
-        statusCounts,
-        priorityCounts,
-        averageCompletionTimeHours: 5,
-      },
-    ]);
-
-    const result = await DashboardService.getDashboardOverview(requester());
+  it("returns system-wide metrics, unscoped to any department", async () => {
+    const result = await DashboardService.getDashboardOverview(requester(), {});
 
     expect(result.systemWide.totalTickets).toBe(10);
-    expect(result.departments).toHaveLength(1);
-    expect(result.departments[0]!.departmentName).toBe("Support");
-    expect(result.departments[0]!.productivity.averageCompletionTimeHours).toBe(5);
+    expect(DashboardRepository.getStatusCounts).toHaveBeenCalledWith(undefined);
+  });
+
+  it("passes the requested period through to the trend query", async () => {
+    await DashboardService.getDashboardOverview(requester(), {
+      period: "month" as DashboardPeriod,
+    });
+
+    expect(DashboardRepository.getTicketsOverTime).toHaveBeenCalledWith(undefined, "month");
   });
 });

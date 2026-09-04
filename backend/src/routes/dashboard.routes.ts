@@ -15,6 +15,7 @@ class DashboardRoutes {
 
     this.router.get(
       "/overview",
+      this.validator("query", this.requestSchema.dashboardOverviewQuerySchema),
       DashboardController.getDashboardOverviewController,
     );
 

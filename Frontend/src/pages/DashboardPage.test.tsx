@@ -8,7 +8,7 @@ import type { AuthContextValue } from "../app/providers/AuthContext";
 import { dashboardService } from "../services/dashboardService";
 import { departmentService } from "../services/departmentService";
 import { ApiError } from "../types/api";
-import type { DashboardMetrics, DepartmentBreakdown } from "../types/dashboard";
+import type { DashboardMetrics, DashboardOverview } from "../types/dashboard";
 import type { Department } from "../types/department";
 import type { SafeUser } from "../types/user";
 
@@ -31,7 +31,6 @@ function makeMetrics(overrides: Partial<DashboardMetrics> = {}): DashboardMetric
     closedTickets: 1,
     statusDistribution: [{ status: "open", count: 3 }],
     priorityDistribution: [{ priority: "high", count: 2 }],
-    productivity: { averageCompletionTimeHours: 5.5 },
     ticketsOverTime: [{ date: "2026-01-01", created: 2, closed: 1 }],
     ...overrides,
   };
@@ -49,14 +48,11 @@ function makeDepartment(overrides: Partial<Department> = {}): Department {
   };
 }
 
-function makeBreakdown(overrides: Partial<DepartmentBreakdown> = {}): DepartmentBreakdown {
+function makeOverview(overrides: Partial<DashboardOverview> = {}): DashboardOverview {
+  const { message: _message, ...metrics } = makeMetrics();
   return {
-    departmentId: "dept-1",
-    departmentName: "Support",
-    totalTickets: 5,
-    statusDistribution: [],
-    priorityDistribution: [],
-    productivity: { averageCompletionTimeHours: 3 },
+    message: "ok",
+    systemWide: metrics,
     ...overrides,
   };
 }
@@ -126,13 +122,8 @@ describe("DashboardPage", () => {
     expect(departmentService.list).not.toHaveBeenCalled();
   });
 
-  it("renders a system-wide overview and department breakdown for a super admin", async () => {
-    vi.mocked(dashboardService.get).mockResolvedValue(makeMetrics());
-    vi.mocked(dashboardService.getOverview).mockResolvedValue({
-      message: "ok",
-      systemWide: makeMetrics(),
-      departments: [makeBreakdown()],
-    });
+  it("calls the overview endpoint for a super admin with no department filter", async () => {
+    vi.mocked(dashboardService.getOverview).mockResolvedValue(makeOverview());
     vi.mocked(departmentService.list).mockResolvedValue({
       message: "ok",
       departments: [makeDepartment()],
@@ -142,11 +133,9 @@ describe("DashboardPage", () => {
 
     expect(await screen.findByText("System-wide ticket overview.")).toBeInTheDocument();
     expect(screen.getByLabelText("Filter dashboard by department")).toBeInTheDocument();
-    expect(await screen.findByText("Department comparison")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Support" })).toHaveAttribute(
-      "href",
-      "/departments/dept-1",
-    );
+    expect(await screen.findByText("Total tickets")).toBeInTheDocument();
+    expect(dashboardService.getOverview).toHaveBeenCalledWith("week");
+    expect(dashboardService.get).not.toHaveBeenCalled();
   });
 
   it("reloads metrics with the selected period", async () => {
@@ -164,14 +153,10 @@ describe("DashboardPage", () => {
     });
   });
 
-  it("filters by department for a super admin and hides the breakdown table", async () => {
+  it("switches from the overview endpoint to the scoped endpoint when a super admin picks a department", async () => {
     const user = userEvent.setup();
+    vi.mocked(dashboardService.getOverview).mockResolvedValue(makeOverview());
     vi.mocked(dashboardService.get).mockResolvedValue(makeMetrics());
-    vi.mocked(dashboardService.getOverview).mockResolvedValue({
-      message: "ok",
-      systemWide: makeMetrics(),
-      departments: [makeBreakdown()],
-    });
     vi.mocked(departmentService.list).mockResolvedValue({
       message: "ok",
       departments: [makeDepartment()],
@@ -179,16 +164,13 @@ describe("DashboardPage", () => {
 
     renderDashboard({ user: makeUser({ role: "super_admin" }) });
 
-    await screen.findByText("Department comparison");
-    vi.mocked(dashboardService.get).mockClear();
+    await screen.findByText("Total tickets");
+    expect(dashboardService.get).not.toHaveBeenCalled();
 
     await user.selectOptions(screen.getByLabelText("Filter dashboard by department"), "dept-1");
 
     await waitFor(() => {
       expect(dashboardService.get).toHaveBeenCalledWith("dept-1", "week");
-    });
-    await waitFor(() => {
-      expect(screen.queryByText("Department comparison")).not.toBeInTheDocument();
     });
   });
 });

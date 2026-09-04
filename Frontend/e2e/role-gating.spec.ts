@@ -36,13 +36,12 @@ async function mockDashboard(page: import("@playwright/test").Page) {
     closedTickets: 0,
     statusDistribution: [],
     priorityDistribution: [],
-    productivity: { averageCompletionTimeHours: 0 },
     ticketsOverTime: [],
   };
   await page.route("**/api/dashboard/overview", (route) =>
     route.fulfill({
       status: 200,
-      json: { message: "OK", systemWide: metrics, departments: [] },
+      json: { message: "OK", systemWide: metrics },
     }),
   );
   await page.route("**/api/dashboard*", (route) =>

@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { PageContainer } from "../components/layout/PageContainer";
 import { PageHeader } from "../components/layout/PageHeader";
 import { Select } from "../components/atoms/Select";
@@ -15,11 +14,7 @@ import {
   DASHBOARD_PERIODS,
   DASHBOARD_PERIOD_LABELS,
 } from "../constants/options";
-import type {
-  DashboardMetrics,
-  DashboardPeriod,
-  DepartmentBreakdown,
-} from "../types/dashboard";
+import type { DashboardMetrics, DashboardPeriod } from "../types/dashboard";
 import type { Department } from "../types/department";
 
 function PeriodToggle({
@@ -62,9 +57,6 @@ export function DashboardPage() {
   const [departmentId, setDepartmentId] = useState("");
   const [period, setPeriod] = useState<DashboardPeriod>("week");
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
-  const [breakdown, setBreakdown] = useState<DepartmentBreakdown[] | null>(
-    null,
-  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -83,25 +75,17 @@ export function DashboardPage() {
     setIsLoading(true);
     setError(null);
 
-    const requests: Promise<unknown>[] = [
-      dashboardService
-        .get(isSuperAdmin ? departmentId || undefined : undefined, period)
-        .then((res) => {
-          if (!cancelled) setMetrics(res);
-        }),
-    ];
+    const request =
+      isSuperAdmin && !departmentId
+        ? dashboardService
+            .getOverview(period)
+            .then((res) => ({ message: res.message, ...res.systemWide }))
+        : dashboardService.get(isSuperAdmin ? departmentId : undefined, period);
 
-    if (isSuperAdmin && !departmentId) {
-      requests.push(
-        dashboardService.getOverview().then((res) => {
-          if (!cancelled) setBreakdown(res.departments);
-        }),
-      );
-    } else {
-      setBreakdown(null);
-    }
-
-    Promise.all(requests)
+    request
+      .then((res) => {
+        if (!cancelled) setMetrics(res);
+      })
       .catch((err: unknown) => {
         if (!cancelled) {
           setError(
@@ -159,70 +143,13 @@ export function DashboardPage() {
 
       {!isLoading && !error && metrics && (
         <div className="flex flex-col gap-6">
-          <DashboardStats metrics={metrics} period={period} />
+          <DashboardStats metrics={metrics} />
           <DashboardCharts
             statusDistribution={metrics.statusDistribution}
             priorityDistribution={metrics.priorityDistribution}
             ticketsOverTime={metrics.ticketsOverTime}
             period={period}
           />
-
-          {breakdown && breakdown.length > 0 && (
-            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
-              <h2 className="mb-3 text-sm font-semibold text-slate-900">
-                Department comparison
-              </h2>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-slate-200 text-sm">
-                  <thead className="bg-slate-50">
-                    <tr>
-                      <th
-                        scope="col"
-                        className="px-3 py-2 text-left font-medium text-slate-600"
-                      >
-                        Department
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-3 py-2 text-right font-medium text-slate-600"
-                      >
-                        Total tickets
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-3 py-2 text-right font-medium text-slate-600"
-                      >
-                        Avg. completion
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {breakdown.map((row) => (
-                      <tr key={row.departmentId} className="hover:bg-slate-50">
-                        <td className="px-3 py-2">
-                          <Link
-                            to={`/departments/${row.departmentId}`}
-                            className="font-medium text-slate-900 hover:underline"
-                          >
-                            {row.departmentName}
-                          </Link>
-                        </td>
-                        <td className="px-3 py-2 text-right text-slate-700">
-                          {row.totalTickets}
-                        </td>
-                        <td className="px-3 py-2 text-right text-slate-700">
-                          {row.productivity.averageCompletionTimeHours.toFixed(
-                            1,
-                          )}
-                          h
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
         </div>
       )}
     </PageContainer>

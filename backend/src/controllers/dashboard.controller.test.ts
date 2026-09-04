@@ -43,15 +43,15 @@ describe("getDashboardController", () => {
 });
 
 describe("getDashboardOverviewController", () => {
-  it("passes the requester through and returns 200", async () => {
+  it("passes the requester and normalized query through, and returns 200", async () => {
     const res = makeRes();
     vi.mocked(DashboardService.getDashboardOverview).mockResolvedValue({ message: "ok" } as any);
-    const req = { user: requester } as any;
+    const req = { user: requester, normalized: { query: { period: "month" } }, query: {} } as any;
 
     DashboardController.getDashboardOverviewController(req, res, next);
     await flush();
 
-    expect(DashboardService.getDashboardOverview).toHaveBeenCalledWith(requester);
+    expect(DashboardService.getDashboardOverview).toHaveBeenCalledWith(requester, { period: "month" });
     expect(res.status).toHaveBeenCalledWith(200);
   });
 });

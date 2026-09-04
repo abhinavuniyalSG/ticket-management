@@ -5,5 +5,6 @@ export const dashboardService = {
   get: (departmentId?: string, period?: DashboardPeriod) =>
     apiRequest<DashboardMetrics>("/dashboard", { query: { departmentId, period } }),
 
-  getOverview: () => apiRequest<DashboardOverview>("/dashboard/overview"),
+  getOverview: (period?: DashboardPeriod) =>
+    apiRequest<DashboardOverview>("/dashboard/overview", { query: { period } }),
 };

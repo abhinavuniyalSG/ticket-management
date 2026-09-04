@@ -15,4 +15,14 @@ export class DashboardSchema {
         .default(DashboardPeriod.week),
     })
     .strict();
+
+  public dashboardOverviewQuerySchema = z
+    .object({
+      period: z
+        .enum([DashboardPeriod.week, DashboardPeriod.month, DashboardPeriod.year], {
+          error: "Period must be one of week, month, year",
+        })
+        .default(DashboardPeriod.week),
+    })
+    .strict();
 }

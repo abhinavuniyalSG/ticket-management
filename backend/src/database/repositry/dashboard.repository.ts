@@ -1,6 +1,5 @@
 import { AppDataSource } from "../dbConnection.js";
 import { Ticket } from "../models/ticket.model.js";
-import { Department } from "../models/department.model.js";
 import { TicketPriority, TicketStatus } from "../../types/ticket.js";
 
 export interface DashboardStatusCounts {
@@ -32,19 +31,10 @@ export enum DashboardPeriod {
   year = "year",
 }
 
-export interface DepartmentBreakdownRow {
-  departmentId: string;
-  departmentName: string;
-  statusCounts: DashboardStatusCounts;
-  priorityCounts: DashboardPriorityCounts;
-  averageCompletionTimeHours: number;
-}
-
 const TREND_WINDOW_DAYS = 7;
 
 export class DashboardRepository {
   private static repository = AppDataSource.getRepository(Ticket);
-  private static departmentRepository = AppDataSource.getRepository(Department);
 
   public static async getStatusCounts(
     departmentId?: string,
@@ -133,51 +123,6 @@ export class DashboardRepository {
       high: Number(result.high ?? 0),
       urgent: Number(result.urgent ?? 0),
     };
-  }
-
-  private static getCompletionWindowInterval(period: DashboardPeriod): string {
-    switch (period) {
-      case DashboardPeriod.month:
-        return "29 days";
-      case DashboardPeriod.year:
-        return "12 months";
-      case DashboardPeriod.week:
-      default:
-        return "6 days";
-    }
-  }
-
-  public static async getAverageCompletionTimeHours(
-    departmentId?: string,
-    period: DashboardPeriod = DashboardPeriod.week,
-  ): Promise<number> {
-    const windowInterval = this.getCompletionWindowInterval(period);
-    const query = this.repository
-      .createQueryBuilder("ticket")
-      .select(
-        "AVG(EXTRACT(EPOCH FROM (ticket.closedAt - ticket.createdAt)) / 3600.0)",
-        "avgHours",
-      )
-      .where("ticket.status = :closed", { closed: TicketStatus.closed })
-      .andWhere("ticket.closedAt IS NOT NULL")
-      .andWhere("ticket.createdAt IS NOT NULL")
-      .andWhere(
-        `ticket.closedAt >= CURRENT_DATE - INTERVAL '${windowInterval}'`,
-      );
-
-    if (departmentId) {
-      query.andWhere("ticket.departmentId = :departmentId", { departmentId });
-    }
-
-    const result = await query.getRawOne();
-    const rawAvg = result?.avgHours;
-
-    if (rawAvg === null || rawAvg === undefined) {
-      return 0;
-    }
-
-    const avg = Number(rawAvg);
-    return Number.isFinite(avg) ? Math.round(avg * 100) / 100 : 0;
   }
 
   /** UTC bucket keys for the period, oldest first, always 'YYYY-MM-DD' (first-of-month for `year`). */
@@ -271,99 +216,5 @@ export class DashboardRepository {
       created: createdMap.get(date) ?? 0,
       closed: closedMap.get(date) ?? 0,
     }));
-  }
-
-  public static async getDepartmentBreakdown(): Promise<
-    DepartmentBreakdownRow[]
-  > {
-    const rows = await this.departmentRepository
-      .createQueryBuilder("dep")
-      .leftJoin("dep.tickets", "t")
-      .select("dep.departmentId", "department_id")
-      .addSelect("dep.departmentName", "department_name")
-      .addSelect("COUNT(t.ticketId)::int", "total")
-      .addSelect("COUNT(*) FILTER (WHERE t.status = :open)::int", "open")
-      .addSelect(
-        "COUNT(*) FILTER (WHERE t.status = :assigned)::int",
-        "assigned",
-      )
-      .addSelect(
-        "COUNT(*) FILTER (WHERE t.status = :inProgress)::int",
-        "in_progress",
-      )
-      .addSelect("COUNT(*) FILTER (WHERE t.status = :reviewed)::int", "reviewed")
-      .addSelect(
-        "COUNT(*) FILTER (WHERE t.status = :completed)::int",
-        "completed",
-      )
-      .addSelect("COUNT(*) FILTER (WHERE t.status = :closed)::int", "closed")
-      .addSelect(
-        "COUNT(*) FILTER (WHERE t.priority = :low)::int",
-        "priority_low",
-      )
-      .addSelect(
-        "COUNT(*) FILTER (WHERE t.priority = :medium)::int",
-        "priority_medium",
-      )
-      .addSelect(
-        "COUNT(*) FILTER (WHERE t.priority = :high)::int",
-        "priority_high",
-      )
-      .addSelect(
-        "COUNT(*) FILTER (WHERE t.priority = :urgent)::int",
-        "priority_urgent",
-      )
-      .addSelect(
-        `AVG(EXTRACT(EPOCH FROM (t.closedAt - t.createdAt)) / 3600.0) FILTER (
-          WHERE t.status = :closed
-            AND t.closedAt IS NOT NULL
-            AND t.closedAt >= CURRENT_DATE - INTERVAL '${TREND_WINDOW_DAYS - 1} days'
-        )`,
-        "avg_completion_hours",
-      )
-      .setParameters({
-        open: TicketStatus.open,
-        assigned: TicketStatus.assigned,
-        inProgress: TicketStatus.inProgress,
-        reviewed: TicketStatus.reviewed,
-        completed: TicketStatus.completed,
-        closed: TicketStatus.closed,
-        low: TicketPriority.low,
-        medium: TicketPriority.medium,
-        high: TicketPriority.high,
-        urgent: TicketPriority.urgent,
-      })
-      .groupBy("dep.departmentId")
-      .addGroupBy("dep.departmentName")
-      .orderBy("dep.departmentName", "ASC")
-      .getRawMany<Record<string, string | number | null>>();
-
-    return rows.map((row) => {
-      const rawAvg = row.avg_completion_hours;
-      const avg = rawAvg === null || rawAvg === undefined ? 0 : Number(rawAvg);
-
-      return {
-        departmentId: String(row.department_id),
-        departmentName: String(row.department_name),
-        statusCounts: {
-          total: Number(row.total ?? 0),
-          open: Number(row.open ?? 0),
-          assigned: Number(row.assigned ?? 0),
-          inProgress: Number(row.in_progress ?? 0),
-          reviewed: Number(row.reviewed ?? 0),
-          completed: Number(row.completed ?? 0),
-          closed: Number(row.closed ?? 0),
-        },
-        priorityCounts: {
-          low: Number(row.priority_low ?? 0),
-          medium: Number(row.priority_medium ?? 0),
-          high: Number(row.priority_high ?? 0),
-          urgent: Number(row.priority_urgent ?? 0),
-        },
-        averageCompletionTimeHours: Number.isFinite(avg)
-          ? Math.round(avg * 100) / 100
-          : 0,
-      };
-    });
   }
 }
