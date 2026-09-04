@@ -5,7 +5,7 @@ import type { ContactType } from "../../types/contact.js";
 import { roleEnum } from "../../types/user.js";
 
 export interface UserFilterOptions {
-  departmentId?: string | null | undefined;
+  departmentId?: string | string[] | null | undefined; //added string becase now we mayt have multipe deaprtment becase an admin can manage multiple department
   department?: string | undefined;
   role?: roleEnum | undefined;
   firstName?: string | undefined;
@@ -41,6 +41,15 @@ export class UserRepository {
     if (filter?.departmentId !== undefined) {
       if (filter.departmentId === null) {
         query.andWhere("user.departmentId IS NULL");
+      } else if (Array.isArray(filter.departmentId)) {
+        if (filter.departmentId.length > 0) {
+          query.andWhere("user.departmentId IN (:...departmentIds)", {
+            departmentIds: filter.departmentId,
+          });
+        } else {
+          // An explicit empty scope means "no departments this caller may see".
+          query.andWhere("1 = 0");
+        }
       } else {
         query.andWhere("user.departmentId = :departmentId", {
           departmentId: filter.departmentId,
@@ -118,10 +127,7 @@ export class UserRepository {
   ): Promise<User | null> {
     return this.repository
       .createQueryBuilder("user")
-      .addSelect([
-        "user.verificationToken",
-        "user.verificationTokenExpires",
-      ])
+      .addSelect(["user.verificationToken", "user.verificationTokenExpires"])
       .where("user.verificationToken = :tokenHash", { tokenHash })
       .getOne();
   }

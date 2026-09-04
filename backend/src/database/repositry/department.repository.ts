@@ -46,6 +46,17 @@ export class DepartmentRepository {
       .getOne();
   }
 
+  /**
+   * Departments where the given user is set as the manager (Department.managedBy).
+   * A single user can manage more than one department.
+   */
+  public static async findByManager(userId: string): Promise<Department[]> {
+    return this.repository
+      .createQueryBuilder("department")
+      .where("department.managedBy = :userId", { userId })
+      .getMany();
+  }
+
   public static async createDepartment(
     data: Partial<Department>,
   ): Promise<Department> {

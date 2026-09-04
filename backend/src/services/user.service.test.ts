@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { UserService } from "./user.service.js";
 import { UserRepository } from "../database/repositry/user.repository.js";
 import { ContactRepository } from "../database/repositry/contact.repository.js";
+import { DepartmentRepository } from "../database/repositry/department.repository.js";
 import { roleEnum } from "../types/user.js";
 import type { RequesterInfo } from "./user.service.js";
 
@@ -9,6 +10,7 @@ vi.mock("../database/repositry/user.repository.js", () => ({
   UserRepository: {
     findAll: vi.fn(),
     findById: vi.fn(),
+    findByRoleAndDepartment: vi.fn(),
     updateUserWithContacts: vi.fn(),
     deleteUser: vi.fn(),
   },
@@ -21,6 +23,12 @@ vi.mock("../database/repositry/contact.repository.js", () => ({
     findById: vi.fn(),
     updateContact: vi.fn(),
     deleteContact: vi.fn(),
+  },
+}));
+
+vi.mock("../database/repositry/department.repository.js", () => ({
+  DepartmentRepository: {
+    findByManager: vi.fn(),
   },
 }));
 
@@ -51,6 +59,8 @@ function requester(overrides: Partial<RequesterInfo> = {}): RequesterInfo {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(UserRepository.findByRoleAndDepartment).mockResolvedValue([]);
+  vi.mocked(DepartmentRepository.findByManager).mockResolvedValue([]);
 });
 
 describe("getAllUsers", () => {
@@ -72,17 +82,45 @@ describe("getAllUsers", () => {
     await UserService.getAllUsers(requester({ id: "admin-1", role: roleEnum.admin }), {});
 
     expect(UserRepository.findAll).toHaveBeenCalledWith(
-      expect.objectContaining({ departmentId: DEPT_A }),
+      expect.objectContaining({ departmentId: [DEPT_A] }),
     );
   });
 
-  it("returns an empty list when the admin has no department", async () => {
+  it("also includes departments the admin manages, even if outside their own department", async () => {
+    vi.mocked(UserRepository.findById).mockResolvedValue(makeUser({ id: "admin-1", departmentId: DEPT_A }));
+    vi.mocked(DepartmentRepository.findByManager).mockResolvedValue([
+      { departmentId: DEPT_B } as any,
+    ]);
+    vi.mocked(UserRepository.findAll).mockResolvedValue([]);
+
+    await UserService.getAllUsers(requester({ id: "admin-1", role: roleEnum.admin }), {});
+
+    expect(UserRepository.findAll).toHaveBeenCalledWith(
+      expect.objectContaining({ departmentId: expect.arrayContaining([DEPT_A, DEPT_B]) }),
+    );
+  });
+
+  it("returns an empty list when the admin has no home department and manages none", async () => {
     vi.mocked(UserRepository.findById).mockResolvedValue(makeUser({ id: "admin-1", departmentId: null }));
 
     const result = await UserService.getAllUsers(requester({ id: "admin-1", role: roleEnum.admin }), {});
 
     expect(result.users).toEqual([]);
     expect(UserRepository.findAll).not.toHaveBeenCalled();
+  });
+
+  it("lists users from a managed department even when the admin has no home department", async () => {
+    vi.mocked(UserRepository.findById).mockResolvedValue(makeUser({ id: "admin-1", departmentId: null }));
+    vi.mocked(DepartmentRepository.findByManager).mockResolvedValue([
+      { departmentId: DEPT_B } as any,
+    ]);
+    vi.mocked(UserRepository.findAll).mockResolvedValue([]);
+
+    await UserService.getAllUsers(requester({ id: "admin-1", role: roleEnum.admin }), {});
+
+    expect(UserRepository.findAll).toHaveBeenCalledWith(
+      expect.objectContaining({ departmentId: [DEPT_B] }),
+    );
   });
 
   it("blocks a regular user from listing users", async () => {
@@ -149,6 +187,22 @@ describe("getUserById", () => {
     await expect(
       UserService.getUserById("target-1", requester({ id: "admin-1", role: roleEnum.admin })),
     ).rejects.toMatchObject({ statusCode: 403 });
+  });
+
+  it("lets an admin view a user in a department they manage, even if it isn't their home department", async () => {
+    vi.mocked(UserRepository.findById)
+      .mockResolvedValueOnce(makeUser({ id: "target-1", departmentId: DEPT_B }))
+      .mockResolvedValueOnce(makeUser({ id: "admin-1", departmentId: DEPT_A }));
+    vi.mocked(DepartmentRepository.findByManager).mockResolvedValue([
+      { departmentId: DEPT_B } as any,
+    ]);
+
+    const result = await UserService.getUserById(
+      "target-1",
+      requester({ id: "admin-1", role: roleEnum.admin }),
+    );
+
+    expect(result.user.id).toBe("target-1");
   });
 
   it("lets a regular user view their own details", async () => {
@@ -222,8 +276,10 @@ describe("updateUser", () => {
       .mockResolvedValueOnce(makeUser({ id: "target-1", departmentId: DEPT_B }))
       .mockResolvedValueOnce(makeUser({ id: "admin-1", departmentId: DEPT_A }));
 
+    // Uses a non-name field so this exercises the cross-department gate specifically,
+    // not the separate "can only change your own name" rule.
     await expect(
-      UserService.updateUser("target-1", { firstName: "New" }, requester({ id: "admin-1", role: roleEnum.admin })),
+      UserService.updateUser("target-1", { contacts: [] }, requester({ id: "admin-1", role: roleEnum.admin })),
     ).rejects.toMatchObject({ statusCode: 403 });
   });
 
@@ -261,6 +317,140 @@ describe("updateUser", () => {
       expect.objectContaining({ role: roleEnum.admin, departmentId: DEPT_B }),
       undefined,
     );
+  });
+
+  it("blocks any actor, including super_admin, from changing someone else's name", async () => {
+    vi.mocked(UserRepository.findById)
+      .mockResolvedValueOnce(makeUser({ id: "target-1" }))
+      .mockResolvedValueOnce(makeUser({ id: "super-1", role: roleEnum.superAdmin }));
+
+    await expect(
+      UserService.updateUser(
+        "target-1",
+        { firstName: "New" },
+        requester({ id: "super-1", role: roleEnum.superAdmin }),
+      ),
+    ).rejects.toMatchObject({ statusCode: 403 });
+    expect(UserRepository.updateUserWithContacts).not.toHaveBeenCalled();
+  });
+
+  it("blocks an admin from changing someone else's last name too", async () => {
+    vi.mocked(UserRepository.findById)
+      .mockResolvedValueOnce(makeUser({ id: "target-1", departmentId: DEPT_A }))
+      .mockResolvedValueOnce(makeUser({ id: "admin-1", role: roleEnum.admin, departmentId: DEPT_A }));
+
+    await expect(
+      UserService.updateUser(
+        "target-1",
+        { lastName: "New" },
+        requester({ id: "admin-1", role: roleEnum.admin }),
+      ),
+    ).rejects.toMatchObject({ statusCode: 403 });
+  });
+
+  it("lets a user change their own name", async () => {
+    vi.mocked(UserRepository.findById)
+      .mockResolvedValueOnce(makeUser({ id: "user-1" }))
+      .mockResolvedValueOnce(makeUser({ id: "user-1" }));
+    vi.mocked(UserRepository.updateUserWithContacts).mockResolvedValue(
+      makeUser({ id: "user-1", firstName: "New" }),
+    );
+
+    const result = await UserService.updateUser(
+      "user-1",
+      { firstName: "New" },
+      requester({ id: "user-1" }),
+    );
+
+    expect(result.user.firstName).toBe("New");
+  });
+
+  it("lets a super_admin change their own name", async () => {
+    vi.mocked(UserRepository.findById)
+      .mockResolvedValueOnce(makeUser({ id: "super-1", role: roleEnum.superAdmin }))
+      .mockResolvedValueOnce(makeUser({ id: "super-1", role: roleEnum.superAdmin }));
+    vi.mocked(UserRepository.updateUserWithContacts).mockResolvedValue(
+      makeUser({ id: "super-1", role: roleEnum.superAdmin, firstName: "New" }),
+    );
+
+    const result = await UserService.updateUser(
+      "super-1",
+      { firstName: "New" },
+      requester({ id: "super-1", role: roleEnum.superAdmin }),
+    );
+
+    expect(result.user.firstName).toBe("New");
+  });
+
+  it("blocks promoting a second user to admin in a department that already has one", async () => {
+    vi.mocked(UserRepository.findById)
+      .mockResolvedValueOnce(makeUser({ id: "target-1", departmentId: DEPT_A }))
+      .mockResolvedValueOnce(makeUser({ id: "super-1", role: roleEnum.superAdmin }));
+    vi.mocked(UserRepository.findByRoleAndDepartment).mockResolvedValue([
+      makeUser({ id: "existing-admin", role: roleEnum.admin, departmentId: DEPT_A }),
+    ]);
+
+    await expect(
+      UserService.updateUser(
+        "target-1",
+        { role: roleEnum.admin },
+        requester({ id: "super-1", role: roleEnum.superAdmin }),
+      ),
+    ).rejects.toMatchObject({ statusCode: 409 });
+    expect(UserRepository.updateUserWithContacts).not.toHaveBeenCalled();
+  });
+
+  it("blocks moving an existing admin into a department that already has a different admin", async () => {
+    vi.mocked(UserRepository.findById)
+      .mockResolvedValueOnce(makeUser({ id: "target-1", role: roleEnum.admin, departmentId: DEPT_A }))
+      .mockResolvedValueOnce(makeUser({ id: "super-1", role: roleEnum.superAdmin }));
+    vi.mocked(UserRepository.findByRoleAndDepartment).mockResolvedValue([
+      makeUser({ id: "existing-admin", role: roleEnum.admin, departmentId: DEPT_B }),
+    ]);
+
+    await expect(
+      UserService.updateUser(
+        "target-1",
+        { departmentId: DEPT_B },
+        requester({ id: "super-1", role: roleEnum.superAdmin }),
+      ),
+    ).rejects.toMatchObject({ statusCode: 409 });
+  });
+
+  it("allows re-saving an admin's other fields without tripping the one-admin-per-department rule on themselves", async () => {
+    const existingAdmin = makeUser({ id: "admin-1", role: roleEnum.admin, departmentId: DEPT_A });
+    vi.mocked(UserRepository.findById)
+      .mockResolvedValueOnce(existingAdmin)
+      .mockResolvedValueOnce(existingAdmin);
+    // The only admin found in the department is the target themselves, so this must not conflict.
+    vi.mocked(UserRepository.findByRoleAndDepartment).mockResolvedValue([existingAdmin]);
+    vi.mocked(UserRepository.updateUserWithContacts).mockResolvedValue(existingAdmin);
+
+    const result = await UserService.updateUser(
+      "admin-1",
+      { firstName: "Same" },
+      requester({ id: "admin-1", role: roleEnum.admin }),
+    );
+
+    expect(result.message).toBe("User updated successfully");
+  });
+
+  it("allows promoting a user to admin in a department with no existing admin", async () => {
+    vi.mocked(UserRepository.findById)
+      .mockResolvedValueOnce(makeUser({ id: "target-1", departmentId: DEPT_A }))
+      .mockResolvedValueOnce(makeUser({ id: "super-1", role: roleEnum.superAdmin }));
+    vi.mocked(UserRepository.findByRoleAndDepartment).mockResolvedValue([]);
+    vi.mocked(UserRepository.updateUserWithContacts).mockResolvedValue(
+      makeUser({ id: "target-1", role: roleEnum.admin, departmentId: DEPT_A }),
+    );
+
+    const result = await UserService.updateUser(
+      "target-1",
+      { role: roleEnum.admin },
+      requester({ id: "super-1", role: roleEnum.superAdmin }),
+    );
+
+    expect(result.user.role).toBe(roleEnum.admin);
   });
 
   it("throws 500 when the update fails to return an updated user", async () => {

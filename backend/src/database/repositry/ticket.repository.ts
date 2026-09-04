@@ -6,7 +6,11 @@ import { roleEnum } from "../../types/user.js";
 export interface TicketFilterOptions {
   requesterRole: roleEnum;
   requesterId: string;
-  requesterDepartmentId?: string | null | undefined;
+  /**
+   * Every department an admin requester may see tickets from: their own
+   * department plus any department they manage (Department.managedBy).
+   */
+  requesterDepartmentIds?: string[] | undefined;
   title?: string | undefined;
   status?: TicketStatus | undefined;
   priority?: TicketPriority | undefined;
@@ -45,12 +49,12 @@ export class TicketRepository {
         { requesterId: options.requesterId },
       );
     } else if (options.requesterRole === roleEnum.admin) {
-      if (options.requesterDepartmentId) {
+      if (options.requesterDepartmentIds && options.requesterDepartmentIds.length > 0) {
         query.andWhere(
-          "(ticket.createdById = :requesterId OR ticket.assignedToId = :requesterId OR ticket.departmentId = :adminDeptId)",
+          "(ticket.createdById = :requesterId OR ticket.assignedToId = :requesterId OR ticket.departmentId IN (:...adminDeptIds))",
           {
             requesterId: options.requesterId,
-            adminDeptId: options.requesterDepartmentId,
+            adminDeptIds: options.requesterDepartmentIds,
           },
         );
       } else {

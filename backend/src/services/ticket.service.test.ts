@@ -28,6 +28,7 @@ vi.mock("../database/repositry/user.repository.js", () => ({
 vi.mock("../database/repositry/department.repository.js", () => ({
   DepartmentRepository: {
     findById: vi.fn(),
+    findByManager: vi.fn(),
   },
 }));
 
@@ -81,6 +82,7 @@ function requester(overrides: Partial<RequesterInfo> = {}): RequesterInfo {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(DepartmentRepository.findByManager).mockResolvedValue([]);
 });
 
 describe("getTicketById permissions", () => {
@@ -140,6 +142,24 @@ describe("getTicketById permissions", () => {
     vi.mocked(UserRepository.findById).mockResolvedValue(
       makeUser({ id: "admin-1", role: roleEnum.admin, departmentId: DEPT_A }),
     );
+
+    const result = await TicketService.getTicketById(
+      "ticket-1",
+      requester({ id: "admin-1", role: roleEnum.admin }),
+    );
+
+    expect(result.ticket.ticketId).toBe("ticket-1");
+  });
+
+  it("lets an admin view a ticket in a department they manage, even outside their home department", async () => {
+    const ticket = makeTicket({ departmentId: DEPT_B, createdById: "other" });
+    vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
+    vi.mocked(UserRepository.findById).mockResolvedValue(
+      makeUser({ id: "admin-1", role: roleEnum.admin, departmentId: DEPT_A }),
+    );
+    vi.mocked(DepartmentRepository.findByManager).mockResolvedValue([
+      { departmentId: DEPT_B } as any,
+    ]);
 
     const result = await TicketService.getTicketById(
       "ticket-1",
@@ -926,9 +946,35 @@ describe("getAllTickets", () => {
 
     expect(TicketRepository.findAll).toHaveBeenCalledWith(
       expect.objectContaining({
-        requesterDepartmentId: DEPT_A,
+        requesterDepartmentIds: [DEPT_A],
         sortOrder: "ASC",
       }),
+    );
+  });
+
+  it("also scopes an admin's ticket list to departments they manage, beyond their home department", async () => {
+    vi.mocked(UserRepository.findById).mockResolvedValue(makeUser({ id: "admin-1", departmentId: DEPT_A }));
+    vi.mocked(DepartmentRepository.findByManager).mockResolvedValue([
+      { departmentId: DEPT_B } as any,
+    ]);
+    vi.mocked(TicketRepository.findAll).mockResolvedValue([]);
+
+    await TicketService.getAllTickets(requester({ id: "admin-1", role: roleEnum.admin }), {});
+
+    expect(TicketRepository.findAll).toHaveBeenCalledWith(
+      expect.objectContaining({
+        requesterDepartmentIds: expect.arrayContaining([DEPT_A, DEPT_B]),
+      }),
+    );
+  });
+
+  it("does not scope a super_admin or regular user's list by department at all", async () => {
+    vi.mocked(TicketRepository.findAll).mockResolvedValue([]);
+
+    await TicketService.getAllTickets(requester({ id: "user-1", role: roleEnum.user }), {});
+
+    expect(TicketRepository.findAll).toHaveBeenCalledWith(
+      expect.objectContaining({ requesterDepartmentIds: undefined }),
     );
   });
 });

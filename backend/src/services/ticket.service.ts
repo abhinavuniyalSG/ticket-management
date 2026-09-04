@@ -152,17 +152,43 @@ export class TicketService {
     }
   }
 
+  /**
+   * Every department id an admin may read tickets/users from: their own home
+   * department plus every department where they are set as the manager
+   * (Department.managedBy). Not applicable to other roles.
+   */
+  private static async getAdminScopedDepartmentIds(
+    adminId: string,
+    adminDepartmentId?: string | null,
+  ): Promise<string[]> {
+    const managedDepartments = await DepartmentRepository.findByManager(adminId);
+    return Array.from(
+      new Set(
+        [adminDepartmentId, ...managedDepartments.map((d) => d.departmentId)].filter(
+          (departmentId): departmentId is string => Boolean(departmentId),
+        ),
+      ),
+    );
+  }
+
   public static async getAllTickets(
     requester: RequesterInfo,
     query: TicketQueryInput,
   ) {
     const requesterUser = await UserRepository.findById(requester.id);
-    const requesterDepartmentId = requesterUser?.departmentId;
+
+    const requesterDepartmentIds =
+      requester.role === roleEnum.admin
+        ? await this.getAdminScopedDepartmentIds(
+            requester.id,
+            requesterUser?.departmentId,
+          )
+        : undefined;
 
     const tickets = await TicketRepository.findAll({
       requesterRole: requester.role as roleEnum,
       requesterId: requester.id,
-      requesterDepartmentId,
+      requesterDepartmentIds,
       title: query.title,
       status: query.status,
       priority: query.priority,
@@ -198,11 +224,13 @@ export class TicketService {
       const requesterUser = await UserRepository.findById(requester.id);
       const isCreator = ticket.createdById === requester.id;
       const isAssignee = ticket.assignedToId === requester.id;
-      const isSameDept =
-        requesterUser?.departmentId &&
-        requesterUser.departmentId === ticket.departmentId;
+      const scopedDepartmentIds = await this.getAdminScopedDepartmentIds(
+        requester.id,
+        requesterUser?.departmentId,
+      );
+      const isInScope = scopedDepartmentIds.includes(ticket.departmentId);
 
-      if (isCreator || isAssignee || isSameDept) {
+      if (isCreator || isAssignee || isInScope) {
         return {
           message: "Ticket details fetched successfully",
           ticket: this.sanitizeTicket(ticket),

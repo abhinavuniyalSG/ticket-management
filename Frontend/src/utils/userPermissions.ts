@@ -24,9 +24,7 @@ export function canEditUserDepartment(actor: User, target: User): boolean {
   return false;
 }
 
+/** Everyone, including admins and super_admins, may only rename themselves. */
 export function canEditUserName(actor: User, target: User): boolean {
-  if (actor.id === target.id) return true;
-  if (actor.role === "super_admin") return true;
-  if (actor.role === "admin") return actor.departmentId === target.departmentId;
-  return false;
+  return actor.id === target.id;
 }

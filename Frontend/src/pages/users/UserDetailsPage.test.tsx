@@ -174,28 +174,53 @@ describe("UserDetailsPage", () => {
     expect(screen.getByRole("button", { name: "Save changes" })).toBeInTheDocument();
   });
 
-  it("saves editable fields and reflects the updated user", async () => {
+  it("saves editable fields (role and department, but never someone else's name) and reflects the updated user", async () => {
     const target = makeUser();
     mockedUserService.getById.mockResolvedValue({ message: "ok", user: target });
     mockedUserService.update.mockResolvedValue({
       message: "User updated.",
-      user: { ...target, firstName: "Updated" },
+      user: { ...target, role: "admin" },
     });
     const user = userEvent.setup();
     renderPage();
 
     await screen.findByRole("heading", { name: "Other Person" });
+    // A super_admin viewing someone else can never edit that person's name.
+    expect(screen.getByLabelText("First name")).toBeDisabled();
+    expect(screen.getByLabelText("Last name")).toBeDisabled();
+    await user.selectOptions(screen.getByLabelText("Role"), "admin");
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() =>
+      expect(mockedUserService.update).toHaveBeenCalledWith("user-2", {
+        departmentId: null,
+        role: "admin",
+      }),
+    );
+    expect(mockedToast.success).toHaveBeenCalledWith("User updated.");
+  });
+
+  it("lets a user save their own name", async () => {
+    const self = makeUser({ id: "actor-1", role: "user" });
+    mockedUserService.getById.mockResolvedValue({ message: "ok", user: self });
+    mockedUserService.update.mockResolvedValue({
+      message: "User updated.",
+      user: { ...self, firstName: "Updated" },
+    });
+    const user = userEvent.setup();
+    renderPage(makeAuthValue({ user: self }), "actor-1");
+
+    await screen.findByRole("heading", { name: "Other Person" });
     const firstNameInput = screen.getByLabelText("First name");
+    expect(firstNameInput).toBeEnabled();
     await user.clear(firstNameInput);
     await user.type(firstNameInput, "Updated");
     await user.click(screen.getByRole("button", { name: "Save changes" }));
 
     await waitFor(() =>
-      expect(mockedUserService.update).toHaveBeenCalledWith("user-2", {
+      expect(mockedUserService.update).toHaveBeenCalledWith("actor-1", {
         firstName: "Updated",
         lastName: "Person",
-        departmentId: null,
-        role: "user",
       }),
     );
     expect(mockedToast.success).toHaveBeenCalledWith("User updated.");

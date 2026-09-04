@@ -1,6 +1,7 @@
 import { logger } from "../core/logger.js";
 import { UserRepository } from "../database/repositry/user.repository.js";
 import { ContactRepository } from "../database/repositry/contact.repository.js";
+import { DepartmentRepository } from "../database/repositry/department.repository.js";
 import { HttpError } from "../utils/httpError.utils.js";
 import { roleEnum } from "../types/user.js";
 import type { ContactType } from "../types/contact.js";
@@ -45,6 +46,25 @@ export class UserService {
     return sanitized;
   }
 
+  /**
+   * Every department id an admin may read tickets/users from: their own home
+   * department plus every department where they are set as the manager
+   * (Department.managedBy). Not applicable to other roles.
+   */
+  private static async getAdminScopedDepartmentIds(
+    adminId: string,
+    adminDepartmentId?: string | null,
+  ): Promise<string[]> {
+    const managedDepartments = await DepartmentRepository.findByManager(adminId);
+    return Array.from(
+      new Set(
+        [adminDepartmentId, ...managedDepartments.map((d) => d.departmentId)].filter(
+          (departmentId): departmentId is string => Boolean(departmentId),
+        ),
+      ),
+    );
+  }
+
   public static async getAllUsers(
     requester: RequesterInfo,
     query: UserQueryInput,
@@ -63,7 +83,12 @@ export class UserService {
 
     if (requester.role === roleEnum.admin) {
       const adminUser = await UserRepository.findById(requester.id);
-      if (!adminUser?.departmentId) {
+      const scopedDepartmentIds = await this.getAdminScopedDepartmentIds(
+        requester.id,
+        adminUser?.departmentId,
+      );
+
+      if (scopedDepartmentIds.length === 0) {
         return {
           message: "Users fetched successfully",
           users: [],
@@ -71,7 +96,7 @@ export class UserService {
       }
 
       const users = await UserRepository.findAll({
-        departmentId: adminUser.departmentId,
+        departmentId: scopedDepartmentIds,
         department: query.department,
         firstName: query.firstName,
         role: query.role,
@@ -108,9 +133,14 @@ export class UserService {
       }
 
       const adminUser = await UserRepository.findById(requester.id);
+      const scopedDepartmentIds = await this.getAdminScopedDepartmentIds(
+        requester.id,
+        adminUser?.departmentId,
+      );
+
       if (
-        adminUser?.departmentId &&
-        adminUser.departmentId === targetUser.departmentId
+        targetUser.departmentId &&
+        scopedDepartmentIds.includes(targetUser.departmentId)
       ) {
         return {
           message: "User details fetched successfully",
@@ -151,6 +181,16 @@ export class UserService {
 
     const requesterUser = await UserRepository.findById(requester.id);
 
+    const isChangingName =
+      updateData.firstName !== undefined || updateData.lastName !== undefined;
+
+    if (isChangingName && requester.id !== targetUser.id) {
+      throw new HttpError(
+        403,
+        "Forbidden: you can only change your own first or last name",
+      );
+    }
+
     if (requester.role === roleEnum.user) {
       if (requester.id !== targetUser.id) {
         throw new HttpError(
@@ -188,6 +228,31 @@ export class UserService {
       }
     } else if (requester.role !== roleEnum.superAdmin) {
       throw new HttpError(403, "Forbidden: insufficient permissions");
+    }
+
+    // A department may have at most one admin. Check whenever the update
+    // would leave the target user as an admin of a department, whether that's
+    // because the role is becoming admin, the department is changing, or both.
+    const effectiveRole = updateData.role ?? targetUser.role;
+    const effectiveDepartmentId =
+      updateData.departmentId !== undefined
+        ? updateData.departmentId
+        : targetUser.departmentId;
+
+    if (effectiveRole === roleEnum.admin && effectiveDepartmentId) {
+      const departmentAdmins = await UserRepository.findByRoleAndDepartment(
+        roleEnum.admin,
+        effectiveDepartmentId,
+      );
+      const conflictingAdmin = departmentAdmins.find(
+        (existingAdmin) => existingAdmin.id !== targetUser.id,
+      );
+      if (conflictingAdmin) {
+        throw new HttpError(
+          409,
+          "This department already has an admin. Reassign or remove the existing admin before assigning another.",
+        );
+      }
     }
 
     const userUpdates: Partial<User> = {};

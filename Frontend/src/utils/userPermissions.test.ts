@@ -96,22 +96,27 @@ describe("canEditUserName", () => {
     expect(canEditUserName(actor, actor)).toBe(true);
   });
 
-  it("lets a super admin edit anyone's name", () => {
+  it("blocks a super admin from editing anyone else's name", () => {
     const actor = makeUser({ role: "super_admin" });
     const target = makeUser({ id: "other", departmentId: "dept-2" });
-    expect(canEditUserName(actor, target)).toBe(true);
+    expect(canEditUserName(actor, target)).toBe(false);
   });
 
-  it("lets an admin edit a name within their own department", () => {
+  it("blocks an admin from editing a name within their own department", () => {
     const actor = makeUser({ role: "admin", departmentId: "dept-1" });
     const target = makeUser({ id: "other", departmentId: "dept-1" });
-    expect(canEditUserName(actor, target)).toBe(true);
+    expect(canEditUserName(actor, target)).toBe(false);
   });
 
   it("blocks an admin from editing a name in another department", () => {
     const actor = makeUser({ role: "admin", departmentId: "dept-1" });
     const target = makeUser({ id: "other", departmentId: "dept-2" });
     expect(canEditUserName(actor, target)).toBe(false);
+  });
+
+  it("lets an admin edit their own name", () => {
+    const actor = makeUser({ id: "admin-1", role: "admin" });
+    expect(canEditUserName(actor, actor)).toBe(true);
   });
 
   it("blocks a regular user from editing someone else's name", () => {
