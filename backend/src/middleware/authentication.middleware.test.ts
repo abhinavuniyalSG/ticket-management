@@ -22,18 +22,25 @@ describe("authMiddleware", () => {
 
     authMiddleware(req, res, next);
 
-    expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 401 }));
+    expect(next).toHaveBeenCalledWith(
+      expect.objectContaining({ statusCode: 401 }),
+    );
   });
 
   it("rejects with 401 when the decoded payload is missing required fields", () => {
     vi.mocked(extractToken).mockReturnValue("a-token");
-    vi.mocked(verifyToken).mockReturnValue({ id: "u1", email: "a@example.com" } as any); // no role, no typ
+    vi.mocked(verifyToken).mockReturnValue({
+      id: "u1",
+      email: "a@example.com",
+    } as any); // no role, no typ
 
     const req = { headers: {}, cookies: {} } as any;
 
     authMiddleware(req, res, next);
 
-    expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 401 }));
+    expect(next).toHaveBeenCalledWith(
+      expect.objectContaining({ statusCode: 401 }),
+    );
   });
 
   it("rejects with 401 when the token type isn't 'access'", () => {
@@ -49,7 +56,9 @@ describe("authMiddleware", () => {
 
     authMiddleware(req, res, next);
 
-    expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 401 }));
+    expect(next).toHaveBeenCalledWith(
+      expect.objectContaining({ statusCode: 401 }),
+    );
   });
 
   it("attaches the decoded user to the request and calls next() with no error on success", () => {
@@ -65,7 +74,12 @@ describe("authMiddleware", () => {
 
     authMiddleware(req, res, next);
 
-    expect(req.user).toEqual({ id: "u1", email: "a@example.com", role: "user", typ: "access" });
+    expect(req.user).toEqual({
+      id: "u1",
+      email: "a@example.com",
+      role: "user",
+      typ: "access",
+    });
     expect(next).toHaveBeenCalledWith();
   });
 
@@ -79,7 +93,12 @@ describe("authMiddleware", () => {
 
     authMiddleware(req, res, next);
 
-    expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 401, message: "Token has expired" }));
+    expect(next).toHaveBeenCalledWith(
+      expect.objectContaining({
+        statusCode: 401,
+        message: "Token has expired",
+      }),
+    );
   });
 
   it("wraps an unexpected error into a generic 500", () => {
@@ -92,6 +111,8 @@ describe("authMiddleware", () => {
 
     authMiddleware(req, res, next);
 
-    expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 500 }));
+    expect(next).toHaveBeenCalledWith(
+      expect.objectContaining({ statusCode: 500 }),
+    );
   });
 });

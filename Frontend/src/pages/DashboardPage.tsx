@@ -10,11 +10,13 @@ import { dashboardService } from "../services/dashboardService";
 import { departmentService } from "../services/departmentService";
 import { useAuth } from "../hooks/useAuth";
 import { ApiError } from "../types/api";
-import {
-  DASHBOARD_PERIODS,
-  DASHBOARD_PERIOD_LABELS,
-} from "../constants/options";
-import type { DashboardMetrics, DashboardPeriod } from "../types/dashboard";
+import { DASHBOARD_PERIODS, DASHBOARD_PERIOD_LABELS } from "../constants/options";
+import type {
+  DashboardMetrics,
+  DashboardOverview,
+  DashboardPeriod,
+  StatusDistributionEntry,
+} from "../types/dashboard";
 import type { Department } from "../types/department";
 
 function PeriodToggle({
@@ -49,25 +51,42 @@ function PeriodToggle({
   );
 }
 
+/** `/dashboard/overview` has no statusDistribution array; it's rebuilt from its per-status counts. */
+function statusDistributionFrom(overview: DashboardOverview): StatusDistributionEntry[] {
+  return [
+    { status: "open", count: overview.openTickets },
+    { status: "assigned", count: overview.assignedTickets },
+    { status: "in_progress", count: overview.inProgressTickets },
+    { status: "reviewed", count: overview.reviewedTickets },
+    { status: "completed", count: overview.completedTickets },
+    { status: "closed", count: overview.closedTickets },
+  ];
+}
+
 export function DashboardPage() {
   const { user } = useAuth();
   const isSuperAdmin = user?.role === "super_admin";
+  const canFilterByDepartment = isSuperAdmin || user?.role === "admin";
 
   const [departments, setDepartments] = useState<Department[]>([]);
   const [departmentId, setDepartmentId] = useState("");
-  const [period, setPeriod] = useState<DashboardPeriod>("week");
+  const [period, setPeriod] = useState<DashboardPeriod>("day");
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isSuperAdmin) {
-      departmentService
-        .list()
-        .then((res) => setDepartments(res.departments))
-        .catch(() => undefined);
-    }
-  }, [isSuperAdmin]);
+    if (!canFilterByDepartment) return;
+    departmentService
+      .list()
+      .then((res) => setDepartments(res.departments))
+      .catch(() => undefined);
+  }, [canFilterByDepartment]);
+
+  // An admin may manage more than one department; only offer those in their picker.
+  const selectableDepartments = isSuperAdmin
+    ? departments
+    : departments.filter((d) => d.managedBy === user?.id);
 
   useEffect(() => {
     let cancelled = false;
@@ -75,16 +94,34 @@ export function DashboardPage() {
     setIsLoading(true);
     setError(null);
 
-    const request =
-      isSuperAdmin && !departmentId
-        ? dashboardService
-            .getOverview(period)
-            .then((res) => ({ message: res.message, ...res.systemWide }))
-        : dashboardService.get(isSuperAdmin ? departmentId : undefined, period);
+    const scopedDepartmentId =
+      canFilterByDepartment && departmentId ? departmentId : undefined;
 
-    request
-      .then((res) => {
-        if (!cancelled) setMetrics(res);
+    // Both routes share the same department/period scoping, so one selection
+    // drives both calls: overview for the counts (and status distribution,
+    // rebuilt from them), the scoped dashboard for priority distribution and
+    // the trend, which overview doesn't return.
+    Promise.all([
+      dashboardService.getOverview(scopedDepartmentId, period),
+      dashboardService.get(scopedDepartmentId, period),
+    ])
+      .then(([overview, dashboard]) => {
+        if (cancelled) return;
+        setMetrics({
+          message: dashboard.message,
+          departmentId: overview.departmentId,
+          period: overview.period,
+          totalTickets: overview.totalTickets,
+          openTickets: overview.openTickets,
+          assignedTickets: overview.assignedTickets,
+          inProgressTickets: overview.inProgressTickets,
+          reviewedTickets: overview.reviewedTickets,
+          completedTickets: overview.completedTickets,
+          closedTickets: overview.closedTickets,
+          statusDistribution: statusDistributionFrom(overview),
+          priorityDistribution: dashboard.priorityDistribution,
+          ticketsOverTime: dashboard.ticketsOverTime,
+        });
       })
       .catch((err: unknown) => {
         if (!cancelled) {
@@ -102,7 +139,7 @@ export function DashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [isSuperAdmin, departmentId, period]);
+  }, [canFilterByDepartment, departmentId, period]);
 
   return (
     <PageContainer>
@@ -116,12 +153,12 @@ export function DashboardPage() {
         actions={
           <>
             <PeriodToggle value={period} onChange={setPeriod} />
-            {isSuperAdmin && (
+            {canFilterByDepartment && (
               <Select
                 aria-label="Filter dashboard by department"
-                placeholder="All departments"
+                placeholder={isSuperAdmin ? "All departments" : "Default department"}
                 value={departmentId}
-                options={departments.map((d) => ({
+                options={selectableDepartments.map((d) => ({
                   value: d.departmentId,
                   label: d.departmentName,
                 }))}

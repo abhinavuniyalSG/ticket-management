@@ -4,31 +4,56 @@ tags:
       Read-only ticket analytics endpoints. All routes require a valid **Bearer token**.
 
       ### Scope by role
-      | Role | `GET /dashboard` scope | `GET /dashboard/overview` |
+      | Role | `GET /dashboard` scope | `GET /dashboard/overview` scope |
       |---|---|---|
       | `user` | 403 Forbidden | 403 Forbidden |
-      | `admin` | Own department only. Supplying `departmentId` is rejected with 403. | 403 Forbidden |
-      | `super_admin` | `departmentId` query param scopes to that department; omitted = entire system | System-wide stats only |
+      | `admin` | Departments the admin manages (`Department.managedBy`) only. Omitted `departmentId` defaults to the first managed department returned by the database; an explicit `departmentId` the admin does not manage is rejected with 403. | Same rule. |
+      | `super_admin` | `departmentId` may be any existing department; omitted = totals across every department | Same rule. |
 
       ### Notes
-      - `period` (`week`, `month`, or `year`, default `week`) controls the window for `ticketsOverTime`:
-        7 daily buckets for `week`, 30 daily buckets for `month`, 12 monthly buckets for `year` (oldest
-        first, including buckets with zero activity).
-      - `statusDistribution` and `priorityDistribution` always include every enum value, with `count: 0`
-        for values that have no matching tickets, and are not affected by `period`.
+      - The two endpoints are meant to be called together for one dashboard view, and deliberately don't
+        repeat each other's data: `GET /dashboard/overview` has the resolved `departmentId`, `period`,
+        and ticket counts (including a per-status breakdown, as `openTickets`/`assignedTickets`/etc);
+        `GET /dashboard` has `priorityDistribution` and `ticketsOverTime`, which `/dashboard/overview`
+        doesn't return. A status-distribution chart should be built from `/dashboard/overview`'s counts.
+      - `GET /dashboard`'s `period` (`day`, `week`, `month`, or `year`, default `day`) windows
+        `priorityDistribution` to tickets created in that current period, and selects `ticketsOverTime`'s
+        bucketing - see that endpoint's description below.
+      - `GET /dashboard/overview`'s `period` (default `day`) instead controls which tickets are counted
+        at all - see that endpoint's description below.
 
 paths:
   /dashboard:
     get:
       tags:
         - Dashboard
-      summary: Get dashboard statistics (role-scoped)
+      summary: Get the priority distribution and the activity trend (role-scoped)
       description: >
-        Returns ticket counts, status/priority distributions, and a `period`-windowed activity trend.
+        Returns `priorityDistribution` and a `period`-driven `ticketsOverTime` trend, scoped the same
+        way as `GET /dashboard/overview`. It does not repeat that endpoint's `departmentId`, `period`,
+        or ticket counts - call both for one dashboard view. In particular, there's no
+        `statusDistribution` here: build that chart from `/dashboard/overview`'s per-status counts
+        (`openTickets`, `assignedTickets`, `inProgressTickets`, `reviewedTickets`, `completedTickets`,
+        `closedTickets`) instead.
 
-        - **admin**: always scoped to the caller's own department. Passing `departmentId` is rejected (403).
-        - **super_admin**: pass `departmentId` to scope to a department, or omit it for system-wide stats.
+        - **admin**: scoped to a department they manage (`Department.managedBy`). Omit `departmentId` to
+          get the first managed department returned by the database; supply it to pick a specific one,
+          but only a department the caller manages is accepted (403 otherwise). An admin who manages no
+          department gets 403.
+        - **super_admin**: pass `departmentId` to scope to any existing department, or omit it for
+          totals across every department.
         - **user**: not permitted (403).
+
+        `priorityDistribution` is windowed to the current `period` (day/week/month/year, same
+        current-period meaning as `GET /dashboard/overview`). `ticketsOverTime` uses `period` to pick
+        its bucketing:
+        - `day` - 7 daily buckets: today and the previous 6 days.
+        - `week` - 4 weekly buckets (Monday-anchored): this week and the previous 3 complete weeks.
+        - `month` - 12 monthly buckets: this month and the previous 12 months.
+        - `year` - one bucket per year, from the earliest ticket in scope through this year.
+
+        All `ticketsOverTime` buckets are oldest first and zero-filled (a bucket with no matching tickets
+        still appears, with `created: 0, closed: 0`).
       security:
         - bearerAuth: []
       parameters:
@@ -36,8 +61,9 @@ paths:
           in: query
           required: false
           description: >
-            Department to scope the statistics to. Only honoured for `super_admin`; an `admin` supplying
-            this parameter receives a 403, and it is never used to override an admin's own department.
+            Department to scope the statistics to. For an `admin`, must be a department they manage;
+            omitted defaults to the first department the database returns for them. For a `super_admin`,
+            any existing department; omitted returns totals across every department.
           schema:
             type: string
             format: uuid
@@ -45,14 +71,15 @@ paths:
         - name: period
           in: query
           required: false
-          description: Window for `ticketsOverTime`. Defaults to `week`.
+          description: >
+            Windows `priorityDistribution` and selects `ticketsOverTime`'s bucketing. Defaults to `day`.
           schema:
             type: string
-            enum: [week, month, year]
-            default: week
+            enum: [day, week, month, year]
+            default: day
       responses:
         "200":
-          description: Dashboard statistics
+          description: Priority distribution and the ticket activity trend
           content:
             application/json:
               schema:
@@ -63,22 +90,40 @@ paths:
                         type: string
                         example: Dashboard statistics fetched successfully
                   - $ref: "#/components/schemas/DashboardMetrics"
+              example:
+                message: Dashboard statistics fetched successfully
+                priorityDistribution:
+                  - priority: low
+                    count: 159
+                  - priority: medium
+                    count: 143
+                  - priority: high
+                    count: 75
+                  - priority: urgent
+                    count: 23
+                ticketsOverTime:
+                  - date: "2026-08-29"
+                    created: 3
+                    closed: 1
+                  - date: "2026-08-30"
+                    created: 0
+                    closed: 0
         "400":
           $ref: "#/components/responses/ValidationError"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
           description: >
-            Forbidden - either the role cannot access the dashboard, an admin supplied `departmentId`,
-            or an admin's account is not assigned to a department.
+            Forbidden - the role cannot access the dashboard, an admin manages no department, or an
+            admin supplied a `departmentId` they do not manage.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
-                message: "Forbidden: admins cannot filter the dashboard by department"
+                message: "Forbidden: you do not manage this department"
         "404":
-          description: Department not found
+          description: Department not found (super_admin queried a departmentId that doesn't exist)
           content:
             application/json:
               schema:
@@ -92,55 +137,128 @@ paths:
     get:
       tags:
         - Dashboard
-      summary: Get the system-wide dashboard overview
+      summary: Get ticket counts for a department (admin) or the whole system (super_admin)
       description: >
-        `super_admin` only. Returns the same dashboard metrics as `GET /dashboard`, computed system-wide
-        (never scoped to a department).
+        Returns a simple set of ticket counts (no distributions, no trend). `admin` and `super_admin`
+        only.
+
+        - **admin**: scoped to a department the caller manages (`Department.managedBy`). Omit
+          `departmentId` to get the first managed department returned by the database; supply it to pick
+          a specific one, but only a department the caller manages is accepted (403 otherwise). An admin
+          who manages no department gets 403.
+        - **super_admin**: supply `departmentId` to scope to any existing department, or omit it for
+          totals across every department.
+        - **user**: not permitted (403).
+
+        `period` (default `day`) selects which tickets are counted, by `createdAt`:
+        - `day` - created today (UTC).
+        - `week` - created this week (from Monday 00:00 UTC).
+        - `month` - created this calendar month.
+        - `year` - created this calendar year.
+        - `all` - every ticket, regardless of when it was created.
+        - `custom` - an explicit historical period, given via `year` (required), and optionally `month`
+          (1-12) and `day` (1-31, requires `month`): `year` alone scopes to that whole year, `year` +
+          `month` to that whole month, and all three to that single day.
       security:
         - bearerAuth: []
       parameters:
+        - name: departmentId
+          in: query
+          required: false
+          description: >
+            Department to scope the counts to. For an `admin`, must be a department they manage; omitted
+            defaults to the first department the database returns for them. For a `super_admin`, any
+            existing department; omitted returns totals across every department.
+          schema:
+            type: string
+            format: uuid
+          example: "01906c26-1234-7abc-adef-000000000020"
         - name: period
           in: query
           required: false
-          description: Window for `ticketsOverTime`. Defaults to `week`.
+          description: Which tickets are counted, by `createdAt`. Defaults to `day`.
           schema:
             type: string
-            enum: [week, month, year]
-            default: week
+            enum: [day, week, month, year, all, custom]
+            default: day
+        - name: year
+          in: query
+          required: false
+          description: Required when `period=custom`. The calendar year, e.g. `2024`.
+          schema:
+            type: integer
+            example: 2024
+        - name: month
+          in: query
+          required: false
+          description: Only used when `period=custom`. 1-12. Requires `year`.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+        - name: day
+          in: query
+          required: false
+          description: Only used when `period=custom`. 1-31. Requires `year` and `month`.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 31
       responses:
         "200":
-          description: Dashboard overview
+          description: Ticket counts for the resolved department/period
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: Dashboard overview fetched successfully
-                  systemWide:
-                    $ref: "#/components/schemas/DashboardMetrics"
+                $ref: "#/components/schemas/DashboardOverviewStats"
+              example:
+                message: Dashboard overview fetched successfully
+                departmentId: "01906c26-1234-7abc-adef-000000000020"
+                period: day
+                totalTickets: 400
+                openTickets: 2
+                assignedTickets: 10
+                inProgressTickets: 7
+                reviewedTickets: 25
+                completedTickets: 17
+                closedTickets: 339
         "400":
-          $ref: "#/components/responses/ValidationError"
+          description: >
+            Validation error, e.g. an invalid `period`, `year`/`month`/`day` supplied without
+            `period=custom`, or `period=custom` missing `year`.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                message: "Validation failed"
+                errors:
+                  - "year is required when period is 'custom'"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
-          $ref: "#/components/responses/Forbidden"
+          description: >
+            Forbidden - the role cannot access the dashboard overview, an admin manages no department, or
+            an admin supplied a `departmentId` they do not manage.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                message: "Forbidden: you do not manage this department"
+        "404":
+          description: Department not found (super_admin queried a departmentId that doesn't exist)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                message: Department not found
         "429":
           $ref: "#/components/responses/TooManyRequests"
 
 components:
   schemas:
-    StatusDistributionEntry:
-      type: object
-      properties:
-        status:
-          type: string
-          enum: [open, assigned, in_progress, reviewed, completed, closed]
-        count:
-          type: integer
-          minimum: 0
-
     PriorityDistributionEntry:
       type: object
       properties:
@@ -156,7 +274,9 @@ components:
       properties:
         date:
           type: string
-          format: date
+          description: >
+            The bucket's label. `YYYY-MM-DD` for `period=day` (a calendar day) and `period=week` (the
+            Monday that week starts on), `YYYY-MM` for `period=month`, `YYYY` for `period=year`.
           example: "2026-08-26"
         created:
           type: integer
@@ -165,9 +285,22 @@ components:
           type: integer
           minimum: 0
 
-    DashboardMetrics:
+    DashboardOverviewStats:
       type: object
       properties:
+        message:
+          type: string
+          example: Dashboard overview fetched successfully
+        departmentId:
+          type: string
+          format: uuid
+          nullable: true
+          description: >
+            The department the counts are scoped to. `null` only for a super_admin who omitted
+            `departmentId` (totals across every department).
+        period:
+          type: string
+          enum: [day, week, month, year, all, custom]
         totalTickets:
           type: integer
           minimum: 0
@@ -189,10 +322,15 @@ components:
         closedTickets:
           type: integer
           minimum: 0
-        statusDistribution:
-          type: array
-          items:
-            $ref: "#/components/schemas/StatusDistributionEntry"
+
+    DashboardMetrics:
+      type: object
+      description: >
+        Deliberately has no `departmentId`, `period`, ticket counts, or `statusDistribution` - those are
+        on `DashboardOverviewStats` (`GET /dashboard/overview`) instead (a status-distribution chart
+        should be built from that response's per-status counts), so the two endpoints don't return the
+        same data twice.
+      properties:
         priorityDistribution:
           type: array
           items:
@@ -200,6 +338,7 @@ components:
         ticketsOverTime:
           type: array
           description: >
-            7 entries for `period=week`, 30 for `period=month`, 12 for `period=year`.
+            7 entries for `period=day`, 4 for `period=week`, 13 for `period=month`, and one per year
+            (from the earliest ticket in scope through this year) for `period=year`.
           items:
             $ref: "#/components/schemas/TicketsOverTimeEntry"

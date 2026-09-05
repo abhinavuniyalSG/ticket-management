@@ -1,4 +1,8 @@
-import { DASHBOARD_PERIOD_WINDOW_LABELS, PRIORITY_LABELS, STATUS_LABELS } from "../../constants/options";
+import {
+  DASHBOARD_PERIOD_WINDOW_LABELS,
+  PRIORITY_LABELS,
+  STATUS_LABELS,
+} from "../../constants/options";
 import type {
   DashboardPeriod,
   PriorityDistributionEntry,
@@ -8,25 +12,44 @@ import type {
 import type { TicketPriority, TicketStatus } from "../../types/ticket";
 
 const PERIOD_RANGE_PHRASE: Record<DashboardPeriod, string> = {
-  week: "per day over the last 7 days",
-  month: "per day over the last 30 days",
-  year: "per month over the last 12 months",
+  day: "per day over the last 7 days",
+  week: "per week over the last 4 weeks",
+  month: "per month over the last 12 months",
+  year: "per year",
 };
 
+/**
+ * `date` is 'YYYY-MM-DD' for day/week (a day, or a week's Monday), 'YYYY-MM'
+ * for month, and 'YYYY' for year - see the backend's ticketsOverTime docs.
+ * Month labels are month-only (no year): the chart shows the spanned years
+ * once each instead, bookending the axis - see the year-range row below.
+ */
 function formatBucketLabel(dateStr: string, period: DashboardPeriod): string {
+  if (period === "year") return dateStr;
   const date = new Date(dateStr);
   return date.toLocaleDateString(
     undefined,
-    period === "year"
+    period === "month"
       ? { month: "short", timeZone: "UTC" }
       : { month: "short", day: "numeric", timeZone: "UTC" },
   );
 }
 
-function formatAccessibleBucketLabel(dateStr: string, period: DashboardPeriod): string {
-  if (period !== "year") return dateStr;
+function yearOf(dateStr: string): number {
+  return new Date(dateStr).getUTCFullYear();
+}
+
+function formatAccessibleBucketLabel(
+  dateStr: string,
+  period: DashboardPeriod,
+): string {
+  if (period !== "month") return dateStr;
   const date = new Date(dateStr);
-  return date.toLocaleDateString(undefined, { month: "long", year: "numeric", timeZone: "UTC" });
+  return date.toLocaleDateString(undefined, {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
 }
 
 const STATUS_COLORS: Record<TicketStatus, string> = {
@@ -86,7 +109,13 @@ function DistributionBars<T extends string>({
   );
 }
 
-function TrendChart({ data, period }: { data: TicketsOverTimeEntry[]; period: DashboardPeriod }) {
+function TrendChart({
+  data,
+  period,
+}: {
+  data: TicketsOverTimeEntry[];
+  period: DashboardPeriod;
+}) {
   const max = Math.max(1, ...data.flatMap((d) => [d.created, d.closed]));
   const width = 560;
   const height = 200;
@@ -96,7 +125,7 @@ function TrendChart({ data, period }: { data: TicketsOverTimeEntry[]; period: Da
   const chartHeight = height - paddingBottom - 8;
   const groupWidth = chartWidth / data.length;
   const barWidth = Math.min(18, groupWidth / 3);
-  const minLabelWidth = period === "year" ? 24 : 40;
+  const minLabelWidth = period === "month" || period === "year" ? 24 : 40;
   const labelStep = Math.max(1, Math.ceil(minLabelWidth / groupWidth));
 
   const gridLines = [0, 0.25, 0.5, 0.75, 1];
@@ -161,8 +190,11 @@ function TrendChart({ data, period }: { data: TicketsOverTimeEntry[]; period: Da
             const groupX = paddingLeft + index * groupWidth;
             const createdHeight = (entry.created / max) * chartHeight;
             const closedHeight = (entry.closed / max) * chartHeight;
-            const showLabel = index === data.length - 1 || index % labelStep === 0;
-            const label = showLabel ? formatBucketLabel(entry.date, period) : null;
+            const showLabel =
+              index === data.length - 1 || index % labelStep === 0;
+            const label = showLabel
+              ? formatBucketLabel(entry.date, period)
+              : null;
 
             return (
               <g key={entry.date}>
@@ -196,6 +228,18 @@ function TrendChart({ data, period }: { data: TicketsOverTimeEntry[]; period: Da
             );
           })}
         </svg>
+        {period === "month" && data.length > 0 && (
+          <div
+            className="flex min-w-[420px] justify-between text-[10px] font-medium text-slate-400"
+            style={{
+              paddingLeft: `${(paddingLeft / width) * 100}%`,
+              paddingRight: `${(8 / width) * 100}%`,
+            }}
+          >
+            <span>{yearOf(data[0]!.date)}</span>
+            <span>{yearOf(data[data.length - 1]!.date)}</span>
+          </div>
+        )}
       </div>
 
       <div className="sr-only">
@@ -205,7 +249,13 @@ function TrendChart({ data, period }: { data: TicketsOverTimeEntry[]; period: Da
           </caption>
           <thead>
             <tr>
-              <th scope="col">{period === "year" ? "Month" : "Date"}</th>
+              <th scope="col">
+                {period === "year"
+                  ? "Year"
+                  : period === "month"
+                    ? "Month"
+                    : "Date"}
+              </th>
               <th scope="col">Created</th>
               <th scope="col">Closed</th>
             </tr>

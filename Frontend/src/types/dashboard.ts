@@ -1,6 +1,6 @@
 import type { TicketPriority, TicketStatus } from "./ticket";
 
-export type DashboardPeriod = "week" | "month" | "year";
+export type DashboardPeriod = "day" | "week" | "month" | "year";
 
 export interface StatusDistributionEntry {
   status: TicketStatus;
@@ -18,8 +18,22 @@ export interface TicketsOverTimeEntry {
   closed: number;
 }
 
-export interface DashboardMetrics {
+/**
+ * What `GET /dashboard` actually returns. No departmentId/period/counts/
+ * statusDistribution here - those live on DashboardOverview instead (status
+ * distribution is derived from its per-status counts), since the two are
+ * always fetched together and shouldn't repeat each other's data.
+ */
+export interface DashboardBreakdown {
   message: string;
+  priorityDistribution: PriorityDistributionEntry[];
+  ticketsOverTime: TicketsOverTimeEntry[];
+}
+
+export interface DashboardOverview {
+  message: string;
+  departmentId: string | null;
+  period: DashboardPeriod;
   totalTickets: number;
   openTickets: number;
   assignedTickets: number;
@@ -27,12 +41,11 @@ export interface DashboardMetrics {
   reviewedTickets: number;
   completedTickets: number;
   closedTickets: number;
+}
+
+/** The combined view-model DashboardPage builds from one overview call + one breakdown call. */
+export interface DashboardMetrics extends DashboardOverview {
   statusDistribution: StatusDistributionEntry[];
   priorityDistribution: PriorityDistributionEntry[];
   ticketsOverTime: TicketsOverTimeEntry[];
-}
-
-export interface DashboardOverview {
-  message: string;
-  systemWide: Omit<DashboardMetrics, "message">;
 }

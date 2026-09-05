@@ -51,18 +51,26 @@ export const CONTACT_TYPE_LABELS: Record<ContactType, string> = {
   linkedin: "LinkedIn",
 };
 
-export const DASHBOARD_PERIODS: DashboardPeriod[] = ["week", "month", "year"];
+export const DASHBOARD_PERIODS: DashboardPeriod[] = [
+  "day",
+  "week",
+  "month",
+  "year",
+];
 
 export const DASHBOARD_PERIOD_LABELS: Record<DashboardPeriod, string> = {
+  day: "Day",
   week: "Week",
   month: "Month",
   year: "Year",
 };
 
+/** Window `ticketsOverTime` covers for each period - see DashboardCharts. */
 export const DASHBOARD_PERIOD_WINDOW_LABELS: Record<DashboardPeriod, string> = {
-  week: "7 days",
-  month: "30 days",
-  year: "12 months",
+  day: "7 days",
+  week: "4 weeks",
+  month: "12 months",
+  year: "yearly",
 };
 
 export const SORT_BY_LABELS: Record<string, string> = {

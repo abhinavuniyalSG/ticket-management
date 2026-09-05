@@ -77,7 +77,12 @@ function makeTicket(overrides: Partial<Ticket> = {}): Ticket {
 }
 
 function requester(overrides: Partial<RequesterInfo> = {}): RequesterInfo {
-  return { id: "user-1", email: "user@example.com", role: roleEnum.user, ...overrides };
+  return {
+    id: "user-1",
+    email: "user@example.com",
+    role: roleEnum.user,
+    ...overrides,
+  };
 }
 
 beforeEach(() => {
@@ -95,7 +100,10 @@ describe("getTicketById permissions", () => {
   });
 
   it("lets a super_admin view any ticket", async () => {
-    const ticket = makeTicket({ departmentId: DEPT_B, createdById: "someone-else" });
+    const ticket = makeTicket({
+      departmentId: DEPT_B,
+      createdById: "someone-else",
+    });
     vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
 
     const result = await TicketService.getTicketById(
@@ -107,7 +115,10 @@ describe("getTicketById permissions", () => {
   });
 
   it("lets an admin view a ticket created in their own department", async () => {
-    const ticket = makeTicket({ departmentId: DEPT_A, createdById: "someone-else" });
+    const ticket = makeTicket({
+      departmentId: DEPT_A,
+      createdById: "someone-else",
+    });
     vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
     vi.mocked(UserRepository.findById).mockResolvedValue(
       makeUser({ id: "admin-1", role: roleEnum.admin, departmentId: DEPT_A }),
@@ -137,7 +148,11 @@ describe("getTicketById permissions", () => {
   });
 
   it("lets an admin view a ticket assigned to them even if it's outside their department", async () => {
-    const ticket = makeTicket({ departmentId: DEPT_B, createdById: "other", assignedToId: "admin-1" });
+    const ticket = makeTicket({
+      departmentId: DEPT_B,
+      createdById: "other",
+      assignedToId: "admin-1",
+    });
     vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
     vi.mocked(UserRepository.findById).mockResolvedValue(
       makeUser({ id: "admin-1", role: roleEnum.admin, departmentId: DEPT_A }),
@@ -177,7 +192,10 @@ describe("getTicketById permissions", () => {
     );
 
     await expect(
-      TicketService.getTicketById("ticket-1", requester({ id: "admin-1", role: roleEnum.admin })),
+      TicketService.getTicketById(
+        "ticket-1",
+        requester({ id: "admin-1", role: roleEnum.admin }),
+      ),
     ).rejects.toMatchObject({ statusCode: 403 });
   });
 
@@ -185,7 +203,10 @@ describe("getTicketById permissions", () => {
     const ticket = makeTicket({ createdById: "user-1" });
     vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
 
-    const result = await TicketService.getTicketById("ticket-1", requester({ id: "user-1" }));
+    const result = await TicketService.getTicketById(
+      "ticket-1",
+      requester({ id: "user-1" }),
+    );
 
     expect(result.ticket.ticketId).toBe("ticket-1");
   });
@@ -194,13 +215,19 @@ describe("getTicketById permissions", () => {
     const ticket = makeTicket({ createdById: "other", assignedToId: "user-1" });
     vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
 
-    const result = await TicketService.getTicketById("ticket-1", requester({ id: "user-1" }));
+    const result = await TicketService.getTicketById(
+      "ticket-1",
+      requester({ id: "user-1" }),
+    );
 
     expect(result.ticket.ticketId).toBe("ticket-1");
   });
 
   it("blocks a regular user from viewing a ticket they neither created nor are assigned to", async () => {
-    const ticket = makeTicket({ createdById: "other", assignedToId: "someone-else" });
+    const ticket = makeTicket({
+      createdById: "other",
+      assignedToId: "someone-else",
+    });
     vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
 
     await expect(
@@ -211,13 +238,24 @@ describe("getTicketById permissions", () => {
   it("strips password and refreshToken from the createdBy and assignedTo relations", async () => {
     const ticket = makeTicket({
       createdById: "user-1",
-      createdBy: makeUser({ id: "user-1", password: "secret", refreshToken: "rt" }) as any,
+      createdBy: makeUser({
+        id: "user-1",
+        password: "secret",
+        refreshToken: "rt",
+      }) as any,
       assignedToId: "assignee-1",
-      assignedTo: makeUser({ id: "assignee-1", password: "secret2", refreshToken: "rt2" }) as any,
+      assignedTo: makeUser({
+        id: "assignee-1",
+        password: "secret2",
+        refreshToken: "rt2",
+      }) as any,
     });
     vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
 
-    const result = await TicketService.getTicketById("ticket-1", requester({ id: "user-1" }));
+    const result = await TicketService.getTicketById(
+      "ticket-1",
+      requester({ id: "user-1" }),
+    );
 
     expect(result.ticket.createdBy).not.toHaveProperty("password");
     expect(result.ticket.createdBy).not.toHaveProperty("refreshToken");
@@ -240,9 +278,15 @@ describe("createTicket", () => {
   });
 
   it("creates an unassigned ticket with open status by default", async () => {
-    vi.mocked(DepartmentRepository.findById).mockResolvedValue({ departmentId: DEPT_A } as any);
-    vi.mocked(TicketRepository.createTicket).mockResolvedValue(makeTicket({ status: TicketStatus.open }));
-    vi.mocked(TicketRepository.findById).mockResolvedValue(makeTicket({ status: TicketStatus.open }));
+    vi.mocked(DepartmentRepository.findById).mockResolvedValue({
+      departmentId: DEPT_A,
+    } as any);
+    vi.mocked(TicketRepository.createTicket).mockResolvedValue(
+      makeTicket({ status: TicketStatus.open }),
+    );
+    vi.mocked(TicketRepository.findById).mockResolvedValue(
+      makeTicket({ status: TicketStatus.open }),
+    );
 
     await TicketService.createTicket(requester(), {
       title: "t",
@@ -251,12 +295,17 @@ describe("createTicket", () => {
     });
 
     expect(TicketRepository.createTicket).toHaveBeenCalledWith(
-      expect.objectContaining({ status: TicketStatus.open, assignedToId: null }),
+      expect.objectContaining({
+        status: TicketStatus.open,
+        assignedToId: null,
+      }),
     );
   });
 
   it("blocks a regular user from assigning a ticket upon creation", async () => {
-    vi.mocked(DepartmentRepository.findById).mockResolvedValue({ departmentId: DEPT_A } as any);
+    vi.mocked(DepartmentRepository.findById).mockResolvedValue({
+      departmentId: DEPT_A,
+    } as any);
 
     await expect(
       TicketService.createTicket(requester({ role: roleEnum.user }), {
@@ -269,80 +318,129 @@ describe("createTicket", () => {
   });
 
   it("blocks an admin from assigning a ticket to a different department than their own", async () => {
-    vi.mocked(DepartmentRepository.findById).mockResolvedValue({ departmentId: DEPT_A } as any);
+    vi.mocked(DepartmentRepository.findById).mockResolvedValue({
+      departmentId: DEPT_A,
+    } as any);
     vi.mocked(UserRepository.findById).mockResolvedValue(
       makeUser({ id: "admin-1", role: roleEnum.admin, departmentId: DEPT_B }),
     );
 
     await expect(
-      TicketService.createTicket(requester({ id: "admin-1", role: roleEnum.admin }), {
-        title: "t",
-        description: "d",
-        departmentId: DEPT_A,
-        assignedToId: "assignee-1",
-      }),
+      TicketService.createTicket(
+        requester({ id: "admin-1", role: roleEnum.admin }),
+        {
+          title: "t",
+          description: "d",
+          departmentId: DEPT_A,
+          assignedToId: "assignee-1",
+        },
+      ),
     ).rejects.toMatchObject({ statusCode: 403 });
   });
 
   it("blocks assignment when the assignee is not found", async () => {
-    vi.mocked(DepartmentRepository.findById).mockResolvedValue({ departmentId: DEPT_A } as any);
-    vi.mocked(UserRepository.findById).mockImplementation(async (id: string) => {
-      if (id === "admin-1") return makeUser({ id: "admin-1", role: roleEnum.admin, departmentId: DEPT_A });
-      return null;
-    });
+    vi.mocked(DepartmentRepository.findById).mockResolvedValue({
+      departmentId: DEPT_A,
+    } as any);
+    vi.mocked(UserRepository.findById).mockImplementation(
+      async (id: string) => {
+        if (id === "admin-1")
+          return makeUser({
+            id: "admin-1",
+            role: roleEnum.admin,
+            departmentId: DEPT_A,
+          });
+        return null;
+      },
+    );
 
     await expect(
-      TicketService.createTicket(requester({ id: "admin-1", role: roleEnum.admin }), {
-        title: "t",
-        description: "d",
-        departmentId: DEPT_A,
-        assignedToId: "missing-assignee",
-      }),
+      TicketService.createTicket(
+        requester({ id: "admin-1", role: roleEnum.admin }),
+        {
+          title: "t",
+          description: "d",
+          departmentId: DEPT_A,
+          assignedToId: "missing-assignee",
+        },
+      ),
     ).rejects.toMatchObject({ statusCode: 404 });
   });
 
   it("blocks assignment when the assignee is in a different department", async () => {
-    vi.mocked(DepartmentRepository.findById).mockResolvedValue({ departmentId: DEPT_A } as any);
-    vi.mocked(UserRepository.findById).mockImplementation(async (id: string) => {
-      if (id === "admin-1") return makeUser({ id: "admin-1", role: roleEnum.admin, departmentId: DEPT_A });
-      return makeUser({ id: "assignee-1", departmentId: DEPT_B });
-    });
+    vi.mocked(DepartmentRepository.findById).mockResolvedValue({
+      departmentId: DEPT_A,
+    } as any);
+    vi.mocked(UserRepository.findById).mockImplementation(
+      async (id: string) => {
+        if (id === "admin-1")
+          return makeUser({
+            id: "admin-1",
+            role: roleEnum.admin,
+            departmentId: DEPT_A,
+          });
+        return makeUser({ id: "assignee-1", departmentId: DEPT_B });
+      },
+    );
 
     await expect(
-      TicketService.createTicket(requester({ id: "admin-1", role: roleEnum.admin }), {
-        title: "t",
-        description: "d",
-        departmentId: DEPT_A,
-        assignedToId: "assignee-1",
-      }),
+      TicketService.createTicket(
+        requester({ id: "admin-1", role: roleEnum.admin }),
+        {
+          title: "t",
+          description: "d",
+          departmentId: DEPT_A,
+          assignedToId: "assignee-1",
+        },
+      ),
     ).rejects.toMatchObject({ statusCode: 400 });
   });
 
   it("creates a ticket with assigned status when a valid same-department assignee is given", async () => {
-    vi.mocked(DepartmentRepository.findById).mockResolvedValue({ departmentId: DEPT_A } as any);
-    vi.mocked(UserRepository.findById).mockImplementation(async (id: string) => {
-      if (id === "admin-1") return makeUser({ id: "admin-1", role: roleEnum.admin, departmentId: DEPT_A });
-      return makeUser({ id: "assignee-1", departmentId: DEPT_A });
+    vi.mocked(DepartmentRepository.findById).mockResolvedValue({
+      departmentId: DEPT_A,
+    } as any);
+    vi.mocked(UserRepository.findById).mockImplementation(
+      async (id: string) => {
+        if (id === "admin-1")
+          return makeUser({
+            id: "admin-1",
+            role: roleEnum.admin,
+            departmentId: DEPT_A,
+          });
+        return makeUser({ id: "assignee-1", departmentId: DEPT_A });
+      },
+    );
+    const created = makeTicket({
+      status: TicketStatus.assigned,
+      assignedToId: "assignee-1",
     });
-    const created = makeTicket({ status: TicketStatus.assigned, assignedToId: "assignee-1" });
     vi.mocked(TicketRepository.createTicket).mockResolvedValue(created);
     vi.mocked(TicketRepository.findById).mockResolvedValue(created);
 
-    await TicketService.createTicket(requester({ id: "admin-1", role: roleEnum.admin }), {
-      title: "t",
-      description: "d",
-      departmentId: DEPT_A,
-      assignedToId: "assignee-1",
-    });
+    await TicketService.createTicket(
+      requester({ id: "admin-1", role: roleEnum.admin }),
+      {
+        title: "t",
+        description: "d",
+        departmentId: DEPT_A,
+        assignedToId: "assignee-1",
+      },
+    );
 
     expect(TicketRepository.createTicket).toHaveBeenCalledWith(
-      expect.objectContaining({ status: TicketStatus.assigned, assignedToId: "assignee-1" }),
+      expect.objectContaining({
+        status: TicketStatus.assigned,
+        assignedToId: "assignee-1",
+      }),
     );
     expect(NotificationService.ticketAssigned).toHaveBeenCalledWith(created);
   });
 
   it("notifies about high/urgent priority tickets after creation", async () => {
-    vi.mocked(DepartmentRepository.findById).mockResolvedValue({ departmentId: DEPT_A } as any);
+    vi.mocked(DepartmentRepository.findById).mockResolvedValue({
+      departmentId: DEPT_A,
+    } as any);
     const created = makeTicket({ priority: TicketPriority.urgent });
     vi.mocked(TicketRepository.createTicket).mockResolvedValue(created);
     vi.mocked(TicketRepository.findById).mockResolvedValue(created);
@@ -354,7 +452,9 @@ describe("createTicket", () => {
       priority: TicketPriority.urgent,
     });
 
-    expect(NotificationService.notifyPriorityTicket).toHaveBeenCalledWith(created);
+    expect(NotificationService.notifyPriorityTicket).toHaveBeenCalledWith(
+      created,
+    );
   });
 });
 
@@ -363,7 +463,11 @@ describe("updateTicket status transitions", () => {
     vi.mocked(TicketRepository.findById).mockResolvedValue(null);
 
     await expect(
-      TicketService.updateTicket("missing", { status: TicketStatus.assigned }, requester()),
+      TicketService.updateTicket(
+        "missing",
+        { status: TicketStatus.assigned },
+        requester(),
+      ),
     ).rejects.toMatchObject({ statusCode: 404 });
   });
 
@@ -372,24 +476,42 @@ describe("updateTicket status transitions", () => {
     vi.mocked(UserRepository.findById).mockResolvedValue(null);
 
     await expect(
-      TicketService.updateTicket("ticket-1", { status: TicketStatus.assigned }, requester()),
+      TicketService.updateTicket(
+        "ticket-1",
+        { status: TicketStatus.assigned },
+        requester(),
+      ),
     ).rejects.toMatchObject({ statusCode: 401 });
   });
 
   it("blocks the creator from manually moving an open ticket to assigned without an assignee change", async () => {
-    const ticket = makeTicket({ status: TicketStatus.open, createdById: "user-1" });
+    const ticket = makeTicket({
+      status: TicketStatus.open,
+      createdById: "user-1",
+    });
     vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
-    vi.mocked(UserRepository.findById).mockResolvedValue(makeUser({ id: "user-1" }));
+    vi.mocked(UserRepository.findById).mockResolvedValue(
+      makeUser({ id: "user-1" }),
+    );
 
     await expect(
-      TicketService.updateTicket("ticket-1", { status: TicketStatus.assigned }, requester({ id: "user-1" })),
+      TicketService.updateTicket(
+        "ticket-1",
+        { status: TicketStatus.assigned },
+        requester({ id: "user-1" }),
+      ),
     ).rejects.toMatchObject({ statusCode: 403 });
   });
 
   it("lets the assignee move a ticket from assigned to in_progress", async () => {
-    const ticket = makeTicket({ status: TicketStatus.assigned, assignedToId: "assignee-1" });
+    const ticket = makeTicket({
+      status: TicketStatus.assigned,
+      assignedToId: "assignee-1",
+    });
     vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
-    vi.mocked(UserRepository.findById).mockResolvedValue(makeUser({ id: "assignee-1" }));
+    vi.mocked(UserRepository.findById).mockResolvedValue(
+      makeUser({ id: "assignee-1" }),
+    );
     const updated = { ...ticket, status: TicketStatus.inProgress };
     vi.mocked(TicketRepository.updateTicket).mockResolvedValue(updated);
 
@@ -407,9 +529,14 @@ describe("updateTicket status transitions", () => {
   });
 
   it("blocks the assignee from skipping straight from assigned to completed", async () => {
-    const ticket = makeTicket({ status: TicketStatus.assigned, assignedToId: "assignee-1" });
+    const ticket = makeTicket({
+      status: TicketStatus.assigned,
+      assignedToId: "assignee-1",
+    });
     vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
-    vi.mocked(UserRepository.findById).mockResolvedValue(makeUser({ id: "assignee-1" }));
+    vi.mocked(UserRepository.findById).mockResolvedValue(
+      makeUser({ id: "assignee-1" }),
+    );
 
     await expect(
       TicketService.updateTicket(
@@ -421,9 +548,14 @@ describe("updateTicket status transitions", () => {
   });
 
   it("lets the assignee move a ticket from in_progress to completed", async () => {
-    const ticket = makeTicket({ status: TicketStatus.inProgress, assignedToId: "assignee-1" });
+    const ticket = makeTicket({
+      status: TicketStatus.inProgress,
+      assignedToId: "assignee-1",
+    });
     vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
-    vi.mocked(UserRepository.findById).mockResolvedValue(makeUser({ id: "assignee-1" }));
+    vi.mocked(UserRepository.findById).mockResolvedValue(
+      makeUser({ id: "assignee-1" }),
+    );
     const updated = { ...ticket, status: TicketStatus.completed };
     vi.mocked(TicketRepository.updateTicket).mockResolvedValue(updated);
 
@@ -433,13 +565,20 @@ describe("updateTicket status transitions", () => {
       requester({ id: "assignee-1" }),
     );
 
-    expect(NotificationService.ticketReadyForReview).toHaveBeenCalledWith(updated);
+    expect(NotificationService.ticketReadyForReview).toHaveBeenCalledWith(
+      updated,
+    );
   });
 
   it("lets the assignee reopen work by moving completed back to in_progress", async () => {
-    const ticket = makeTicket({ status: TicketStatus.completed, assignedToId: "assignee-1" });
+    const ticket = makeTicket({
+      status: TicketStatus.completed,
+      assignedToId: "assignee-1",
+    });
     vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
-    vi.mocked(UserRepository.findById).mockResolvedValue(makeUser({ id: "assignee-1" }));
+    vi.mocked(UserRepository.findById).mockResolvedValue(
+      makeUser({ id: "assignee-1" }),
+    );
     const updated = { ...ticket, status: TicketStatus.inProgress };
     vi.mocked(TicketRepository.updateTicket).mockResolvedValue(updated);
 
@@ -453,9 +592,15 @@ describe("updateTicket status transitions", () => {
   });
 
   it("lets the creator send a completed ticket to reviewed", async () => {
-    const ticket = makeTicket({ status: TicketStatus.completed, createdById: "user-1", assignedToId: "assignee-1" });
+    const ticket = makeTicket({
+      status: TicketStatus.completed,
+      createdById: "user-1",
+      assignedToId: "assignee-1",
+    });
     vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
-    vi.mocked(UserRepository.findById).mockResolvedValue(makeUser({ id: "user-1" }));
+    vi.mocked(UserRepository.findById).mockResolvedValue(
+      makeUser({ id: "user-1" }),
+    );
     const updated = { ...ticket, status: TicketStatus.reviewed };
     vi.mocked(TicketRepository.updateTicket).mockResolvedValue(updated);
 
@@ -469,10 +614,20 @@ describe("updateTicket status transitions", () => {
   });
 
   it("lets the creator reopen a completed ticket", async () => {
-    const ticket = makeTicket({ status: TicketStatus.completed, createdById: "user-1", assignedToId: "assignee-1" });
+    const ticket = makeTicket({
+      status: TicketStatus.completed,
+      createdById: "user-1",
+      assignedToId: "assignee-1",
+    });
     vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
-    vi.mocked(UserRepository.findById).mockResolvedValue(makeUser({ id: "user-1" }));
-    const updated = { ...ticket, status: TicketStatus.open, assignedToId: null };
+    vi.mocked(UserRepository.findById).mockResolvedValue(
+      makeUser({ id: "user-1" }),
+    );
+    const updated = {
+      ...ticket,
+      status: TicketStatus.open,
+      assignedToId: null,
+    };
     vi.mocked(TicketRepository.updateTicket).mockResolvedValue(updated);
 
     const result = await TicketService.updateTicket(
@@ -485,9 +640,15 @@ describe("updateTicket status transitions", () => {
   });
 
   it("blocks a bystander (not creator, not assignee) from transitioning status", async () => {
-    const ticket = makeTicket({ status: TicketStatus.assigned, createdById: "creator-1", assignedToId: "assignee-1" });
+    const ticket = makeTicket({
+      status: TicketStatus.assigned,
+      createdById: "creator-1",
+      assignedToId: "assignee-1",
+    });
     vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
-    vi.mocked(UserRepository.findById).mockResolvedValue(makeUser({ id: "bystander-1" }));
+    vi.mocked(UserRepository.findById).mockResolvedValue(
+      makeUser({ id: "bystander-1" }),
+    );
 
     await expect(
       TicketService.updateTicket(
@@ -509,7 +670,11 @@ describe("updateTicket status transitions", () => {
     vi.mocked(UserRepository.findById).mockResolvedValue(
       makeUser({ id: "admin-1", role: roleEnum.admin, departmentId: DEPT_A }),
     );
-    const updated = { ...ticket, status: TicketStatus.closed, closedAt: new Date() };
+    const updated = {
+      ...ticket,
+      status: TicketStatus.closed,
+      closedAt: new Date(),
+    };
     vi.mocked(TicketRepository.updateTicket).mockResolvedValue(updated);
 
     const result = await TicketService.updateTicket(
@@ -521,7 +686,10 @@ describe("updateTicket status transitions", () => {
     expect(result.ticket.status).toBe(TicketStatus.closed);
     expect(TicketRepository.updateTicket).toHaveBeenCalledWith(
       "ticket-1",
-      expect.objectContaining({ status: TicketStatus.closed, closedAt: expect.any(Date) }),
+      expect.objectContaining({
+        status: TicketStatus.closed,
+        closedAt: expect.any(Date),
+      }),
     );
   });
 
@@ -547,7 +715,11 @@ describe("updateTicket status transitions", () => {
   });
 
   it("blocks a same-department admin from manually moving an open ticket to any other status", async () => {
-    const ticket = makeTicket({ status: TicketStatus.open, departmentId: DEPT_A, createdById: "creator-1" });
+    const ticket = makeTicket({
+      status: TicketStatus.open,
+      departmentId: DEPT_A,
+      createdById: "creator-1",
+    });
     vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
     vi.mocked(UserRepository.findById).mockResolvedValue(
       makeUser({ id: "admin-1", role: roleEnum.admin, departmentId: DEPT_A }),
@@ -607,7 +779,10 @@ describe("updateTicket status transitions", () => {
   });
 
   it("lets a super_admin make any status transition, though the target state's own invariants still apply", async () => {
-    const ticket = makeTicket({ status: TicketStatus.open, createdById: "creator-1" });
+    const ticket = makeTicket({
+      status: TicketStatus.open,
+      createdById: "creator-1",
+    });
     vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
     vi.mocked(UserRepository.findById).mockResolvedValue(
       makeUser({ id: "super-1", role: roleEnum.superAdmin }),
@@ -623,9 +798,14 @@ describe("updateTicket status transitions", () => {
   });
 
   it("returns 'No changes detected' when the requested status equals the current status", async () => {
-    const ticket = makeTicket({ status: TicketStatus.open, createdById: "user-1" });
+    const ticket = makeTicket({
+      status: TicketStatus.open,
+      createdById: "user-1",
+    });
     vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
-    vi.mocked(UserRepository.findById).mockResolvedValue(makeUser({ id: "user-1" }));
+    vi.mocked(UserRepository.findById).mockResolvedValue(
+      makeUser({ id: "user-1" }),
+    );
 
     const result = await TicketService.updateTicket(
       "ticket-1",
@@ -640,9 +820,14 @@ describe("updateTicket status transitions", () => {
 
 describe("updateTicket assignment", () => {
   it("blocks a regular user (not same-dept admin, not super_admin) from assigning a ticket", async () => {
-    const ticket = makeTicket({ status: TicketStatus.open, createdById: "user-1" });
+    const ticket = makeTicket({
+      status: TicketStatus.open,
+      createdById: "user-1",
+    });
     vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
-    vi.mocked(UserRepository.findById).mockResolvedValue(makeUser({ id: "user-1" }));
+    vi.mocked(UserRepository.findById).mockResolvedValue(
+      makeUser({ id: "user-1" }),
+    );
 
     await expect(
       TicketService.updateTicket(
@@ -654,12 +839,23 @@ describe("updateTicket assignment", () => {
   });
 
   it("blocks assigning to a user outside the ticket's department", async () => {
-    const ticket = makeTicket({ status: TicketStatus.open, departmentId: DEPT_A, createdById: "creator-1" });
-    vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
-    vi.mocked(UserRepository.findById).mockImplementation(async (id: string) => {
-      if (id === "admin-1") return makeUser({ id: "admin-1", role: roleEnum.admin, departmentId: DEPT_A });
-      return makeUser({ id: "assignee-1", departmentId: DEPT_B });
+    const ticket = makeTicket({
+      status: TicketStatus.open,
+      departmentId: DEPT_A,
+      createdById: "creator-1",
     });
+    vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
+    vi.mocked(UserRepository.findById).mockImplementation(
+      async (id: string) => {
+        if (id === "admin-1")
+          return makeUser({
+            id: "admin-1",
+            role: roleEnum.admin,
+            departmentId: DEPT_A,
+          });
+        return makeUser({ id: "assignee-1", departmentId: DEPT_B });
+      },
+    );
 
     await expect(
       TicketService.updateTicket(
@@ -671,13 +867,28 @@ describe("updateTicket assignment", () => {
   });
 
   it("assigns a same-department admin's ticket and moves it to assigned status, notifying the new assignee", async () => {
-    const ticket = makeTicket({ status: TicketStatus.open, departmentId: DEPT_A, createdById: "creator-1" });
-    vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
-    vi.mocked(UserRepository.findById).mockImplementation(async (id: string) => {
-      if (id === "admin-1") return makeUser({ id: "admin-1", role: roleEnum.admin, departmentId: DEPT_A });
-      return makeUser({ id: "assignee-1", departmentId: DEPT_A });
+    const ticket = makeTicket({
+      status: TicketStatus.open,
+      departmentId: DEPT_A,
+      createdById: "creator-1",
     });
-    const updated = { ...ticket, status: TicketStatus.assigned, assignedToId: "assignee-1" };
+    vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
+    vi.mocked(UserRepository.findById).mockImplementation(
+      async (id: string) => {
+        if (id === "admin-1")
+          return makeUser({
+            id: "admin-1",
+            role: roleEnum.admin,
+            departmentId: DEPT_A,
+          });
+        return makeUser({ id: "assignee-1", departmentId: DEPT_A });
+      },
+    );
+    const updated = {
+      ...ticket,
+      status: TicketStatus.assigned,
+      assignedToId: "assignee-1",
+    };
     vi.mocked(TicketRepository.updateTicket).mockResolvedValue(updated);
 
     const result = await TicketService.updateTicket(
@@ -701,7 +912,11 @@ describe("updateTicket assignment", () => {
     vi.mocked(UserRepository.findById).mockResolvedValue(
       makeUser({ id: "admin-1", role: roleEnum.admin, departmentId: DEPT_A }),
     );
-    const updated = { ...ticket, status: TicketStatus.open, assignedToId: null };
+    const updated = {
+      ...ticket,
+      status: TicketStatus.open,
+      assignedToId: null,
+    };
     vi.mocked(TicketRepository.updateTicket).mockResolvedValue(updated);
 
     const result = await TicketService.updateTicket(
@@ -715,12 +930,23 @@ describe("updateTicket assignment", () => {
   });
 
   it("rejects an explicit status alongside a new assignee that isn't 'assigned'", async () => {
-    const ticket = makeTicket({ status: TicketStatus.open, departmentId: DEPT_A, createdById: "creator-1" });
-    vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
-    vi.mocked(UserRepository.findById).mockImplementation(async (id: string) => {
-      if (id === "admin-1") return makeUser({ id: "admin-1", role: roleEnum.admin, departmentId: DEPT_A });
-      return makeUser({ id: "assignee-1", departmentId: DEPT_A });
+    const ticket = makeTicket({
+      status: TicketStatus.open,
+      departmentId: DEPT_A,
+      createdById: "creator-1",
     });
+    vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
+    vi.mocked(UserRepository.findById).mockImplementation(
+      async (id: string) => {
+        if (id === "admin-1")
+          return makeUser({
+            id: "admin-1",
+            role: roleEnum.admin,
+            departmentId: DEPT_A,
+          });
+        return makeUser({ id: "assignee-1", departmentId: DEPT_A });
+      },
+    );
 
     await expect(
       TicketService.updateTicket(
@@ -755,9 +981,14 @@ describe("updateTicket assignment", () => {
 
 describe("updateTicket content edits", () => {
   it("blocks a non-creator from editing title, description, or priority", async () => {
-    const ticket = makeTicket({ status: TicketStatus.open, createdById: "creator-1" });
+    const ticket = makeTicket({
+      status: TicketStatus.open,
+      createdById: "creator-1",
+    });
     vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
-    vi.mocked(UserRepository.findById).mockResolvedValue(makeUser({ id: "someone-else" }));
+    vi.mocked(UserRepository.findById).mockResolvedValue(
+      makeUser({ id: "someone-else" }),
+    );
 
     await expect(
       TicketService.updateTicket(
@@ -769,9 +1000,14 @@ describe("updateTicket content edits", () => {
   });
 
   it("lets the creator edit content while the ticket is open", async () => {
-    const ticket = makeTicket({ status: TicketStatus.open, createdById: "user-1" });
+    const ticket = makeTicket({
+      status: TicketStatus.open,
+      createdById: "user-1",
+    });
     vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
-    vi.mocked(UserRepository.findById).mockResolvedValue(makeUser({ id: "user-1" }));
+    vi.mocked(UserRepository.findById).mockResolvedValue(
+      makeUser({ id: "user-1" }),
+    );
     const updated = { ...ticket, title: "New title" };
     vi.mocked(TicketRepository.updateTicket).mockResolvedValue(updated);
 
@@ -785,9 +1021,15 @@ describe("updateTicket content edits", () => {
   });
 
   it("blocks the creator from editing content while the ticket isn't open", async () => {
-    const ticket = makeTicket({ status: TicketStatus.assigned, createdById: "user-1", assignedToId: "assignee-1" });
+    const ticket = makeTicket({
+      status: TicketStatus.assigned,
+      createdById: "user-1",
+      assignedToId: "assignee-1",
+    });
     vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
-    vi.mocked(UserRepository.findById).mockResolvedValue(makeUser({ id: "user-1" }));
+    vi.mocked(UserRepository.findById).mockResolvedValue(
+      makeUser({ id: "user-1" }),
+    );
 
     await expect(
       TicketService.updateTicket(
@@ -799,10 +1041,21 @@ describe("updateTicket content edits", () => {
   });
 
   it("allows the creator to edit content while reopening a completed ticket", async () => {
-    const ticket = makeTicket({ status: TicketStatus.completed, createdById: "user-1", assignedToId: "assignee-1" });
+    const ticket = makeTicket({
+      status: TicketStatus.completed,
+      createdById: "user-1",
+      assignedToId: "assignee-1",
+    });
     vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
-    vi.mocked(UserRepository.findById).mockResolvedValue(makeUser({ id: "user-1" }));
-    const updated = { ...ticket, title: "New title", status: TicketStatus.open, assignedToId: null };
+    vi.mocked(UserRepository.findById).mockResolvedValue(
+      makeUser({ id: "user-1" }),
+    );
+    const updated = {
+      ...ticket,
+      title: "New title",
+      status: TicketStatus.open,
+      assignedToId: null,
+    };
     vi.mocked(TicketRepository.updateTicket).mockResolvedValue(updated);
 
     const result = await TicketService.updateTicket(
@@ -816,9 +1069,15 @@ describe("updateTicket content edits", () => {
   });
 
   it("notifies department recipients when priority is raised to high or urgent", async () => {
-    const ticket = makeTicket({ status: TicketStatus.open, createdById: "user-1", priority: TicketPriority.low });
+    const ticket = makeTicket({
+      status: TicketStatus.open,
+      createdById: "user-1",
+      priority: TicketPriority.low,
+    });
     vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
-    vi.mocked(UserRepository.findById).mockResolvedValue(makeUser({ id: "user-1" }));
+    vi.mocked(UserRepository.findById).mockResolvedValue(
+      makeUser({ id: "user-1" }),
+    );
     const updated = { ...ticket, priority: TicketPriority.high };
     vi.mocked(TicketRepository.updateTicket).mockResolvedValue(updated);
 
@@ -828,7 +1087,9 @@ describe("updateTicket content edits", () => {
       requester({ id: "user-1" }),
     );
 
-    expect(NotificationService.notifyPriorityTicket).toHaveBeenCalledWith(updated);
+    expect(NotificationService.notifyPriorityTicket).toHaveBeenCalledWith(
+      updated,
+    );
   });
 });
 
@@ -836,13 +1097,18 @@ describe("deleteTicket", () => {
   it("throws 404 when the ticket does not exist", async () => {
     vi.mocked(TicketRepository.findById).mockResolvedValue(null);
 
-    await expect(TicketService.deleteTicket("missing", requester())).rejects.toMatchObject({
+    await expect(
+      TicketService.deleteTicket("missing", requester()),
+    ).rejects.toMatchObject({
       statusCode: 404,
     });
   });
 
   it("lets a super_admin delete any ticket regardless of status or assignment", async () => {
-    const ticket = makeTicket({ status: TicketStatus.inProgress, assignedToId: "assignee-1" });
+    const ticket = makeTicket({
+      status: TicketStatus.inProgress,
+      assignedToId: "assignee-1",
+    });
     vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
     vi.mocked(TicketRepository.deleteTicket).mockResolvedValue(true);
 
@@ -856,32 +1122,57 @@ describe("deleteTicket", () => {
   });
 
   it("lets the creator delete their own ticket while it's unassigned and open", async () => {
-    const ticket = makeTicket({ status: TicketStatus.open, assignedToId: null, createdById: "user-1" });
+    const ticket = makeTicket({
+      status: TicketStatus.open,
+      assignedToId: null,
+      createdById: "user-1",
+    });
     vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
-    vi.mocked(UserRepository.findById).mockResolvedValue(makeUser({ id: "user-1" }));
+    vi.mocked(UserRepository.findById).mockResolvedValue(
+      makeUser({ id: "user-1" }),
+    );
     vi.mocked(TicketRepository.deleteTicket).mockResolvedValue(true);
 
-    const result = await TicketService.deleteTicket("ticket-1", requester({ id: "user-1" }));
+    const result = await TicketService.deleteTicket(
+      "ticket-1",
+      requester({ id: "user-1" }),
+    );
 
     expect(result.message).toBe("Ticket deleted successfully");
   });
 
   it("blocks the creator from deleting a ticket that is already assigned", async () => {
-    const ticket = makeTicket({ status: TicketStatus.assigned, assignedToId: "assignee-1", createdById: "user-1" });
+    const ticket = makeTicket({
+      status: TicketStatus.assigned,
+      assignedToId: "assignee-1",
+      createdById: "user-1",
+    });
     vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
-    vi.mocked(UserRepository.findById).mockResolvedValue(makeUser({ id: "user-1" }));
+    vi.mocked(UserRepository.findById).mockResolvedValue(
+      makeUser({ id: "user-1" }),
+    );
 
-    await expect(TicketService.deleteTicket("ticket-1", requester({ id: "user-1" }))).rejects.toMatchObject({
+    await expect(
+      TicketService.deleteTicket("ticket-1", requester({ id: "user-1" })),
+    ).rejects.toMatchObject({
       statusCode: 403,
     });
   });
 
   it("blocks the creator from deleting a ticket that isn't open (even if unassigned)", async () => {
-    const ticket = makeTicket({ status: TicketStatus.reviewed, assignedToId: null, createdById: "user-1" });
+    const ticket = makeTicket({
+      status: TicketStatus.reviewed,
+      assignedToId: null,
+      createdById: "user-1",
+    });
     vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
-    vi.mocked(UserRepository.findById).mockResolvedValue(makeUser({ id: "user-1" }));
+    vi.mocked(UserRepository.findById).mockResolvedValue(
+      makeUser({ id: "user-1" }),
+    );
 
-    await expect(TicketService.deleteTicket("ticket-1", requester({ id: "user-1" }))).rejects.toMatchObject({
+    await expect(
+      TicketService.deleteTicket("ticket-1", requester({ id: "user-1" })),
+    ).rejects.toMatchObject({
       statusCode: 403,
     });
   });
@@ -908,9 +1199,15 @@ describe("deleteTicket", () => {
   });
 
   it("blocks a bystander user from deleting a ticket they didn't create", async () => {
-    const ticket = makeTicket({ status: TicketStatus.open, assignedToId: null, createdById: "creator-1" });
+    const ticket = makeTicket({
+      status: TicketStatus.open,
+      assignedToId: null,
+      createdById: "creator-1",
+    });
     vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
-    vi.mocked(UserRepository.findById).mockResolvedValue(makeUser({ id: "bystander-1" }));
+    vi.mocked(UserRepository.findById).mockResolvedValue(
+      makeUser({ id: "bystander-1" }),
+    );
 
     await expect(
       TicketService.deleteTicket("ticket-1", requester({ id: "bystander-1" })),
@@ -930,19 +1227,27 @@ describe("deleteTicket", () => {
     );
 
     await expect(
-      TicketService.deleteTicket("ticket-1", requester({ id: "admin-2", role: roleEnum.admin })),
+      TicketService.deleteTicket(
+        "ticket-1",
+        requester({ id: "admin-2", role: roleEnum.admin }),
+      ),
     ).rejects.toMatchObject({ statusCode: 403 });
   });
 });
 
 describe("getAllTickets", () => {
   it("passes the requester's department and normalized sort order through to the repository", async () => {
-    vi.mocked(UserRepository.findById).mockResolvedValue(makeUser({ id: "admin-1", departmentId: DEPT_A }));
+    vi.mocked(UserRepository.findById).mockResolvedValue(
+      makeUser({ id: "admin-1", departmentId: DEPT_A }),
+    );
     vi.mocked(TicketRepository.findAll).mockResolvedValue([]);
 
-    await TicketService.getAllTickets(requester({ id: "admin-1", role: roleEnum.admin }), {
-      sortOrder: "asc" as any,
-    });
+    await TicketService.getAllTickets(
+      requester({ id: "admin-1", role: roleEnum.admin }),
+      {
+        sortOrder: "asc" as any,
+      },
+    );
 
     expect(TicketRepository.findAll).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -953,13 +1258,18 @@ describe("getAllTickets", () => {
   });
 
   it("also scopes an admin's ticket list to departments they manage, beyond their home department", async () => {
-    vi.mocked(UserRepository.findById).mockResolvedValue(makeUser({ id: "admin-1", departmentId: DEPT_A }));
+    vi.mocked(UserRepository.findById).mockResolvedValue(
+      makeUser({ id: "admin-1", departmentId: DEPT_A }),
+    );
     vi.mocked(DepartmentRepository.findByManager).mockResolvedValue([
       { departmentId: DEPT_B } as any,
     ]);
     vi.mocked(TicketRepository.findAll).mockResolvedValue([]);
 
-    await TicketService.getAllTickets(requester({ id: "admin-1", role: roleEnum.admin }), {});
+    await TicketService.getAllTickets(
+      requester({ id: "admin-1", role: roleEnum.admin }),
+      {},
+    );
 
     expect(TicketRepository.findAll).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -971,7 +1281,10 @@ describe("getAllTickets", () => {
   it("does not scope a super_admin or regular user's list by department at all", async () => {
     vi.mocked(TicketRepository.findAll).mockResolvedValue([]);
 
-    await TicketService.getAllTickets(requester({ id: "user-1", role: roleEnum.user }), {});
+    await TicketService.getAllTickets(
+      requester({ id: "user-1", role: roleEnum.user }),
+      {},
+    );
 
     expect(TicketRepository.findAll).toHaveBeenCalledWith(
       expect.objectContaining({ requesterDepartmentIds: undefined }),

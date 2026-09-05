@@ -1,8 +1,9 @@
 import { AppDataSource } from "../dbConnection.js";
 import { Ticket } from "../models/ticket.model.js";
 import { TicketPriority, TicketStatus } from "../../types/ticket.js";
+import type { SelectQueryBuilder } from "typeorm";
 
-export interface DashboardStatusCounts {
+export interface TicketStatusCounts {
   total: number;
   open: number;
   assigned: number;
@@ -12,33 +13,157 @@ export interface DashboardStatusCounts {
   closed: number;
 }
 
-export interface DashboardPriorityCounts {
+export interface TicketPriorityCounts {
   low: number;
   medium: number;
   high: number;
   urgent: number;
 }
 
-export interface TicketsOverTimeEntry {
+export interface TicketCountFilter {
+  departmentId?: string | undefined;
+  createdFrom?: Date | undefined;
+  createdTo?: Date | undefined;
+}
+
+export interface TicketTrendEntry {
   date: string;
   created: number;
   closed: number;
 }
 
-export enum DashboardPeriod {
+/**
+ * How `GET /dashboard`'s `ticketsOverTime` is bucketed:
+ * - day: 7 daily buckets, today plus the previous 6 days.
+ * - week: 4 weekly buckets (Monday-anchored), this week plus the previous 3 complete weeks.
+ * - month: 12 monthly buckets, this month plus the previous 12 months.
+ * - year: one bucket per year, from the department's (or system's) earliest ticket through this year.
+ */
+export enum TicketTrendPeriod {
+  day = "day",
   week = "week",
   month = "month",
   year = "year",
 }
 
-const TREND_WINDOW_DAYS = 7;
+const TREND_DAY_BUCKET_COUNT = 7;
+const TREND_WEEK_BUCKET_COUNT = 4;
+const TREND_MONTH_BUCKET_COUNT = 12;
+const DAYS_PER_WEEK = 7;
+
+function startOfUtcDay(): Date {
+  const now = new Date();
+  return new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+  );
+}
+
+/** Monday 00:00 UTC of the current ISO week. */
+function startOfUtcWeek(): Date {
+  const today = startOfUtcDay();
+  const isoWeekday = today.getUTCDay() === 0 ? 7 : today.getUTCDay();
+  today.setUTCDate(today.getUTCDate() - (isoWeekday - 1));
+  return today;
+}
+
+function startOfUtcMonth(): Date {
+  const now = new Date();
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+}
+
+/** Oldest-first 'YYYY-MM-DD' keys: today and the previous 6 days. */
+export function getDailyTrendBucketKeys(): string[] {
+  const today = startOfUtcDay();
+  const keys: string[] = [];
+  for (let i = TREND_DAY_BUCKET_COUNT - 1; i >= 0; i--) {
+    const bucket = new Date(today);
+    bucket.setUTCDate(bucket.getUTCDate() - i);
+    keys.push(bucket.toISOString().slice(0, 10));
+  }
+  return keys;
+}
+
+/** Oldest-first 'YYYY-MM-DD' keys (each a Monday): this week and the previous 3 complete weeks. */
+export function getWeeklyTrendBucketKeys(): string[] {
+  const thisWeek = startOfUtcWeek();
+  const keys: string[] = [];
+  for (let i = TREND_WEEK_BUCKET_COUNT - 1; i >= 0; i--) {
+    const bucket = new Date(thisWeek);
+    bucket.setUTCDate(bucket.getUTCDate() - i * DAYS_PER_WEEK);
+    keys.push(bucket.toISOString().slice(0, 10));
+  }
+  return keys;
+}
+
+/** Oldest-first 'YYYY-MM' keys: this month and the previous 12 months. */
+export function getMonthlyTrendBucketKeys(): string[] {
+  const thisMonth = startOfUtcMonth();
+  const keys: string[] = [];
+  for (let i = TREND_MONTH_BUCKET_COUNT - 1; i >= 0; i--) {
+    const bucket = new Date(
+      Date.UTC(thisMonth.getUTCFullYear(), thisMonth.getUTCMonth() - i, 1),
+    );
+    keys.push(bucket.toISOString().slice(0, 7));
+  }
+  return keys;
+}
+
+/** Oldest-first 'YYYY' keys, from `earliestTicketYear` through the current year (just the current year if null). */
+export function getYearlyTrendBucketKeys(
+  earliestTicketYear: number | null,
+): string[] {
+  const currentYear = new Date().getUTCFullYear();
+  const startYear = Math.min(earliestTicketYear ?? currentYear, currentYear);
+  const keys: string[] = [];
+  for (let year = startYear; year <= currentYear; year++) {
+    keys.push(String(year));
+  }
+  return keys;
+}
+
+/** The Date an oldest-first bucket-key array starts at, for bounding the SQL query. */
+export function getTrendRangeStart(
+  period: TicketTrendPeriod,
+  oldestBucketKey: string,
+): Date {
+  if (period === TicketTrendPeriod.month) {
+    return new Date(`${oldestBucketKey}-01T00:00:00.000Z`);
+  }
+  if (period === TicketTrendPeriod.year) {
+    return new Date(`${oldestBucketKey}-01-01T00:00:00.000Z`);
+  }
+  return new Date(`${oldestBucketKey}T00:00:00.000Z`);
+}
 
 export class DashboardRepository {
   private static repository = AppDataSource.getRepository(Ticket);
 
-  public static async getStatusCounts(
+  private static filterByDepartment(
+    query: SelectQueryBuilder<Ticket>,
     departmentId?: string,
-  ): Promise<DashboardStatusCounts> {
+  ): void {
+    if (departmentId) {
+      query.andWhere("ticket.departmentId = :departmentId", { departmentId });
+    }
+  }
+
+  private static filterByCreatedAtRange(
+    query: SelectQueryBuilder<Ticket>,
+    createdFrom?: Date,
+    createdTo?: Date,
+  ): void {
+    if (createdFrom) {
+      query.andWhere("ticket.createdAt >= :createdFrom", { createdFrom });
+    }
+    if (createdTo) {
+      query.andWhere("ticket.createdAt < :createdTo", { createdTo });
+    }
+  }
+
+  /** Ticket counts per status, optionally scoped to a department and/or a createdAt window. */
+  public static async countTicketsByStatus(
+    filter: TicketCountFilter = {},
+  ): Promise<TicketStatusCounts> {
     const query = this.repository
       .createQueryBuilder("ticket")
       .select("COUNT(*)::int", "total")
@@ -72,26 +197,26 @@ export class DashboardRepository {
         closed: TicketStatus.closed,
       });
 
-    if (departmentId) {
-      query.where("ticket.departmentId = :departmentId", { departmentId });
-    }
+    this.filterByDepartment(query, filter.departmentId);
+    this.filterByCreatedAtRange(query, filter.createdFrom, filter.createdTo);
 
-    const result = await query.getRawOne();
+    const row = await query.getRawOne();
 
     return {
-      total: Number(result.total ?? 0),
-      open: Number(result.open ?? 0),
-      assigned: Number(result.assigned ?? 0),
-      inProgress: Number(result.in_progress ?? 0),
-      reviewed: Number(result.reviewed ?? 0),
-      completed: Number(result.completed ?? 0),
-      closed: Number(result.closed ?? 0),
+      total: Number(row.total ?? 0),
+      open: Number(row.open ?? 0),
+      assigned: Number(row.assigned ?? 0),
+      inProgress: Number(row.in_progress ?? 0),
+      reviewed: Number(row.reviewed ?? 0),
+      completed: Number(row.completed ?? 0),
+      closed: Number(row.closed ?? 0),
     };
   }
 
-  public static async getPriorityCounts(
-    departmentId?: string,
-  ): Promise<DashboardPriorityCounts> {
+  /** Ticket counts per priority, optionally scoped to a department and/or a createdAt window. */
+  public static async countTicketsByPriority(
+    filter: TicketCountFilter = {},
+  ): Promise<TicketPriorityCounts> {
     const query = this.repository
       .createQueryBuilder("ticket")
       .select("COUNT(*) FILTER (WHERE ticket.priority = :low)::int", "low")
@@ -111,69 +236,86 @@ export class DashboardRepository {
         urgent: TicketPriority.urgent,
       });
 
-    if (departmentId) {
-      query.where("ticket.departmentId = :departmentId", { departmentId });
-    }
+    this.filterByDepartment(query, filter.departmentId);
+    this.filterByCreatedAtRange(query, filter.createdFrom, filter.createdTo);
 
-    const result = await query.getRawOne();
+    const row = await query.getRawOne();
 
     return {
-      low: Number(result.low ?? 0),
-      medium: Number(result.medium ?? 0),
-      high: Number(result.high ?? 0),
-      urgent: Number(result.urgent ?? 0),
+      low: Number(row.low ?? 0),
+      medium: Number(row.medium ?? 0),
+      high: Number(row.high ?? 0),
+      urgent: Number(row.urgent ?? 0),
     };
   }
 
-  /** UTC bucket keys for the period, oldest first, always 'YYYY-MM-DD' (first-of-month for `year`). */
-  private static bucketKeysForPeriod(period: DashboardPeriod): string[] {
-    const now = new Date();
-    const todayUtc = new Date(
-      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
-    );
+  /** The calendar year of the department's (or system's) very first ticket, or null if there are none. */
+  private static async findEarliestTicketYear(
+    departmentId?: string,
+  ): Promise<number | null> {
+    const query = this.repository
+      .createQueryBuilder("ticket")
+      .select("MIN(ticket.createdAt)", "earliestCreatedAt");
+    this.filterByDepartment(query, departmentId);
 
-    if (period === DashboardPeriod.year) {
-      const keys: string[] = [];
-      for (let i = 11; i >= 0; i--) {
-        const bucket = new Date(
-          Date.UTC(todayUtc.getUTCFullYear(), todayUtc.getUTCMonth() - i, 1),
-        );
-        keys.push(bucket.toISOString().slice(0, 10));
-      }
-      return keys;
+    const row = await query.getRawOne<{
+      earliestCreatedAt: Date | string | null;
+    }>();
+    if (!row?.earliestCreatedAt) {
+      return null;
     }
-
-    const windowDays =
-      period === DashboardPeriod.month ? 30 : TREND_WINDOW_DAYS;
-    const keys: string[] = [];
-    for (let i = windowDays - 1; i >= 0; i--) {
-      const bucket = new Date(todayUtc);
-      bucket.setUTCDate(bucket.getUTCDate() - i);
-      keys.push(bucket.toISOString().slice(0, 10));
-    }
-    return keys;
+    return new Date(row.earliestCreatedAt).getUTCFullYear();
   }
 
-  /** SQL expression bucketing a timestamptz column into a UTC 'YYYY-MM-DD' string, matching bucketKeysForPeriod. */
-  private static bucketExpression(
+  private static async trendBucketKeys(
+    period: TicketTrendPeriod,
+    departmentId?: string,
+  ): Promise<string[]> {
+    switch (period) {
+      case TicketTrendPeriod.day:
+        return getDailyTrendBucketKeys();
+      case TicketTrendPeriod.week:
+        return getWeeklyTrendBucketKeys();
+      case TicketTrendPeriod.month:
+        return getMonthlyTrendBucketKeys();
+      case TicketTrendPeriod.year: {
+        const earliestYear = await this.findEarliestTicketYear(departmentId);
+        return getYearlyTrendBucketKeys(earliestYear);
+      }
+    }
+  }
+
+  /** SQL bucketing a timestamptz column to match the keys `trendBucketKeys` produces for this period. */
+  private static trendBucketExpression(
     column: string,
-    period: DashboardPeriod,
+    period: TicketTrendPeriod,
   ): string {
     const utcColumn = `${column} AT TIME ZONE 'UTC'`;
-    return period === DashboardPeriod.year
-      ? `to_char(date_trunc('month', ${utcColumn}), 'YYYY-MM-DD')`
-      : `to_char(${utcColumn}, 'YYYY-MM-DD')`;
+    switch (period) {
+      case TicketTrendPeriod.week:
+        return `to_char(date_trunc('week', ${utcColumn}), 'YYYY-MM-DD')`;
+      case TicketTrendPeriod.month:
+        return `to_char(date_trunc('month', ${utcColumn}), 'YYYY-MM')`;
+      case TicketTrendPeriod.year:
+        return `to_char(date_trunc('year', ${utcColumn}), 'YYYY')`;
+      case TicketTrendPeriod.day:
+        return `to_char(${utcColumn}, 'YYYY-MM-DD')`;
+    }
   }
 
-  public static async getTicketsOverTime(
-    departmentId?: string,
-    period: DashboardPeriod = DashboardPeriod.week,
-  ): Promise<TicketsOverTimeEntry[]> {
-    const bucketKeys = this.bucketKeysForPeriod(period);
-    const rangeStart = new Date(`${bucketKeys[0]}T00:00:00.000Z`);
+  /** Tickets created and closed per bucket over the trend period, oldest first, zero-filled. */
+  public static async getTicketTrend(
+    departmentId: string | undefined,
+    period: TicketTrendPeriod = TicketTrendPeriod.day,
+  ): Promise<TicketTrendEntry[]> {
+    const bucketKeys = await this.trendBucketKeys(period, departmentId);
+    const rangeStart = getTrendRangeStart(period, bucketKeys[0]!);
 
-    const createdBucket = this.bucketExpression("ticket.createdAt", period);
-    const closedBucket = this.bucketExpression("ticket.closedAt", period);
+    const createdBucket = this.trendBucketExpression(
+      "ticket.createdAt",
+      period,
+    );
+    const closedBucket = this.trendBucketExpression("ticket.closedAt", period);
 
     const createdQuery = this.repository
       .createQueryBuilder("ticket")
@@ -181,6 +323,7 @@ export class DashboardRepository {
       .addSelect("COUNT(*)", "count")
       .where("ticket.createdAt >= :rangeStart", { rangeStart })
       .groupBy(createdBucket);
+    this.filterByDepartment(createdQuery, departmentId);
 
     const closedQuery = this.repository
       .createQueryBuilder("ticket")
@@ -189,32 +332,24 @@ export class DashboardRepository {
       .where("ticket.status = :closed", { closed: TicketStatus.closed })
       .andWhere("ticket.closedAt >= :rangeStart", { rangeStart })
       .groupBy(closedBucket);
-
-    if (departmentId) {
-      createdQuery.andWhere("ticket.departmentId = :departmentId", {
-        departmentId,
-      });
-      closedQuery.andWhere("ticket.departmentId = :departmentId", {
-        departmentId,
-      });
-    }
+    this.filterByDepartment(closedQuery, departmentId);
 
     const [createdRows, closedRows] = await Promise.all([
       createdQuery.getRawMany<{ bucket: string; count: string }>(),
       closedQuery.getRawMany<{ bucket: string; count: string }>(),
     ]);
 
-    const createdMap = new Map(
+    const createdByBucket = new Map(
       createdRows.map((row) => [row.bucket, Number(row.count)]),
     );
-    const closedMap = new Map(
+    const closedByBucket = new Map(
       closedRows.map((row) => [row.bucket, Number(row.count)]),
     );
 
     return bucketKeys.map((date) => ({
       date,
-      created: createdMap.get(date) ?? 0,
-      closed: closedMap.get(date) ?? 0,
+      created: createdByBucket.get(date) ?? 0,
+      closed: closedByBucket.get(date) ?? 0,
     }));
   }
 }

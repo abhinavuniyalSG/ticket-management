@@ -6,6 +6,8 @@ import type { DashboardMetrics } from "../../types/dashboard";
 function makeMetrics(overrides: Partial<DashboardMetrics> = {}): DashboardMetrics {
   return {
     message: "ok",
+    departmentId: null,
+    period: "day",
     totalTickets: 42,
     openTickets: 10,
     assignedTickets: 8,

@@ -7,7 +7,9 @@ import type {
   TicketsOverTimeEntry,
 } from "../../types/dashboard";
 
-function makeStatusEntry(overrides: Partial<StatusDistributionEntry> = {}): StatusDistributionEntry {
+function makeStatusEntry(
+  overrides: Partial<StatusDistributionEntry> = {},
+): StatusDistributionEntry {
   return { status: "open", count: 4, ...overrides };
 }
 
@@ -17,7 +19,9 @@ function makePriorityEntry(
   return { priority: "high", count: 3, ...overrides };
 }
 
-function makeTrendEntry(overrides: Partial<TicketsOverTimeEntry> = {}): TicketsOverTimeEntry {
+function makeTrendEntry(
+  overrides: Partial<TicketsOverTimeEntry> = {},
+): TicketsOverTimeEntry {
   return { date: "2024-01-05", created: 5, closed: 2, ...overrides };
 }
 
@@ -35,7 +39,9 @@ describe("DashboardCharts", () => {
       />,
     );
 
-    const section = screen.getByText("Status distribution").closest("div") as HTMLElement;
+    const section = screen
+      .getByText("Status distribution")
+      .closest("div") as HTMLElement;
     expect(within(section).getByText("Open")).toBeInTheDocument();
     expect(within(section).getByText("4")).toBeInTheDocument();
     expect(within(section).getByText("Closed")).toBeInTheDocument();
@@ -55,7 +61,9 @@ describe("DashboardCharts", () => {
       />,
     );
 
-    const section = screen.getByText("Priority distribution").closest("div") as HTMLElement;
+    const section = screen
+      .getByText("Priority distribution")
+      .closest("div") as HTMLElement;
     expect(within(section).getByText("High")).toBeInTheDocument();
     expect(within(section).getByText("3")).toBeInTheDocument();
     expect(within(section).getByText("Urgent")).toBeInTheDocument();
@@ -72,7 +80,9 @@ describe("DashboardCharts", () => {
       />,
     );
 
-    expect(screen.getByText("Tickets over time (30 days)")).toBeInTheDocument();
+    expect(
+      screen.getByText("Tickets over time (12 months)"),
+    ).toBeInTheDocument();
   });
 
   it("renders an accessible data table mirroring the chart's created/closed counts", () => {
@@ -100,29 +110,96 @@ describe("DashboardCharts", () => {
       <DashboardCharts
         statusDistribution={[]}
         priorityDistribution={[]}
-        ticketsOverTime={[makeTrendEntry()]}
+        ticketsOverTime={[makeTrendEntry({ date: "2024" })]}
         period="year"
       />,
     );
 
     expect(
       screen.getByRole("img", {
-        name: "Bar chart of tickets created and closed per month over the last 12 months",
+        name: "Bar chart of tickets created and closed per year",
       }),
     ).toBeInTheDocument();
   });
 
-  it("shows a full month and year in the accessible table for the year period", () => {
+  it("shows a full month and year in the accessible table for the month period", () => {
     render(
       <DashboardCharts
         statusDistribution={[]}
         priorityDistribution={[]}
-        ticketsOverTime={[makeTrendEntry({ date: "2024-03-15" })]}
-        period="year"
+        ticketsOverTime={[makeTrendEntry({ date: "2024-03" })]}
+        period="month"
       />,
     );
 
     const table = screen.getByRole("table");
     expect(within(table).getByText("March 2024")).toBeInTheDocument();
+  });
+
+  it("shows the bare year in the accessible table for the year period", () => {
+    render(
+      <DashboardCharts
+        statusDistribution={[]}
+        priorityDistribution={[]}
+        ticketsOverTime={[makeTrendEntry({ date: "2024" })]}
+        period="year"
+      />,
+    );
+
+    const table = screen.getByRole("table");
+    expect(within(table).getByText("2024")).toBeInTheDocument();
+  });
+
+  it("labels each bar with just the month, not the year, for the month period", () => {
+    render(
+      <DashboardCharts
+        statusDistribution={[]}
+        priorityDistribution={[]}
+        ticketsOverTime={[
+          makeTrendEntry({ date: "2025-12" }),
+          makeTrendEntry({ date: "2026-01" }),
+        ]}
+        period="month"
+      />,
+    );
+
+    expect(screen.getByText("Dec")).toBeInTheDocument();
+    expect(screen.getByText("Jan")).toBeInTheDocument();
+    expect(screen.queryByText("Dec 2025")).not.toBeInTheDocument();
+    expect(screen.queryByText("Jan 2026")).not.toBeInTheDocument();
+  });
+
+  it("bookends the month trend chart with the first and last entries' years", () => {
+    render(
+      <DashboardCharts
+        statusDistribution={[]}
+        priorityDistribution={[]}
+        ticketsOverTime={[
+          makeTrendEntry({ date: "2025-12" }),
+          makeTrendEntry({ date: "2026-01" }),
+        ]}
+        period="month"
+      />,
+    );
+
+    expect(screen.getByText("2025")).toBeInTheDocument();
+    expect(screen.getByText("2026")).toBeInTheDocument();
+  });
+
+  it("doesn't show year bookends for non-month periods", () => {
+    render(
+      <DashboardCharts
+        statusDistribution={[]}
+        priorityDistribution={[]}
+        ticketsOverTime={[
+          makeTrendEntry({ date: "2025-12-29" }),
+          makeTrendEntry({ date: "2026-01-05" }),
+        ]}
+        period="week"
+      />,
+    );
+
+    expect(screen.queryByText("2025")).not.toBeInTheDocument();
+    expect(screen.queryByText("2026")).not.toBeInTheDocument();
   });
 });

@@ -2,6 +2,7 @@ import { catchAsync } from "../utils/catchAsync.js";
 import type { Request, Response, NextFunction } from "express";
 import {
   DashboardService,
+  type DashboardOverviewQueryInput,
   type DashboardQueryInput,
 } from "../services/dashboard.service.js";
 import type { RequesterInfo } from "../services/ticket.service.js";
@@ -26,8 +27,7 @@ export class DashboardController {
   ) => {
     const requester = req.user as RequesterInfo;
     const query =
-      (req.normalized?.query as Pick<DashboardQueryInput, "period">) ??
-      req.query;
+      (req.normalized?.query as DashboardOverviewQueryInput) ?? req.query;
     const result = await DashboardService.getDashboardOverview(
       requester,
       query,
