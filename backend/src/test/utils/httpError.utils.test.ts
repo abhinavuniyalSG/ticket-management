@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { HttpError } from "./httpError.utils.js";
+import { HttpError } from "../../utils/httpError.utils.js";
 
 describe("HttpError", () => {
   it("stores the status code and message it was created with", () => {

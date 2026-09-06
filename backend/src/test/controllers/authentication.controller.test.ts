@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { AuthenticationController } from "./authentication.controller.js";
-import { AuthenticationService } from "../services/authentication.service.js";
-import { extractToken } from "../utils/auth.util.js";
-import { clearAuthCookies, setAuthCookies } from "../utils/cookie.util.js";
+import { AuthenticationController } from "../../controllers/authentication.controller.js";
+import { AuthenticationService } from "../../services/authentication.service.js";
+import { extractToken } from "../../utils/auth.util.js";
+import { clearAuthCookies, setAuthCookies } from "../../utils/cookie.util.js";
 
-vi.mock("../services/authentication.service.js", () => ({
+vi.mock("../../services/authentication.service.js", () => ({
   AuthenticationService: {
     register: vi.fn(),
     login: vi.fn(),
@@ -16,11 +16,11 @@ vi.mock("../services/authentication.service.js", () => ({
   },
 }));
 
-vi.mock("../utils/auth.util.js", () => ({
+vi.mock("../../utils/auth.util.js", () => ({
   extractToken: vi.fn(),
 }));
 
-vi.mock("../utils/cookie.util.js", () => ({
+vi.mock("../../utils/cookie.util.js", () => ({
   setAuthCookies: vi.fn(),
   clearAuthCookies: vi.fn(),
 }));

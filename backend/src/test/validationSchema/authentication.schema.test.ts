@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { AuthenticationSchema } from "./authentication.schema.js";
+import { AuthenticationSchema } from "../../validationSchema/authentication.schema.js";
 
 const schema = new AuthenticationSchema();
 

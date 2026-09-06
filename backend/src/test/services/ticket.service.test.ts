@@ -1,15 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { TicketService } from "./ticket.service.js";
-import { TicketRepository } from "../database/repositry/ticket.repository.js";
-import { UserRepository } from "../database/repositry/user.repository.js";
-import { DepartmentRepository } from "../database/repositry/department.repository.js";
-import { NotificationService } from "./notification.service.js";
-import { roleEnum } from "../types/user.js";
-import { TicketPriority, TicketStatus } from "../types/ticket.js";
-import type { Ticket } from "../database/models/ticket.model.js";
-import type { RequesterInfo } from "./ticket.service.js";
+import { TicketService } from "../../services/ticket.service.js";
+import { TicketRepository } from "../../database/repositry/ticket.repository.js";
+import { UserRepository } from "../../database/repositry/user.repository.js";
+import { DepartmentRepository } from "../../database/repositry/department.repository.js";
+import { NotificationService } from "../../services/notification.service.js";
+import { roleEnum } from "../../types/user.js";
+import { TicketPriority, TicketStatus } from "../../types/ticket.js";
+import type { Ticket } from "../../database/models/ticket.model.js";
+import type { RequesterInfo } from "../../services/ticket.service.js";
 
-vi.mock("../database/repositry/ticket.repository.js", () => ({
+vi.mock("../../database/repositry/ticket.repository.js", () => ({
   TicketRepository: {
     findAll: vi.fn(),
     findById: vi.fn(),
@@ -19,20 +19,20 @@ vi.mock("../database/repositry/ticket.repository.js", () => ({
   },
 }));
 
-vi.mock("../database/repositry/user.repository.js", () => ({
+vi.mock("../../database/repositry/user.repository.js", () => ({
   UserRepository: {
     findById: vi.fn(),
   },
 }));
 
-vi.mock("../database/repositry/department.repository.js", () => ({
+vi.mock("../../database/repositry/department.repository.js", () => ({
   DepartmentRepository: {
     findById: vi.fn(),
     findByManager: vi.fn(),
   },
 }));
 
-vi.mock("./notification.service.js", () => ({
+vi.mock("../../services/notification.service.js", () => ({
   NotificationService: {
     ticketAssigned: vi.fn(),
     ticketReadyForReview: vi.fn(),
@@ -40,7 +40,7 @@ vi.mock("./notification.service.js", () => ({
   },
 }));
 
-vi.mock("../core/logger.js", () => ({
+vi.mock("../../core/logger.js", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
 

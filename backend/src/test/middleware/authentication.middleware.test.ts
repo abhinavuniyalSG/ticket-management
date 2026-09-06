@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { authMiddleware } from "./authentication.middleware.js";
-import { extractToken, verifyToken } from "../utils/auth.util.js";
-import { HttpError } from "../utils/httpError.utils.js";
+import { authMiddleware } from "../../middleware/authentication.middleware.js";
+import { extractToken, verifyToken } from "../../utils/auth.util.js";
+import { HttpError } from "../../utils/httpError.utils.js";
 
-vi.mock("../utils/auth.util.js", () => ({
+vi.mock("../../utils/auth.util.js", () => ({
   extractToken: vi.fn(),
   verifyToken: vi.fn(),
 }));

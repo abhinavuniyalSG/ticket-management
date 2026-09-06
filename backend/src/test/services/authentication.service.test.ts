@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { AuthenticationService } from "./authentication.service.js";
-import { UserRepository } from "../database/repositry/user.repository.js";
-import { EmailService } from "./email.service.js";
-import * as authUtil from "../utils/auth.util.js";
+import { AuthenticationService } from "../../services/authentication.service.js";
+import { UserRepository } from "../../database/repositry/user.repository.js";
+import { EmailService } from "../../services/email.service.js";
+import * as authUtil from "../../utils/auth.util.js";
 
-vi.mock("../database/repositry/user.repository.js", () => ({
+vi.mock("../../database/repositry/user.repository.js", () => ({
   UserRepository: {
     findByEmail: vi.fn(),
     createUser: vi.fn(),
@@ -17,15 +17,15 @@ vi.mock("../database/repositry/user.repository.js", () => ({
   },
 }));
 
-vi.mock("./email.service.js", () => ({
+vi.mock("../../services/email.service.js", () => ({
   EmailService: { send: vi.fn() },
 }));
 
-vi.mock("../core/logger.js", () => ({
+vi.mock("../../core/logger.js", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
 
-vi.mock("../utils/auth.util.js", () => ({
+vi.mock("../../utils/auth.util.js", () => ({
   generateHashPassword: vi.fn().mockResolvedValue("hashed-password"),
   verifyHashPassword: vi.fn(),
   generateRandomToken: vi.fn().mockReturnValue("raw-token"),

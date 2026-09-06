@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { TicketController } from "./ticket.controller.js";
-import { TicketService } from "../services/ticket.service.js";
+import { TicketController } from "../../controllers/ticket.controller.js";
+import { TicketService } from "../../services/ticket.service.js";
 
-vi.mock("../services/ticket.service.js", () => ({
+vi.mock("../../services/ticket.service.js", () => ({
   TicketService: {
     getAllTickets: vi.fn(),
     getTicketById: vi.fn(),

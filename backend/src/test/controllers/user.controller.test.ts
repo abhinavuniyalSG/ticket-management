@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { UserController } from "./user.controller.js";
-import { UserService } from "../services/user.service.js";
+import { UserController } from "../../controllers/user.controller.js";
+import { UserService } from "../../services/user.service.js";
 
-vi.mock("../services/user.service.js", () => ({
+vi.mock("../../services/user.service.js", () => ({
   UserService: {
     getAllUsers: vi.fn(),
     getUserById: vi.fn(),

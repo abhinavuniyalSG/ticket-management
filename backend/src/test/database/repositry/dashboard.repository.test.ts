@@ -6,7 +6,7 @@ import {
   getMonthlyTrendBucketKeys,
   getYearlyTrendBucketKeys,
   getTrendRangeStart,
-} from "./dashboard.repository.js";
+} from "../../../database/repositry/dashboard.repository.js";
 
 describe("trend bucket keys", () => {
   beforeEach(() => {

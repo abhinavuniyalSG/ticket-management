@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { UserService } from "./user.service.js";
-import { UserRepository } from "../database/repositry/user.repository.js";
-import { ContactRepository } from "../database/repositry/contact.repository.js";
-import { DepartmentRepository } from "../database/repositry/department.repository.js";
-import { roleEnum } from "../types/user.js";
-import type { RequesterInfo } from "./user.service.js";
+import { UserService } from "../../services/user.service.js";
+import { UserRepository } from "../../database/repositry/user.repository.js";
+import { ContactRepository } from "../../database/repositry/contact.repository.js";
+import { DepartmentRepository } from "../../database/repositry/department.repository.js";
+import { roleEnum } from "../../types/user.js";
+import type { RequesterInfo } from "../../services/user.service.js";
 
-vi.mock("../database/repositry/user.repository.js", () => ({
+vi.mock("../../database/repositry/user.repository.js", () => ({
   UserRepository: {
     findAll: vi.fn(),
     findById: vi.fn(),
@@ -16,7 +16,7 @@ vi.mock("../database/repositry/user.repository.js", () => ({
   },
 }));
 
-vi.mock("../database/repositry/contact.repository.js", () => ({
+vi.mock("../../database/repositry/contact.repository.js", () => ({
   ContactRepository: {
     findByTypeAndDetail: vi.fn(),
     createContact: vi.fn(),
@@ -26,13 +26,13 @@ vi.mock("../database/repositry/contact.repository.js", () => ({
   },
 }));
 
-vi.mock("../database/repositry/department.repository.js", () => ({
+vi.mock("../../database/repositry/department.repository.js", () => ({
   DepartmentRepository: {
     findByManager: vi.fn(),
   },
 }));
 
-vi.mock("../core/logger.js", () => ({
+vi.mock("../../core/logger.js", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
 

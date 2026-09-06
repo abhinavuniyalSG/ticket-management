@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { z } from "zod";
-import { requestValidator } from "./requestValidator.middleware.js";
+import { requestValidator } from "../../middleware/requestValidator.middleware.js";
 
-vi.mock("../core/logger.js", () => ({
+vi.mock("../../core/logger.js", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
 

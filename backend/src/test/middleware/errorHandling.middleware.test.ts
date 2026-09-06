@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { ErrorMiddleware } from "./errorHandling.middleware.js";
-import { HttpError } from "../utils/httpError.utils.js";
-import { logger } from "../core/logger.js";
+import { ErrorMiddleware } from "../../middleware/errorHandling.middleware.js";
+import { HttpError } from "../../utils/httpError.utils.js";
+import { logger } from "../../core/logger.js";
 
-vi.mock("../core/logger.js", () => ({
+vi.mock("../../core/logger.js", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
 

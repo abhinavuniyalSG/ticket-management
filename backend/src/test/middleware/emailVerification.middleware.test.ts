@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { requireVerifiedEmail } from "./emailVerification.middleware.js";
-import { UserRepository } from "../database/repositry/user.repository.js";
+import { requireVerifiedEmail } from "../../middleware/emailVerification.middleware.js";
+import { UserRepository } from "../../database/repositry/user.repository.js";
 
-vi.mock("../database/repositry/user.repository.js", () => ({
+vi.mock("../../database/repositry/user.repository.js", () => ({
   UserRepository: {
     findById: vi.fn(),
   },

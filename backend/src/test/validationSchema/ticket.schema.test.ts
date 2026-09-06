@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { TicketSchema } from "./ticket.schema.js";
+import { TicketSchema } from "../../validationSchema/ticket.schema.js";
 
 const schema = new TicketSchema();
 

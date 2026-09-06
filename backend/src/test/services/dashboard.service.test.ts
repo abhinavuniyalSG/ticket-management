@@ -2,16 +2,16 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   DashboardService,
   DashboardOverviewPeriod,
-} from "./dashboard.service.js";
+} from "../../services/dashboard.service.js";
 import {
   DashboardRepository,
   TicketTrendPeriod,
-} from "../database/repositry/dashboard.repository.js";
-import { DepartmentRepository } from "../database/repositry/department.repository.js";
-import { roleEnum } from "../types/user.js";
-import type { RequesterInfo } from "./ticket.service.js";
+} from "../../database/repositry/dashboard.repository.js";
+import { DepartmentRepository } from "../../database/repositry/department.repository.js";
+import { roleEnum } from "../../types/user.js";
+import type { RequesterInfo } from "../../services/ticket.service.js";
 
-vi.mock("../database/repositry/dashboard.repository.js", () => ({
+vi.mock("../../database/repositry/dashboard.repository.js", () => ({
   TicketTrendPeriod: { day: "day", week: "week", month: "month", year: "year" },
   DashboardRepository: {
     countTicketsByStatus: vi.fn(),
@@ -20,7 +20,7 @@ vi.mock("../database/repositry/dashboard.repository.js", () => ({
   },
 }));
 
-vi.mock("../database/repositry/department.repository.js", () => ({
+vi.mock("../../database/repositry/department.repository.js", () => ({
   DepartmentRepository: {
     findById: vi.fn(),
     findByManager: vi.fn(),

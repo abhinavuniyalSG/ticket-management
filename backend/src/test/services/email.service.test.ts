@@ -9,7 +9,7 @@ vi.mock("nodemailer", () => ({
   default: { createTransport: createTransportMock },
 }));
 
-vi.mock("../core/logger.js", () => ({
+vi.mock("../../core/logger.js", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
 
@@ -17,7 +17,7 @@ const ORIGINAL_ENV = { ...process.env };
 
 async function loadEmailService() {
   vi.resetModules();
-  const mod = await import("./email.service.js");
+  const mod = await import("../../services/email.service.js");
   return mod.EmailService;
 }
 

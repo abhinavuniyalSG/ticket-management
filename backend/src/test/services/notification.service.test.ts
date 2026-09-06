@@ -1,18 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { NotificationService } from "./notification.service.js";
-import { EmailService } from "./email.service.js";
-import { UserRepository } from "../database/repositry/user.repository.js";
-import { DepartmentRepository } from "../database/repositry/department.repository.js";
-import { TicketRepository } from "../database/repositry/ticket.repository.js";
-import { roleEnum } from "../types/user.js";
-import { TicketPriority, TicketStatus } from "../types/ticket.js";
-import type { Ticket } from "../database/models/ticket.model.js";
+import { NotificationService } from "../../services/notification.service.js";
+import { EmailService } from "../../services/email.service.js";
+import { UserRepository } from "../../database/repositry/user.repository.js";
+import { DepartmentRepository } from "../../database/repositry/department.repository.js";
+import { TicketRepository } from "../../database/repositry/ticket.repository.js";
+import { roleEnum } from "../../types/user.js";
+import { TicketPriority, TicketStatus } from "../../types/ticket.js";
+import type { Ticket } from "../../database/models/ticket.model.js";
 
-vi.mock("./email.service.js", () => ({
+vi.mock("../../services/email.service.js", () => ({
   EmailService: { send: vi.fn() },
 }));
 
-vi.mock("../database/repositry/user.repository.js", () => ({
+vi.mock("../../database/repositry/user.repository.js", () => ({
   UserRepository: {
     findById: vi.fn(),
     findByRoleAndDepartment: vi.fn(),
@@ -20,21 +20,21 @@ vi.mock("../database/repositry/user.repository.js", () => ({
   },
 }));
 
-vi.mock("../database/repositry/department.repository.js", () => ({
+vi.mock("../../database/repositry/department.repository.js", () => ({
   DepartmentRepository: {
     findById: vi.fn(),
     findAll: vi.fn(),
   },
 }));
 
-vi.mock("../database/repositry/ticket.repository.js", () => ({
+vi.mock("../../database/repositry/ticket.repository.js", () => ({
   TicketRepository: {
     findByDepartmentStatuses: vi.fn(),
     getSummary: vi.fn(),
   },
 }));
 
-vi.mock("../core/logger.js", () => ({
+vi.mock("../../core/logger.js", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
 

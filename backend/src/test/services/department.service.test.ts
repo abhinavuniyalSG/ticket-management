@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { DepartmentService } from "./department.service.js";
-import { DepartmentRepository } from "../database/repositry/department.repository.js";
-import { UserRepository } from "../database/repositry/user.repository.js";
-import { roleEnum } from "../types/user.js";
-import type { RequesterInfo } from "./user.service.js";
+import { DepartmentService } from "../../services/department.service.js";
+import { DepartmentRepository } from "../../database/repositry/department.repository.js";
+import { UserRepository } from "../../database/repositry/user.repository.js";
+import { roleEnum } from "../../types/user.js";
+import type { RequesterInfo } from "../../services/user.service.js";
 
-vi.mock("../database/repositry/department.repository.js", () => ({
+vi.mock("../../database/repositry/department.repository.js", () => ({
   DepartmentRepository: {
     findByName: vi.fn(),
     findByEmail: vi.fn(),
@@ -17,13 +17,13 @@ vi.mock("../database/repositry/department.repository.js", () => ({
   },
 }));
 
-vi.mock("../database/repositry/user.repository.js", () => ({
+vi.mock("../../database/repositry/user.repository.js", () => ({
   UserRepository: {
     findById: vi.fn(),
   },
 }));
 
-vi.mock("../core/logger.js", () => ({
+vi.mock("../../core/logger.js", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
 

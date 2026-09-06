@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { UserSchema } from "./user.schema.js";
+import { UserSchema } from "../../validationSchema/user.schema.js";
 
 const schema = new UserSchema();
 const UUID_V7 = "018f4d2e-6b1a-7a3e-8b0a-0f2a1c9d4e5b";

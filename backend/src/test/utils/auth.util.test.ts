@@ -7,8 +7,8 @@ import {
   verifyTokenHash,
   tokenGenerator,
   verifyToken,
-} from "./auth.util.js";
-import { JWT_VARIABLES } from "../config/secrets.js";
+} from "../../utils/auth.util.js";
+import { JWT_VARIABLES } from "../../config/secrets.js";
 
 describe("password hashing", () => {
   it("hashes a password to something other than the plain text", async () => {

@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { DashboardController } from "./dashboard.controller.js";
-import { DashboardService } from "../services/dashboard.service.js";
+import { DashboardController } from "../../controllers/dashboard.controller.js";
+import { DashboardService } from "../../services/dashboard.service.js";
 
-vi.mock("../services/dashboard.service.js", () => ({
+vi.mock("../../services/dashboard.service.js", () => ({
   DashboardService: {
     getDashboard: vi.fn(),
     getDashboardOverview: vi.fn(),
