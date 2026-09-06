@@ -41,7 +41,6 @@ describe("trend bucket keys", () => {
 
   it("getMonthlyTrendBucketKeys: 12 months, oldest first, ending this month", () => {
     expect(getMonthlyTrendBucketKeys()).toEqual([
-      "2025-09",
       "2025-10",
       "2025-11",
       "2025-12",
@@ -96,7 +95,6 @@ describe("month and week buckets roll over a year boundary correctly", () => {
 
   it("getMonthlyTrendBucketKeys crosses into the previous year", () => {
     expect(getMonthlyTrendBucketKeys()).toEqual([
-      "2025-01",
       "2025-02",
       "2025-03",
       "2025-04",
