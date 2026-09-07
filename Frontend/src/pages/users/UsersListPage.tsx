@@ -10,13 +10,14 @@ import { Spinner } from "../../components/atoms/Spinner";
 import { EmptyState } from "../../components/molecules/EmptyState";
 import { ErrorState } from "../../components/molecules/ErrorState";
 import { ConfirmDialog } from "../../components/molecules/ConfirmDialog";
+import { Pagination } from "../../components/molecules/Pagination";
 import { UserTable } from "../../components/organisms/UserTable";
 import { userService } from "../../services/userService";
 import type { UserQueryParams } from "../../services/userService";
 import { departmentService } from "../../services/departmentService";
 import { useDebouncedValue } from "../../hooks/useDebouncedValue";
 import { useAuth } from "../../hooks/useAuth";
-import { ApiError } from "../../types/api";
+import { ApiError, type PaginationMeta } from "../../types/api";
 import type { User } from "../../types/user";
 import type { Department } from "../../types/department";
 import { ROLE_LABELS, USER_ROLES } from "../../constants/options";
@@ -27,6 +28,8 @@ export function UsersListPage() {
   const isSuperAdmin = actor?.role === "super_admin";
 
   const [users, setUsers] = useState<User[] | null>(null);
+  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
+  const [page, setPage] = useState(1);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +42,7 @@ export function UsersListPage() {
 
   const debouncedSearch = useDebouncedValue(search);
 
-  const query = useMemo<UserQueryParams>(
+  const filterQuery = useMemo<UserQueryParams>(
     () => ({
       firstName: debouncedSearch.trim() || undefined,
       role: (roleFilter || undefined) as UserQueryParams["role"],
@@ -48,12 +51,25 @@ export function UsersListPage() {
     [debouncedSearch, roleFilter, departmentFilter],
   );
 
+  // Any filter change starts the results back over at page 1.
+  useEffect(() => {
+    setPage(1);
+  }, [filterQuery]);
+
+  const query = useMemo<UserQueryParams>(
+    () => ({ ...filterQuery, page }),
+    [filterQuery, page],
+  );
+
   const loadUsers = () => {
     setIsLoading(true);
     setError(null);
     userService
       .list(query)
-      .then((res) => setUsers(res.users))
+      .then((res) => {
+        setUsers(res.users);
+        setPagination(res.pagination);
+      })
       .catch((err: unknown) => {
         setError(err instanceof ApiError ? err.message : "Unable to load users.");
       })
@@ -68,7 +84,7 @@ export function UsersListPage() {
   useEffect(() => {
     if (isSuperAdmin) {
       departmentService
-        .list()
+        .list({ limit: 100 })
         .then((res) => setDepartments(res.departments))
         .catch(() => undefined);
     }
@@ -153,28 +169,33 @@ export function UsersListPage() {
       )}
 
       {!isLoading && !error && users && users.length > 0 && actor && (
-        <UserTable
-          users={users}
-          renderActions={(target) =>
-            canDeleteUser(actor, target) ? (
-              <IconButton
-                label={`Delete ${target.firstName} ${target.lastName}`}
-                variant="danger"
-                onClick={() => setDeleteTarget(target)}
-                icon={
-                  <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="h-4 w-4">
-                    <path
-                      d="M5 5l10 10M15 5L5 15"
-                      stroke="currentColor"
-                      strokeWidth="1.7"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                }
-              />
-            ) : null
-          }
-        />
+        <>
+          <UserTable
+            users={users}
+            renderActions={(target) =>
+              canDeleteUser(actor, target) ? (
+                <IconButton
+                  label={`Delete ${target.firstName} ${target.lastName}`}
+                  variant="danger"
+                  onClick={() => setDeleteTarget(target)}
+                  icon={
+                    <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="h-4 w-4">
+                      <path
+                        d="M5 5l10 10M15 5L5 15"
+                        stroke="currentColor"
+                        strokeWidth="1.7"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  }
+                />
+              ) : null
+            }
+          />
+          {pagination && (
+            <Pagination pagination={pagination} onPageChange={setPage} isLoading={isLoading} />
+          )}
+        </>
       )}
 
       <ConfirmDialog

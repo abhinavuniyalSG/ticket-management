@@ -87,7 +87,7 @@ export class NotificationService {
   }
 
   public static async sendDepartmentReminders(): Promise<void> {
-    const departments = await DepartmentRepository.findAll();
+    const { data: departments } = await DepartmentRepository.findAll();
     for (const department of departments) {
       const tickets = await TicketRepository.findByDepartmentStatuses(
         department.departmentId,

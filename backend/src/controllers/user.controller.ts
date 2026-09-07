@@ -14,6 +14,8 @@ interface UserListQueryParams {
   department?: string;
   firstName?: string;
   role?: roleEnum;
+  page?: number;
+  limit?: number;
 }
 
 export class UserController {
@@ -30,6 +32,8 @@ export class UserController {
         department: rawQuery.department,
         firstName: rawQuery.firstName,
         role: rawQuery.role,
+        page: rawQuery.page,
+        limit: rawQuery.limit,
       };
       const result = await UserService.getAllUsers(requester, query);
       return res.status(200).json(result);

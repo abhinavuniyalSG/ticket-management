@@ -5,6 +5,11 @@ import { roleEnum } from "../types/user.js";
 import type { Department } from "../database/models/department.model.js";
 import { logger } from "../core/logger.js";
 import type { RequesterInfo } from "./user.service.js";
+import {
+  buildPaginationMeta,
+  DEFAULT_LIMIT,
+  DEFAULT_PAGE,
+} from "../utils/pagination.util.js";
 
 export interface CreateDepartmentInput {
   departmentName: string;
@@ -20,6 +25,8 @@ export interface UpdateDepartmentInput {
 
 export interface DepartmentQueryInput {
   departmentName?: string;
+  page?: number;
+  limit?: number;
 }
 
 export class DepartmentService {
@@ -120,13 +127,19 @@ export class DepartmentService {
    * Any authenticated role can view all departments.
    */
   public static async getAllDepartments(query: DepartmentQueryInput = {}) {
-    const departments = await DepartmentRepository.findAll({
+    const page = query.page ?? DEFAULT_PAGE;
+    const limit = query.limit ?? DEFAULT_LIMIT;
+
+    const { data: departments, total } = await DepartmentRepository.findAll({
       departmentName: query.departmentName,
+      page,
+      limit,
     });
 
     return {
       message: "Departments fetched successfully",
       departments: departments.map((d) => this.sanitizeDepartment(d)),
+      pagination: buildPaginationMeta(total, page, limit),
     };
   }
 

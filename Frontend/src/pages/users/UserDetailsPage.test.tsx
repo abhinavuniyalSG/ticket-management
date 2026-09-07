@@ -11,6 +11,7 @@ import { departmentService } from "../../services/departmentService";
 import { ApiError } from "../../types/api";
 import type { User } from "../../types/user";
 import type { Department } from "../../types/department";
+import { makePagination } from "../../test/paginationFixture";
 
 vi.mock("../../services/userService", () => ({
   userService: { getById: vi.fn(), update: vi.fn(), remove: vi.fn() },
@@ -83,6 +84,7 @@ beforeEach(() => {
   mockedDepartmentService.list.mockResolvedValue({
     message: "ok",
     departments: [makeDepartment()],
+    pagination: makePagination({ totalItems: 1, totalPages: 1 }),
   });
 });
 

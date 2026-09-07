@@ -94,4 +94,24 @@ describe("ticketQuerySchema", () => {
     const result = schema.ticketQuerySchema.safeParse({ createdFrom: "15-01-2026" });
     expect(result.success).toBe(false);
   });
+
+  it("defaults page to 1 and limit to 20 when omitted", () => {
+    const result = schema.ticketQuerySchema.parse({});
+    expect(result.page).toBe(1);
+    expect(result.limit).toBe(20);
+  });
+
+  it("coerces string page/limit query values to numbers", () => {
+    const result = schema.ticketQuerySchema.parse({ page: "2", limit: "50" });
+    expect(result.page).toBe(2);
+    expect(result.limit).toBe(50);
+  });
+
+  it("rejects a page below 1", () => {
+    expect(schema.ticketQuerySchema.safeParse({ page: "0" }).success).toBe(false);
+  });
+
+  it("rejects a limit above 100", () => {
+    expect(schema.ticketQuerySchema.safeParse({ limit: "101" }).success).toBe(false);
+  });
 });

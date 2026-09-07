@@ -36,9 +36,11 @@ paths:
             type: string
             maxLength: 100
           example: Engineering
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
       responses:
         "200":
-          description: List of departments
+          description: Paginated list of departments
           content:
             application/json:
               schema:
@@ -51,6 +53,8 @@ paths:
                     type: array
                     items:
                       $ref: "#/components/schemas/Department"
+                  pagination:
+                    $ref: "#/components/schemas/PaginationMeta"
         "400":
           $ref: "#/components/responses/ValidationError"
         "401":

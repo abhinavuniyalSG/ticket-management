@@ -48,6 +48,16 @@ describe("userQuerySchema", () => {
   it("rejects an invalid role filter", () => {
     expect(schema.userQuerySchema.safeParse({ role: "owner" }).success).toBe(false);
   });
+
+  it("defaults page to 1 and limit to 20 when omitted", () => {
+    const result = schema.userQuerySchema.parse({});
+    expect(result.page).toBe(1);
+    expect(result.limit).toBe(20);
+  });
+
+  it("rejects a limit above 100", () => {
+    expect(schema.userQuerySchema.safeParse({ limit: "101" }).success).toBe(false);
+  });
 });
 
 describe("userIdParamSchema", () => {

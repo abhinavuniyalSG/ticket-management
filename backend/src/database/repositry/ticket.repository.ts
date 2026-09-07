@@ -2,6 +2,7 @@ import { AppDataSource } from "../dbConnection.js";
 import { Ticket } from "../models/ticket.model.js";
 import { TicketPriority, TicketStatus } from "../../types/ticket.js";
 import { roleEnum } from "../../types/user.js";
+import type { PaginatedResult } from "../../utils/pagination.util.js";
 
 export interface TicketFilterOptions {
   requesterRole: roleEnum;
@@ -21,6 +22,8 @@ export interface TicketFilterOptions {
   createdTo?: Date | undefined;
   sortBy?: "createdAt" | "updatedAt" | "priority" | "status" | undefined;
   sortOrder?: "ASC" | "DESC" | undefined;
+  page?: number | undefined;
+  limit?: number | undefined;
 }
 
 export class TicketRepository {
@@ -36,7 +39,9 @@ export class TicketRepository {
       .getOne();
   }
 
-  public static async findAll(options: TicketFilterOptions): Promise<Ticket[]> {
+  public static async findAll(
+    options: TicketFilterOptions,
+  ): Promise<PaginatedResult<Ticket>> {
     const query = this.repository
       .createQueryBuilder("ticket")
       .leftJoinAndSelect("ticket.department", "department")
@@ -114,7 +119,12 @@ export class TicketRepository {
     const sortOrder = options.sortOrder ?? "DESC";
     query.orderBy(`ticket.${sortBy}`, sortOrder);
 
-    return query.getMany();
+    if (options.page !== undefined && options.limit !== undefined) {
+      query.skip((options.page - 1) * options.limit).take(options.limit);
+    }
+
+    const [data, total] = await query.getManyAndCount();
+    return { data, total };
   }
 
   public static async createTicket(data: Partial<Ticket>): Promise<Ticket> {

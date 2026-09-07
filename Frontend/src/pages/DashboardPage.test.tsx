@@ -11,6 +11,7 @@ import { ApiError } from "../types/api";
 import type { DashboardBreakdown, DashboardOverview } from "../types/dashboard";
 import type { Department } from "../types/department";
 import type { SafeUser } from "../types/user";
+import { makePagination } from "../test/paginationFixture";
 
 vi.mock("../services/dashboardService");
 vi.mock("../services/departmentService");
@@ -19,7 +20,11 @@ beforeEach(() => {
   vi.clearAllMocks();
   // Both admin and super_admin now fetch the department list; give every test
   // a harmless default so only the tests that care need to override it.
-  vi.mocked(departmentService.list).mockResolvedValue({ message: "ok", departments: [] });
+  vi.mocked(departmentService.list).mockResolvedValue({
+    message: "ok",
+    departments: [],
+    pagination: makePagination(),
+  });
 });
 
 function makeBreakdown(overrides: Partial<DashboardBreakdown> = {}): DashboardBreakdown {
@@ -179,6 +184,7 @@ describe("DashboardPage", () => {
         makeDepartment({ departmentId: "dept-1", departmentName: "Support", managedBy: "user-1" }),
         makeDepartment({ departmentId: "dept-2", departmentName: "Sales", managedBy: "someone-else" }),
       ],
+      pagination: makePagination({ totalItems: 2, totalPages: 1 }),
     });
 
     renderDashboard({ user: makeUser({ role: "admin", id: "user-1" }) });
@@ -196,6 +202,7 @@ describe("DashboardPage", () => {
         makeDepartment({ departmentId: "dept-1", departmentName: "Support", managedBy: "someone-else" }),
         makeDepartment({ departmentId: "dept-2", departmentName: "Sales", managedBy: null }),
       ],
+      pagination: makePagination({ totalItems: 2, totalPages: 1 }),
     });
 
     renderDashboard({ user: makeUser({ role: "super_admin" }) });
@@ -211,6 +218,7 @@ describe("DashboardPage", () => {
     vi.mocked(departmentService.list).mockResolvedValue({
       message: "ok",
       departments: [makeDepartment({ departmentId: "dept-1", managedBy: "user-1" })],
+      pagination: makePagination({ totalItems: 1, totalPages: 1 }),
     });
 
     renderDashboard({ user: makeUser({ role: "admin", id: "user-1" }) });

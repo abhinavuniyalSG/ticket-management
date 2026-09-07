@@ -1240,7 +1240,7 @@ describe("getAllTickets", () => {
     vi.mocked(UserRepository.findById).mockResolvedValue(
       makeUser({ id: "admin-1", departmentId: DEPT_A }),
     );
-    vi.mocked(TicketRepository.findAll).mockResolvedValue([]);
+    vi.mocked(TicketRepository.findAll).mockResolvedValue({ data: [], total: 0 });
 
     await TicketService.getAllTickets(
       requester({ id: "admin-1", role: roleEnum.admin }),
@@ -1264,7 +1264,7 @@ describe("getAllTickets", () => {
     vi.mocked(DepartmentRepository.findByManager).mockResolvedValue([
       { departmentId: DEPT_B } as any,
     ]);
-    vi.mocked(TicketRepository.findAll).mockResolvedValue([]);
+    vi.mocked(TicketRepository.findAll).mockResolvedValue({ data: [], total: 0 });
 
     await TicketService.getAllTickets(
       requester({ id: "admin-1", role: roleEnum.admin }),
@@ -1279,7 +1279,7 @@ describe("getAllTickets", () => {
   });
 
   it("does not scope a super_admin or regular user's list by department at all", async () => {
-    vi.mocked(TicketRepository.findAll).mockResolvedValue([]);
+    vi.mocked(TicketRepository.findAll).mockResolvedValue({ data: [], total: 0 });
 
     await TicketService.getAllTickets(
       requester({ id: "user-1", role: roleEnum.user }),
@@ -1288,6 +1288,40 @@ describe("getAllTickets", () => {
 
     expect(TicketRepository.findAll).toHaveBeenCalledWith(
       expect.objectContaining({ requesterDepartmentIds: undefined }),
+    );
+  });
+
+  it("defaults page/limit and returns pagination metadata", async () => {
+    vi.mocked(TicketRepository.findAll).mockResolvedValue({ data: [], total: 45 });
+
+    const result = await TicketService.getAllTickets(
+      requester({ id: "user-1", role: roleEnum.user }),
+      {},
+    );
+
+    expect(TicketRepository.findAll).toHaveBeenCalledWith(
+      expect.objectContaining({ page: 1, limit: 20 }),
+    );
+    expect(result.pagination).toEqual({
+      page: 1,
+      limit: 20,
+      totalItems: 45,
+      totalPages: 3,
+      hasNextPage: true,
+      hasPrevPage: false,
+    });
+  });
+
+  it("passes through an explicit page/limit", async () => {
+    vi.mocked(TicketRepository.findAll).mockResolvedValue({ data: [], total: 45 });
+
+    await TicketService.getAllTickets(
+      requester({ id: "user-1", role: roleEnum.user }),
+      { page: 2, limit: 10 },
+    );
+
+    expect(TicketRepository.findAll).toHaveBeenCalledWith(
+      expect.objectContaining({ page: 2, limit: 10 }),
     );
   });
 });

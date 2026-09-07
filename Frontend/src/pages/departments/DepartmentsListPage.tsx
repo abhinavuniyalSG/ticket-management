@@ -13,18 +13,21 @@ import { Spinner } from "../../components/atoms/Spinner";
 import { EmptyState } from "../../components/molecules/EmptyState";
 import { ErrorState } from "../../components/molecules/ErrorState";
 import { ConfirmDialog } from "../../components/molecules/ConfirmDialog";
+import { Pagination } from "../../components/molecules/Pagination";
 import { DepartmentTable } from "../../components/organisms/DepartmentTable";
 import { departmentService } from "../../services/departmentService";
 import type { DepartmentQueryParams } from "../../services/departmentService";
 import { userService } from "../../services/userService";
 import { useDebouncedValue } from "../../hooks/useDebouncedValue";
-import { ApiError } from "../../types/api";
+import { ApiError, type PaginationMeta } from "../../types/api";
 import type { Department } from "../../types/department";
 import type { User } from "../../types/user";
 import { fullName } from "../../utils/format";
 
 export function DepartmentsListPage() {
   const [departments, setDepartments] = useState<Department[] | null>(null);
+  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
+  const [page, setPage] = useState(1);
   const [managers, setManagers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -42,9 +45,19 @@ export function DepartmentsListPage() {
 
   const debouncedSearch = useDebouncedValue(search);
 
-  const query = useMemo<DepartmentQueryParams>(
+  const filterQuery = useMemo<DepartmentQueryParams>(
     () => ({ departmentName: debouncedSearch.trim() || undefined }),
     [debouncedSearch],
+  );
+
+  // Any filter change starts the results back over at page 1.
+  useEffect(() => {
+    setPage(1);
+  }, [filterQuery]);
+
+  const query = useMemo<DepartmentQueryParams>(
+    () => ({ ...filterQuery, page }),
+    [filterQuery, page],
   );
 
   const loadDepartments = () => {
@@ -52,7 +65,10 @@ export function DepartmentsListPage() {
     setError(null);
     departmentService
       .list(query)
-      .then((res) => setDepartments(res.departments))
+      .then((res) => {
+        setDepartments(res.departments);
+        setPagination(res.pagination);
+      })
       .catch((err: unknown) => {
         setError(err instanceof ApiError ? err.message : "Unable to load departments.");
       })
@@ -66,7 +82,7 @@ export function DepartmentsListPage() {
 
   useEffect(() => {
     userService
-      .list()
+      .list({ limit: 100 })
       .then((res) => setManagers(res.users.filter((u) => u.role === "admin" || u.role === "super_admin")))
       .catch(() => undefined);
   }, []);
@@ -196,26 +212,31 @@ export function DepartmentsListPage() {
       )}
 
       {!isLoading && !error && departments && departments.length > 0 && (
-        <DepartmentTable
-          departments={departments}
-          renderActions={(department) => (
-            <IconButton
-              label={`Delete ${department.departmentName}`}
-              variant="danger"
-              onClick={() => setDeleteTarget(department)}
-              icon={
-                <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="h-4 w-4">
-                  <path
-                    d="M5 5l10 10M15 5L5 15"
-                    stroke="currentColor"
-                    strokeWidth="1.7"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              }
-            />
+        <>
+          <DepartmentTable
+            departments={departments}
+            renderActions={(department) => (
+              <IconButton
+                label={`Delete ${department.departmentName}`}
+                variant="danger"
+                onClick={() => setDeleteTarget(department)}
+                icon={
+                  <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="h-4 w-4">
+                    <path
+                      d="M5 5l10 10M15 5L5 15"
+                      stroke="currentColor"
+                      strokeWidth="1.7"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                }
+              />
+            )}
+          />
+          {pagination && (
+            <Pagination pagination={pagination} onPageChange={setPage} isLoading={isLoading} />
           )}
-        />
+        </>
       )}
 
       <ConfirmDialog

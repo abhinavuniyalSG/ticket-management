@@ -57,9 +57,11 @@ paths:
           schema:
             type: string
             enum: [user, admin, super_admin]
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
       responses:
         "200":
-          description: List of users
+          description: Paginated list of users
           content:
             application/json:
               schema:
@@ -72,6 +74,8 @@ paths:
                     type: array
                     items:
                       $ref: "#/components/schemas/UserPublic"
+                  pagination:
+                    $ref: "#/components/schemas/PaginationMeta"
         "400":
           $ref: "#/components/responses/ValidationError"
         "401":

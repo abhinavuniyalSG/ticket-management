@@ -9,13 +9,14 @@ import { Button } from "../../components/atoms/Button";
 import { Spinner } from "../../components/atoms/Spinner";
 import { EmptyState } from "../../components/molecules/EmptyState";
 import { ErrorState } from "../../components/molecules/ErrorState";
+import { Pagination } from "../../components/molecules/Pagination";
 import { TicketTable } from "../../components/organisms/TicketTable";
 import { ticketService } from "../../services/ticketService";
 import { useDebouncedValue } from "../../hooks/useDebouncedValue";
 import { departmentService } from "../../services/departmentService";
 import { userService } from "../../services/userService";
 import { useAuth } from "../../hooks/useAuth";
-import { ApiError } from "../../types/api";
+import { ApiError, type PaginationMeta } from "../../types/api";
 import type {
   Ticket,
   TicketPriority,
@@ -90,6 +91,8 @@ export function TicketsListPage() {
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [tickets, setTickets] = useState<Ticket[] | null>(null);
+  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
+  const [page, setPage] = useState(1);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -97,13 +100,13 @@ export function TicketsListPage() {
 
   useEffect(() => {
     departmentService
-      .list()
+      .list({ limit: 100 })
       .then((res) => setDepartments(res.departments))
       .catch(() => undefined);
 
     if (canSeeUserFilters) {
       userService
-        .list()
+        .list({ limit: 100 })
         .then((res) => setUsers(res.users))
         .catch(() => undefined);
     }
@@ -112,7 +115,7 @@ export function TicketsListPage() {
 
   const debouncedTitle = useDebouncedValue(filters.title);
 
-  const query = useMemo<TicketQueryParams>(
+  const filterQuery = useMemo<TicketQueryParams>(
     () => ({
       title: debouncedTitle.trim() || undefined,
       status: (filters.status || undefined) as TicketStatus | undefined,
@@ -139,12 +142,25 @@ export function TicketsListPage() {
     ],
   );
 
+  // Any filter change starts the results back over at page 1.
+  useEffect(() => {
+    setPage(1);
+  }, [filterQuery]);
+
+  const query = useMemo<TicketQueryParams>(
+    () => ({ ...filterQuery, page }),
+    [filterQuery, page],
+  );
+
   const loadTickets = () => {
     setIsLoading(true);
     setError(null);
     ticketService
       .list(query)
-      .then((res) => setTickets(res.tickets))
+      .then((res) => {
+        setTickets(res.tickets);
+        setPagination(res.pagination);
+      })
       .catch((err: unknown) => {
         setError(
           err instanceof ApiError ? err.message : "Unable to load tickets.",
@@ -346,7 +362,16 @@ export function TicketsListPage() {
       )}
 
       {!isLoading && !error && tickets && tickets.length > 0 && (
-        <TicketTable tickets={tickets} />
+        <>
+          <TicketTable tickets={tickets} />
+          {pagination && (
+            <Pagination
+              pagination={pagination}
+              onPageChange={setPage}
+              isLoading={isLoading}
+            />
+          )}
+        </>
       )}
     </PageContainer>
   );

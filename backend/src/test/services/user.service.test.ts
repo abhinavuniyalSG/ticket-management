@@ -65,19 +65,25 @@ beforeEach(() => {
 
 describe("getAllUsers", () => {
   it("returns every user for a super_admin", async () => {
-    vi.mocked(UserRepository.findAll).mockResolvedValue([makeUser()]);
+    vi.mocked(UserRepository.findAll).mockResolvedValue({ data: [makeUser()], total: 1 });
 
     const result = await UserService.getAllUsers(requester({ role: roleEnum.superAdmin }), {});
 
     expect(result.users).toHaveLength(1);
     expect(UserRepository.findAll).toHaveBeenCalledWith(
-      expect.objectContaining({ department: undefined, firstName: undefined, role: undefined }),
+      expect.objectContaining({
+        department: undefined,
+        firstName: undefined,
+        role: undefined,
+        page: 1,
+        limit: 20,
+      }),
     );
   });
 
   it("scopes results to the admin's own department", async () => {
     vi.mocked(UserRepository.findById).mockResolvedValue(makeUser({ id: "admin-1", departmentId: DEPT_A }));
-    vi.mocked(UserRepository.findAll).mockResolvedValue([]);
+    vi.mocked(UserRepository.findAll).mockResolvedValue({ data: [], total: 0 });
 
     await UserService.getAllUsers(requester({ id: "admin-1", role: roleEnum.admin }), {});
 
@@ -91,7 +97,7 @@ describe("getAllUsers", () => {
     vi.mocked(DepartmentRepository.findByManager).mockResolvedValue([
       { departmentId: DEPT_B } as any,
     ]);
-    vi.mocked(UserRepository.findAll).mockResolvedValue([]);
+    vi.mocked(UserRepository.findAll).mockResolvedValue({ data: [], total: 0 });
 
     await UserService.getAllUsers(requester({ id: "admin-1", role: roleEnum.admin }), {});
 
@@ -106,6 +112,9 @@ describe("getAllUsers", () => {
     const result = await UserService.getAllUsers(requester({ id: "admin-1", role: roleEnum.admin }), {});
 
     expect(result.users).toEqual([]);
+    expect(result.pagination).toEqual(
+      expect.objectContaining({ totalItems: 0, page: 1, limit: 20 }),
+    );
     expect(UserRepository.findAll).not.toHaveBeenCalled();
   });
 
@@ -114,7 +123,7 @@ describe("getAllUsers", () => {
     vi.mocked(DepartmentRepository.findByManager).mockResolvedValue([
       { departmentId: DEPT_B } as any,
     ]);
-    vi.mocked(UserRepository.findAll).mockResolvedValue([]);
+    vi.mocked(UserRepository.findAll).mockResolvedValue({ data: [], total: 0 });
 
     await UserService.getAllUsers(requester({ id: "admin-1", role: roleEnum.admin }), {});
 
@@ -128,12 +137,33 @@ describe("getAllUsers", () => {
   });
 
   it("strips password and refreshToken from returned users", async () => {
-    vi.mocked(UserRepository.findAll).mockResolvedValue([makeUser()]);
+    vi.mocked(UserRepository.findAll).mockResolvedValue({ data: [makeUser()], total: 1 });
 
     const result = await UserService.getAllUsers(requester({ role: roleEnum.superAdmin }), {});
 
     expect(result.users[0]).not.toHaveProperty("password");
     expect(result.users[0]).not.toHaveProperty("refreshToken");
+  });
+
+  it("passes through an explicit page/limit and returns pagination metadata", async () => {
+    vi.mocked(UserRepository.findAll).mockResolvedValue({ data: [], total: 25 });
+
+    const result = await UserService.getAllUsers(
+      requester({ role: roleEnum.superAdmin }),
+      { page: 2, limit: 10 },
+    );
+
+    expect(UserRepository.findAll).toHaveBeenCalledWith(
+      expect.objectContaining({ page: 2, limit: 10 }),
+    );
+    expect(result.pagination).toEqual({
+      page: 2,
+      limit: 10,
+      totalItems: 25,
+      totalPages: 3,
+      hasNextPage: true,
+      hasPrevPage: true,
+    });
   });
 });
 

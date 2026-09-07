@@ -9,6 +9,7 @@ import { userService } from "../../services/userService";
 import { ApiError } from "../../types/api";
 import type { Department } from "../../types/department";
 import type { User } from "../../types/user";
+import { makePagination } from "../../test/paginationFixture";
 
 vi.mock("../../services/departmentService", () => ({
   departmentService: { getById: vi.fn(), update: vi.fn(), remove: vi.fn() },
@@ -64,7 +65,11 @@ function renderPage(id = "dept-1") {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockedUserService.list.mockResolvedValue({ message: "ok", users: [] });
+  mockedUserService.list.mockResolvedValue({
+    message: "ok",
+    users: [],
+    pagination: makePagination(),
+  });
 });
 
 describe("DepartmentDetailsPage", () => {
@@ -103,6 +108,7 @@ describe("DepartmentDetailsPage", () => {
     mockedUserService.list.mockResolvedValue({
       message: "ok",
       users: [makeUser({ id: "user-1", firstName: "Ada", lastName: "Admin", role: "admin" })],
+      pagination: makePagination({ totalItems: 1, totalPages: 1 }),
     });
     renderPage();
 
@@ -127,6 +133,7 @@ describe("DepartmentDetailsPage", () => {
         makeUser({ id: "u1", firstName: "Ada", lastName: "Admin", role: "admin" }),
         makeUser({ id: "u2", firstName: "Ray", lastName: "Regular", role: "user" }),
       ],
+      pagination: makePagination({ totalItems: 2, totalPages: 1 }),
     });
     renderPage();
 

@@ -125,9 +125,11 @@ paths:
             type: string
             enum: [asc, desc, ASC, DESC]
             default: desc
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
       responses:
         "200":
-          description: List of tickets matching the filters (not paginated — every matching ticket is returned)
+          description: Paginated list of tickets matching the filters
           content:
             application/json:
               schema:
@@ -140,6 +142,8 @@ paths:
                     type: array
                     items:
                       $ref: "#/components/schemas/Ticket"
+                  pagination:
+                    $ref: "#/components/schemas/PaginationMeta"
         "400":
           $ref: "#/components/responses/ValidationError"
         "401":

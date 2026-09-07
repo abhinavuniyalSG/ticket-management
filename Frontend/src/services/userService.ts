@@ -1,16 +1,20 @@
 import { apiRequest } from "./apiClient";
 import type { User, UserRole, UpdateUserPayload } from "../types/user";
 import type { AddContactPayload, Contact, UpdateContactPayload } from "../types/contact";
+import type { PaginationMeta } from "../types/api";
 
 interface UserListResponse {
   message: string;
   users: User[];
+  pagination: PaginationMeta;
 }
 
 export interface UserQueryParams {
   department?: string;
   firstName?: string;
   role?: UserRole;
+  page?: number;
+  limit?: number;
 }
 
 interface UserResponse {
@@ -34,6 +38,8 @@ export const userService = {
         department: params.department,
         firstName: params.firstName,
         role: params.role,
+        page: params.page?.toString(),
+        limit: params.limit?.toString(),
       },
     }),
 

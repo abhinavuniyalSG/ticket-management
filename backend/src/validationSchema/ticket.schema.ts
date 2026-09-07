@@ -1,5 +1,6 @@
 import z from "zod";
 import { TicketPriority, TicketStatus } from "../types/ticket.js";
+import { paginationQuerySchema } from "../utils/pagination.util.js";
 
 export class TicketSchema {
   public ticketIdParamSchema = z
@@ -173,6 +174,7 @@ export class TicketSchema {
         .enum(["createdAt", "updatedAt", "priority", "status"])
         .optional(),
       sortOrder: z.enum(["asc", "desc", "ASC", "DESC"]).optional(),
+      ...paginationQuerySchema,
     })
     .strict();
 }

@@ -129,14 +129,33 @@ describe("createDepartment", () => {
 
 describe("getAllDepartments / getDepartmentById", () => {
   it("returns all departments, sanitizing the manager on each", async () => {
-    vi.mocked(DepartmentRepository.findAll).mockResolvedValue([
-      makeDepartment({ manager: { id: "m-1", password: "x", refreshToken: "y" } }),
-    ]);
+    vi.mocked(DepartmentRepository.findAll).mockResolvedValue({
+      data: [makeDepartment({ manager: { id: "m-1", password: "x", refreshToken: "y" } })],
+      total: 1,
+    });
 
     const result = await DepartmentService.getAllDepartments();
 
     expect(result.departments[0]).not.toHaveProperty("managerPassword");
     expect((result.departments[0] as any).manager).not.toHaveProperty("password");
+  });
+
+  it("defaults page/limit and returns pagination metadata", async () => {
+    vi.mocked(DepartmentRepository.findAll).mockResolvedValue({ data: [], total: 5 });
+
+    const result = await DepartmentService.getAllDepartments();
+
+    expect(DepartmentRepository.findAll).toHaveBeenCalledWith(
+      expect.objectContaining({ page: 1, limit: 20 }),
+    );
+    expect(result.pagination).toEqual({
+      page: 1,
+      limit: 20,
+      totalItems: 5,
+      totalPages: 1,
+      hasNextPage: false,
+      hasPrevPage: false,
+    });
   });
 
   it("throws 404 when the department isn't found", async () => {

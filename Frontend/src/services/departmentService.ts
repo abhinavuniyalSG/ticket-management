@@ -4,10 +4,12 @@ import type {
   Department,
   UpdateDepartmentPayload,
 } from "../types/department";
+import type { PaginationMeta } from "../types/api";
 
 interface DepartmentListResponse {
   message: string;
   departments: Department[];
+  pagination: PaginationMeta;
 }
 
 interface DepartmentResponse {
@@ -21,12 +23,18 @@ interface MessageResponse {
 
 export interface DepartmentQueryParams {
   departmentName?: string;
+  page?: number;
+  limit?: number;
 }
 
 export const departmentService = {
   list: (params: DepartmentQueryParams = {}) =>
     apiRequest<DepartmentListResponse>("/departments", {
-      query: { departmentName: params.departmentName },
+      query: {
+        departmentName: params.departmentName,
+        page: params.page?.toString(),
+        limit: params.limit?.toString(),
+      },
     }),
 
   getById: (id: string) => apiRequest<DepartmentResponse>(`/departments/${id}`),

@@ -7,6 +7,11 @@ import { TicketPriority, TicketStatus } from "../types/ticket.js";
 import { Ticket } from "../database/models/ticket.model.js";
 import { logger } from "../core/logger.js";
 import { NotificationService } from "./notification.service.js";
+import {
+  buildPaginationMeta,
+  DEFAULT_LIMIT,
+  DEFAULT_PAGE,
+} from "../utils/pagination.util.js";
 
 export interface CreateTicketInput {
   title: string;
@@ -35,6 +40,8 @@ export interface TicketQueryInput {
   createdTo?: string;
   sortBy?: "createdAt" | "updatedAt" | "priority" | "status";
   sortOrder?: "asc" | "desc" | "ASC" | "DESC";
+  page?: number;
+  limit?: number;
 }
 
 export interface RequesterInfo {
@@ -185,7 +192,10 @@ export class TicketService {
           )
         : undefined;
 
-    const tickets = await TicketRepository.findAll({
+    const page = query.page ?? DEFAULT_PAGE;
+    const limit = query.limit ?? DEFAULT_LIMIT;
+
+    const { data: tickets, total } = await TicketRepository.findAll({
       requesterRole: requester.role as roleEnum,
       requesterId: requester.id,
       requesterDepartmentIds,
@@ -199,11 +209,14 @@ export class TicketService {
       createdTo: query.createdTo ? new Date(query.createdTo) : undefined,
       sortBy: query.sortBy,
       sortOrder: query.sortOrder?.toUpperCase() as "ASC" | "DESC" | undefined,
+      page,
+      limit,
     });
 
     return {
       message: "Tickets fetched successfully",
       tickets: tickets.map((t) => this.sanitizeTicket(t)),
+      pagination: buildPaginationMeta(total, page, limit),
     };
   }
 

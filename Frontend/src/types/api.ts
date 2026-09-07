@@ -1,3 +1,17 @@
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
+export interface PaginationParams {
+  page?: number;
+  limit?: number;
+}
+
 export class ApiError extends Error {
   public readonly status: number;
   public readonly errors?: string[];

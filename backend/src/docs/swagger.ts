@@ -70,6 +70,62 @@ authenticated user to have a verified email, and returns **403** with
           description: "httpOnly accessToken cookie set by /auth/login, /auth/register, or /auth/refresh",
         },
       },
+      parameters: {
+        PageParam: {
+          name: "page",
+          in: "query",
+          required: false,
+          description: "Page number to return (1-indexed)",
+          schema: {
+            type: "integer",
+            minimum: 1,
+            default: 1,
+          },
+        },
+        LimitParam: {
+          name: "limit",
+          in: "query",
+          required: false,
+          description: "Number of items per page",
+          schema: {
+            type: "integer",
+            minimum: 1,
+            maximum: 100,
+            default: 20,
+          },
+        },
+      },
+      schemas: {
+        PaginationMeta: {
+          type: "object",
+          properties: {
+            page: {
+              type: "integer",
+              example: 1,
+            },
+            limit: {
+              type: "integer",
+              example: 20,
+            },
+            totalItems: {
+              type: "integer",
+              example: 42,
+            },
+            totalPages: {
+              type: "integer",
+              example: 3,
+            },
+            hasNextPage: {
+              type: "boolean",
+              example: true,
+            },
+            hasPrevPage: {
+              type: "boolean",
+              example: false,
+            },
+          },
+        },
+      },
     },
   },
   apis: [resolve(process.cwd(), "swaggerDocs/**/*.yaml")],

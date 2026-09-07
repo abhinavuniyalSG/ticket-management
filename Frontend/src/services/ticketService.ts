@@ -5,10 +5,12 @@ import type {
   TicketQueryParams,
   UpdateTicketPayload,
 } from "../types/ticket";
+import type { PaginationMeta } from "../types/api";
 
 interface TicketListResponse {
   message: string;
   tickets: Ticket[];
+  pagination: PaginationMeta;
 }
 
 interface TicketResponse {
@@ -32,6 +34,8 @@ function toQuery(params: TicketQueryParams): Record<string, string | undefined> 
     createdTo: params.createdTo,
     sortBy: params.sortBy,
     sortOrder: params.sortOrder,
+    page: params.page?.toString(),
+    limit: params.limit?.toString(),
   };
 }
 

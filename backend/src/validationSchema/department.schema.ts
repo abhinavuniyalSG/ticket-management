@@ -1,4 +1,5 @@
 import z from "zod";
+import { paginationQuerySchema } from "../utils/pagination.util.js";
 
 export class DepartmentSchema {
   public departmentQuerySchema = z
@@ -9,6 +10,7 @@ export class DepartmentSchema {
         .min(1, "Department name cannot be empty")
         .max(100, "Department name must not exceed 100 characters")
         .optional(),
+      ...paginationQuerySchema,
     })
     .strict();
 

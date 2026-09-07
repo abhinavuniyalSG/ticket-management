@@ -1,8 +1,11 @@
 import { AppDataSource } from "../dbConnection.js";
 import { Department } from "../models/department.model.js";
+import type { PaginatedResult } from "../../utils/pagination.util.js";
 
 export interface DepartmentFilterOptions {
   departmentName?: string | undefined;
+  page?: number | undefined;
+  limit?: number | undefined;
 }
 
 export class DepartmentRepository {
@@ -10,7 +13,7 @@ export class DepartmentRepository {
 
   public static async findAll(
     filter?: DepartmentFilterOptions,
-  ): Promise<Department[]> {
+  ): Promise<PaginatedResult<Department>> {
     const query = this.repository
       .createQueryBuilder("department")
       .leftJoinAndSelect("department.manager", "manager");
@@ -21,7 +24,12 @@ export class DepartmentRepository {
       });
     }
 
-    return query.getMany();
+    if (filter?.page !== undefined && filter?.limit !== undefined) {
+      query.skip((filter.page - 1) * filter.limit).take(filter.limit);
+    }
+
+    const [data, total] = await query.getManyAndCount();
+    return { data, total };
   }
 
   public static async findById(id: string): Promise<Department | null> {

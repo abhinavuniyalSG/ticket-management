@@ -3,12 +3,15 @@ import { User } from "../models/user.model.js";
 import { Contact } from "../models/contact.model.js";
 import type { ContactType } from "../../types/contact.js";
 import { roleEnum } from "../../types/user.js";
+import type { PaginatedResult } from "../../utils/pagination.util.js";
 
 export interface UserFilterOptions {
   departmentId?: string | string[] | null | undefined; //added string becase now we mayt have multipe deaprtment becase an admin can manage multiple department
   department?: string | undefined;
   role?: roleEnum | undefined;
   firstName?: string | undefined;
+  page?: number | undefined;
+  limit?: number | undefined;
 }
 
 export class UserRepository {
@@ -32,7 +35,9 @@ export class UserRepository {
       .getOne();
   }
 
-  public static async findAll(filter?: UserFilterOptions): Promise<User[]> {
+  public static async findAll(
+    filter?: UserFilterOptions,
+  ): Promise<PaginatedResult<User>> {
     const query = this.repository
       .createQueryBuilder("user")
       .leftJoinAndSelect("user.department", "department")
@@ -73,7 +78,12 @@ export class UserRepository {
       });
     }
 
-    return query.getMany();
+    if (filter?.page !== undefined && filter?.limit !== undefined) {
+      query.skip((filter.page - 1) * filter.limit).take(filter.limit);
+    }
+
+    const [data, total] = await query.getManyAndCount();
+    return { data, total };
   }
 
   public static async findById(id: string): Promise<User | null> {

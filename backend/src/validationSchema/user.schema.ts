@@ -1,6 +1,7 @@
 import z from "zod";
 import { ContactType } from "../types/contact.js";
 import { roleEnum } from "../types/user.js";
+import { paginationQuerySchema } from "../utils/pagination.util.js";
 
 export class UserSchema {
   public userIdParamSchema = z
@@ -94,6 +95,8 @@ export class UserSchema {
       role: z
         .enum([roleEnum.user, roleEnum.admin, roleEnum.superAdmin])
         .optional(),
+
+      ...paginationQuerySchema,
     })
     .strict();
 

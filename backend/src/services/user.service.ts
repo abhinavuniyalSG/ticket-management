@@ -6,6 +6,11 @@ import { HttpError } from "../utils/httpError.utils.js";
 import { roleEnum } from "../types/user.js";
 import type { ContactType } from "../types/contact.js";
 import type { User } from "../database/models/user.model.js";
+import {
+  buildPaginationMeta,
+  DEFAULT_LIMIT,
+  DEFAULT_PAGE,
+} from "../utils/pagination.util.js";
 
 export interface AddContactInput {
   contactType: ContactType;
@@ -38,6 +43,8 @@ export interface UserQueryInput {
   department?: string | undefined;
   firstName?: string | undefined;
   role?: roleEnum | undefined;
+  page?: number | undefined;
+  limit?: number | undefined;
 }
 
 export class UserService {
@@ -69,15 +76,21 @@ export class UserService {
     requester: RequesterInfo,
     query: UserQueryInput,
   ) {
+    const page = query.page ?? DEFAULT_PAGE;
+    const limit = query.limit ?? DEFAULT_LIMIT;
+
     if (requester.role === roleEnum.superAdmin) {
-      const users = await UserRepository.findAll({
+      const { data: users, total } = await UserRepository.findAll({
         department: query.department,
         firstName: query.firstName,
         role: query.role,
+        page,
+        limit,
       });
       return {
         message: "Users fetched successfully",
         users: users.map((u) => UserService.sanitizeUser(u)),
+        pagination: buildPaginationMeta(total, page, limit),
       };
     }
 
@@ -92,18 +105,22 @@ export class UserService {
         return {
           message: "Users fetched successfully",
           users: [],
+          pagination: buildPaginationMeta(0, page, limit),
         };
       }
 
-      const users = await UserRepository.findAll({
+      const { data: users, total } = await UserRepository.findAll({
         departmentId: scopedDepartmentIds,
         department: query.department,
         firstName: query.firstName,
         role: query.role,
+        page,
+        limit,
       });
       return {
         message: "Users fetched successfully",
         users: users.map((u) => UserService.sanitizeUser(u)),
+        pagination: buildPaginationMeta(total, page, limit),
       };
     }
 

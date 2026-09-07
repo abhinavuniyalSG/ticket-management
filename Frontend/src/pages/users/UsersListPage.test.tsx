@@ -11,6 +11,7 @@ import { departmentService } from "../../services/departmentService";
 import { ApiError } from "../../types/api";
 import type { User } from "../../types/user";
 import type { Department } from "../../types/department";
+import { makePagination } from "../../test/paginationFixture";
 
 vi.mock("../../services/userService", () => ({
   userService: { list: vi.fn(), remove: vi.fn() },
@@ -77,7 +78,11 @@ function renderPage(authValue: AuthContextValue = makeAuthValue()) {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockedDepartmentService.list.mockResolvedValue({ message: "ok", departments: [] });
+  mockedDepartmentService.list.mockResolvedValue({
+    message: "ok",
+    departments: [],
+    pagination: makePagination(),
+  });
 });
 
 describe("UsersListPage", () => {
@@ -91,6 +96,7 @@ describe("UsersListPage", () => {
     mockedUserService.list.mockResolvedValue({
       message: "ok",
       users: [makeUser({ id: "user-1", firstName: "Jane", lastName: "Doe" })],
+      pagination: makePagination({ totalItems: 1, totalPages: 1 }),
     });
 
     renderPage();
@@ -100,11 +106,16 @@ describe("UsersListPage", () => {
       firstName: undefined,
       role: undefined,
       department: undefined,
+      page: 1,
     });
   });
 
   it("shows an empty state when there are no users", async () => {
-    mockedUserService.list.mockResolvedValue({ message: "ok", users: [] });
+    mockedUserService.list.mockResolvedValue({
+      message: "ok",
+      users: [],
+      pagination: makePagination(),
+    });
 
     renderPage();
 
@@ -113,7 +124,11 @@ describe("UsersListPage", () => {
 
   it("shows an error state and retries on click", async () => {
     mockedUserService.list.mockRejectedValueOnce(new ApiError(500, "Server error"));
-    mockedUserService.list.mockResolvedValueOnce({ message: "ok", users: [] });
+    mockedUserService.list.mockResolvedValueOnce({
+      message: "ok",
+      users: [],
+      pagination: makePagination(),
+    });
 
     const user = userEvent.setup();
     renderPage();
@@ -134,7 +149,11 @@ describe("UsersListPage", () => {
   });
 
   it("refetches with the trimmed search text after debouncing", async () => {
-    mockedUserService.list.mockResolvedValue({ message: "ok", users: [] });
+    mockedUserService.list.mockResolvedValue({
+      message: "ok",
+      users: [],
+      pagination: makePagination(),
+    });
     const user = userEvent.setup();
     renderPage();
 
@@ -147,13 +166,18 @@ describe("UsersListPage", () => {
           firstName: "Jane",
           role: undefined,
           department: undefined,
+          page: 1,
         }),
       { timeout: 2000 },
     );
   });
 
   it("refetches when the role filter changes", async () => {
-    mockedUserService.list.mockResolvedValue({ message: "ok", users: [] });
+    mockedUserService.list.mockResolvedValue({
+      message: "ok",
+      users: [],
+      pagination: makePagination(),
+    });
     const user = userEvent.setup();
     renderPage();
 
@@ -165,12 +189,17 @@ describe("UsersListPage", () => {
         firstName: undefined,
         role: "admin",
         department: undefined,
+        page: 1,
       }),
     );
   });
 
   it("only shows the department filter to a super admin", async () => {
-    mockedUserService.list.mockResolvedValue({ message: "ok", users: [] });
+    mockedUserService.list.mockResolvedValue({
+      message: "ok",
+      users: [],
+      pagination: makePagination(),
+    });
     renderPage(makeAuthValue({ user: makeUser({ id: "actor-1", role: "user" }) }));
 
     await waitFor(() => expect(mockedUserService.list).toHaveBeenCalledTimes(1));
@@ -179,10 +208,15 @@ describe("UsersListPage", () => {
   });
 
   it("loads departments and filters by department for a super admin", async () => {
-    mockedUserService.list.mockResolvedValue({ message: "ok", users: [] });
+    mockedUserService.list.mockResolvedValue({
+      message: "ok",
+      users: [],
+      pagination: makePagination(),
+    });
     mockedDepartmentService.list.mockResolvedValue({
       message: "ok",
       departments: [makeDepartment({ departmentName: "Support" })],
+      pagination: makePagination({ totalItems: 1, totalPages: 1 }),
     });
     const user = userEvent.setup();
     renderPage();
@@ -195,12 +229,17 @@ describe("UsersListPage", () => {
         firstName: undefined,
         role: undefined,
         department: "Support",
+        page: 1,
       }),
     );
   });
 
   it("enables the clear-filters button once a filter is active, and clears everything on click", async () => {
-    mockedUserService.list.mockResolvedValue({ message: "ok", users: [] });
+    mockedUserService.list.mockResolvedValue({
+      message: "ok",
+      users: [],
+      pagination: makePagination(),
+    });
     const user = userEvent.setup();
     renderPage();
 
@@ -223,6 +262,7 @@ describe("UsersListPage", () => {
         firstName: undefined,
         role: undefined,
         department: undefined,
+        page: 1,
       }),
     );
     expect(clearButton).toBeDisabled();
@@ -232,6 +272,7 @@ describe("UsersListPage", () => {
     mockedUserService.list.mockResolvedValue({
       message: "ok",
       users: [makeUser({ id: "user-2", firstName: "Other", lastName: "Person" })],
+      pagination: makePagination({ totalItems: 1, totalPages: 1 }),
     });
     renderPage(makeAuthValue({ user: makeUser({ id: "actor-1", role: "user" }) }));
 
@@ -241,7 +282,11 @@ describe("UsersListPage", () => {
 
   it("deletes a user after confirming and removes it from the list", async () => {
     const target = makeUser({ id: "user-2", firstName: "Other", lastName: "Person" });
-    mockedUserService.list.mockResolvedValue({ message: "ok", users: [target] });
+    mockedUserService.list.mockResolvedValue({
+      message: "ok",
+      users: [target],
+      pagination: makePagination({ totalItems: 1, totalPages: 1 }),
+    });
     mockedUserService.remove.mockResolvedValue({ message: "User deleted." });
     const user = userEvent.setup();
     renderPage();
@@ -260,7 +305,11 @@ describe("UsersListPage", () => {
 
   it("shows an error toast and keeps the user listed when deletion fails", async () => {
     const target = makeUser({ id: "user-2", firstName: "Other", lastName: "Person" });
-    mockedUserService.list.mockResolvedValue({ message: "ok", users: [target] });
+    mockedUserService.list.mockResolvedValue({
+      message: "ok",
+      users: [target],
+      pagination: makePagination({ totalItems: 1, totalPages: 1 }),
+    });
     mockedUserService.remove.mockRejectedValue(new ApiError(403, "Not allowed"));
     const user = userEvent.setup();
     renderPage();
@@ -272,5 +321,54 @@ describe("UsersListPage", () => {
 
     await waitFor(() => expect(mockedToast.error).toHaveBeenCalledWith("Not allowed"));
     expect(screen.getAllByRole("link", { name: "Other Person" }).length).toBeGreaterThan(0);
+  });
+
+  it("shows pagination info and requests the next page on click", async () => {
+    mockedUserService.list.mockResolvedValue({
+      message: "ok",
+      users: [makeUser({ id: "user-1", firstName: "Jane", lastName: "Doe" })],
+      pagination: makePagination({ page: 1, totalItems: 30, totalPages: 2, hasNextPage: true }),
+    });
+    const user = userEvent.setup();
+    renderPage();
+
+    await screen.findAllByRole("link", { name: "Jane Doe" });
+    expect(screen.getByText("Page 1 of 2")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Next" }));
+
+    await waitFor(() =>
+      expect(mockedUserService.list).toHaveBeenLastCalledWith(
+        expect.objectContaining({ page: 2 }),
+      ),
+    );
+  });
+
+  it("resets back to page 1 when the search filter changes", async () => {
+    mockedUserService.list.mockResolvedValue({
+      message: "ok",
+      users: [makeUser({ id: "user-1", firstName: "Jane", lastName: "Doe" })],
+      pagination: makePagination({ page: 1, totalItems: 30, totalPages: 2, hasNextPage: true }),
+    });
+    const user = userEvent.setup();
+    renderPage();
+
+    await screen.findAllByRole("link", { name: "Jane Doe" });
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    await waitFor(() =>
+      expect(mockedUserService.list).toHaveBeenLastCalledWith(
+        expect.objectContaining({ page: 2 }),
+      ),
+    );
+
+    await user.type(screen.getByLabelText("Search users"), "Jane");
+
+    await waitFor(
+      () =>
+        expect(mockedUserService.list).toHaveBeenLastCalledWith(
+          expect.objectContaining({ firstName: "Jane", page: 1 }),
+        ),
+      { timeout: 2000 },
+    );
   });
 });

@@ -9,6 +9,7 @@ import { userService } from "../../services/userService";
 import { ApiError } from "../../types/api";
 import type { Department } from "../../types/department";
 import type { User } from "../../types/user";
+import { makePagination } from "../../test/paginationFixture";
 
 vi.mock("../../services/departmentService", () => ({
   departmentService: { list: vi.fn(), create: vi.fn(), remove: vi.fn() },
@@ -61,7 +62,11 @@ function renderPage() {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockedUserService.list.mockResolvedValue({ message: "ok", users: [] });
+  mockedUserService.list.mockResolvedValue({
+    message: "ok",
+    users: [],
+    pagination: makePagination(),
+  });
 });
 
 describe("DepartmentsListPage", () => {
@@ -75,16 +80,21 @@ describe("DepartmentsListPage", () => {
     mockedDepartmentService.list.mockResolvedValue({
       message: "ok",
       departments: [makeDepartment({ departmentName: "Support" })],
+      pagination: makePagination({ totalItems: 1, totalPages: 1 }),
     });
 
     renderPage();
 
     await screen.findAllByRole("link", { name: "Support" });
-    expect(mockedDepartmentService.list).toHaveBeenCalledWith({ departmentName: undefined });
+    expect(mockedDepartmentService.list).toHaveBeenCalledWith({ departmentName: undefined, page: 1 });
   });
 
   it("shows an empty state when there are no departments", async () => {
-    mockedDepartmentService.list.mockResolvedValue({ message: "ok", departments: [] });
+    mockedDepartmentService.list.mockResolvedValue({
+      message: "ok",
+      departments: [],
+      pagination: makePagination(),
+    });
     renderPage();
 
     expect(await screen.findByText("No departments found")).toBeInTheDocument();
@@ -92,7 +102,11 @@ describe("DepartmentsListPage", () => {
 
   it("shows an error state and retries on click", async () => {
     mockedDepartmentService.list.mockRejectedValueOnce(new ApiError(500, "Server error"));
-    mockedDepartmentService.list.mockResolvedValueOnce({ message: "ok", departments: [] });
+    mockedDepartmentService.list.mockResolvedValueOnce({
+      message: "ok",
+      departments: [],
+      pagination: makePagination(),
+    });
     const user = userEvent.setup();
     renderPage();
 
@@ -104,7 +118,11 @@ describe("DepartmentsListPage", () => {
   });
 
   it("refetches with the trimmed search text after debouncing", async () => {
-    mockedDepartmentService.list.mockResolvedValue({ message: "ok", departments: [] });
+    mockedDepartmentService.list.mockResolvedValue({
+      message: "ok",
+      departments: [],
+      pagination: makePagination(),
+    });
     const user = userEvent.setup();
     renderPage();
 
@@ -112,13 +130,21 @@ describe("DepartmentsListPage", () => {
     await user.type(screen.getByLabelText("Search departments"), "Sales");
 
     await waitFor(
-      () => expect(mockedDepartmentService.list).toHaveBeenLastCalledWith({ departmentName: "Sales" }),
+      () =>
+        expect(mockedDepartmentService.list).toHaveBeenLastCalledWith({
+          departmentName: "Sales",
+          page: 1,
+        }),
       { timeout: 2000 },
     );
   });
 
   it("only offers admins and super admins as manager options", async () => {
-    mockedDepartmentService.list.mockResolvedValue({ message: "ok", departments: [] });
+    mockedDepartmentService.list.mockResolvedValue({
+      message: "ok",
+      departments: [],
+      pagination: makePagination(),
+    });
     mockedUserService.list.mockResolvedValue({
       message: "ok",
       users: [
@@ -126,6 +152,7 @@ describe("DepartmentsListPage", () => {
         makeUser({ id: "u2", firstName: "Sue", lastName: "Super", role: "super_admin" }),
         makeUser({ id: "u3", firstName: "Ray", lastName: "Regular", role: "user" }),
       ],
+      pagination: makePagination({ totalItems: 3, totalPages: 1 }),
     });
     const user = userEvent.setup();
     renderPage();
@@ -140,7 +167,11 @@ describe("DepartmentsListPage", () => {
   });
 
   it("validates the create form before submitting", async () => {
-    mockedDepartmentService.list.mockResolvedValue({ message: "ok", departments: [] });
+    mockedDepartmentService.list.mockResolvedValue({
+      message: "ok",
+      departments: [],
+      pagination: makePagination(),
+    });
     const user = userEvent.setup();
     renderPage();
 
@@ -159,7 +190,11 @@ describe("DepartmentsListPage", () => {
   });
 
   it("creates a department, refreshes the list, and closes the form", async () => {
-    mockedDepartmentService.list.mockResolvedValue({ message: "ok", departments: [] });
+    mockedDepartmentService.list.mockResolvedValue({
+      message: "ok",
+      departments: [],
+      pagination: makePagination(),
+    });
     mockedDepartmentService.create.mockResolvedValue({
       message: "Department created.",
       department: makeDepartment(),
@@ -186,7 +221,11 @@ describe("DepartmentsListPage", () => {
   });
 
   it("shows an error toast and keeps the form open when creation fails", async () => {
-    mockedDepartmentService.list.mockResolvedValue({ message: "ok", departments: [] });
+    mockedDepartmentService.list.mockResolvedValue({
+      message: "ok",
+      departments: [],
+      pagination: makePagination(),
+    });
     mockedDepartmentService.create.mockRejectedValue(new ApiError(409, "Name already in use"));
     const user = userEvent.setup();
     renderPage();
@@ -202,7 +241,11 @@ describe("DepartmentsListPage", () => {
 
   it("deletes a department after confirming and removes it from the list", async () => {
     const target = makeDepartment({ departmentId: "dept-2", departmentName: "Marketing" });
-    mockedDepartmentService.list.mockResolvedValue({ message: "ok", departments: [target] });
+    mockedDepartmentService.list.mockResolvedValue({
+      message: "ok",
+      departments: [target],
+      pagination: makePagination({ totalItems: 1, totalPages: 1 }),
+    });
     mockedDepartmentService.remove.mockResolvedValue({ message: "Department deleted." });
     const user = userEvent.setup();
     renderPage();
@@ -217,5 +260,54 @@ describe("DepartmentsListPage", () => {
     await waitFor(() => expect(mockedDepartmentService.remove).toHaveBeenCalledWith("dept-2"));
     expect(mockedToast.success).toHaveBeenCalledWith("Department deleted.");
     expect(screen.queryAllByRole("link", { name: "Marketing" })).toHaveLength(0);
+  });
+
+  it("shows pagination info and requests the next page on click", async () => {
+    mockedDepartmentService.list.mockResolvedValue({
+      message: "ok",
+      departments: [makeDepartment({ departmentName: "Support" })],
+      pagination: makePagination({ page: 1, totalItems: 25, totalPages: 2, hasNextPage: true }),
+    });
+    const user = userEvent.setup();
+    renderPage();
+
+    await screen.findAllByRole("link", { name: "Support" });
+    expect(screen.getByText("Page 1 of 2")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Next" }));
+
+    await waitFor(() =>
+      expect(mockedDepartmentService.list).toHaveBeenLastCalledWith(
+        expect.objectContaining({ page: 2 }),
+      ),
+    );
+  });
+
+  it("resets back to page 1 when the search filter changes", async () => {
+    mockedDepartmentService.list.mockResolvedValue({
+      message: "ok",
+      departments: [makeDepartment({ departmentName: "Support" })],
+      pagination: makePagination({ page: 1, totalItems: 25, totalPages: 2, hasNextPage: true }),
+    });
+    const user = userEvent.setup();
+    renderPage();
+
+    await screen.findAllByRole("link", { name: "Support" });
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    await waitFor(() =>
+      expect(mockedDepartmentService.list).toHaveBeenLastCalledWith(
+        expect.objectContaining({ page: 2 }),
+      ),
+    );
+
+    await user.type(screen.getByLabelText("Search departments"), "Sales");
+
+    await waitFor(
+      () =>
+        expect(mockedDepartmentService.list).toHaveBeenLastCalledWith(
+          expect.objectContaining({ departmentName: "Sales", page: 1 }),
+        ),
+      { timeout: 2000 },
+    );
   });
 });

@@ -32,8 +32,8 @@ export function CreateTicketPage() {
     setIsLoading(true);
     setError(null);
     Promise.all([
-      departmentService.list(),
-      showAssignee ? userService.list() : Promise.resolve({ message: "", users: [] }),
+      departmentService.list({ limit: 100 }),
+      showAssignee ? userService.list({ limit: 100 }) : Promise.resolve({ message: "", users: [] }),
     ])
       .then(([deptRes, userRes]) => {
         setDepartments(deptRes.departments);

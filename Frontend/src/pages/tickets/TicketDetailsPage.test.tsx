@@ -11,6 +11,7 @@ import { ApiError } from "../../types/api";
 import type { Department } from "../../types/department";
 import type { Ticket } from "../../types/ticket";
 import type { SafeUser, User } from "../../types/user";
+import { makePagination } from "../../test/paginationFixture";
 
 vi.mock("../../services/ticketService", () => ({
   ticketService: { getById: vi.fn(), update: vi.fn(), remove: vi.fn() },
@@ -110,7 +111,11 @@ function createDeferred<T>() {
 describe("TicketDetailsPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(userService.list).mockResolvedValue({ message: "ok", users: [] });
+    vi.mocked(userService.list).mockResolvedValue({
+      message: "ok",
+      users: [],
+      pagination: makePagination(),
+    });
   });
 
   it("shows a spinner while the ticket is loading", async () => {
@@ -317,6 +322,7 @@ describe("TicketDetailsPage", () => {
     vi.mocked(userService.list).mockResolvedValue({
       message: "ok",
       users: [makeUser({ id: "member-1", firstName: "Sam", lastName: "Lee", departmentId: "dept-1" })],
+      pagination: makePagination({ totalItems: 1, totalPages: 1 }),
     });
     vi.mocked(ticketService.update).mockResolvedValueOnce({
       message: "Ticket assigned",

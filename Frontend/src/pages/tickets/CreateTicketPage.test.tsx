@@ -11,6 +11,7 @@ import { userService } from "../../services/userService";
 import { ApiError } from "../../types/api";
 import type { Department } from "../../types/department";
 import type { SafeUser, User } from "../../types/user";
+import { makePagination } from "../../test/paginationFixture";
 
 vi.mock("../../services/ticketService", () => ({
   ticketService: { create: vi.fn() },
@@ -94,14 +95,20 @@ describe("CreateTicketPage", () => {
     vi.mocked(departmentService.list).mockResolvedValue({
       message: "ok",
       departments: [makeDepartment()],
+      pagination: makePagination({ totalItems: 1, totalPages: 1 }),
     });
-    vi.mocked(userService.list).mockResolvedValue({ message: "ok", users: [] });
+    vi.mocked(userService.list).mockResolvedValue({
+      message: "ok",
+      users: [],
+      pagination: makePagination(),
+    });
   });
 
   it("shows a spinner while form data is loading", async () => {
     const deferred = createDeferred<{
       message: string;
       departments: Department[];
+      pagination: ReturnType<typeof makePagination>;
     }>();
     vi.mocked(departmentService.list).mockReturnValue(deferred.promise);
 
@@ -109,7 +116,7 @@ describe("CreateTicketPage", () => {
 
     expect(screen.getByRole("status")).toBeInTheDocument();
 
-    deferred.resolve({ message: "ok", departments: [] });
+    deferred.resolve({ message: "ok", departments: [], pagination: makePagination() });
     await waitFor(() =>
       expect(screen.queryByRole("status")).not.toBeInTheDocument(),
     );
@@ -134,6 +141,7 @@ describe("CreateTicketPage", () => {
           departmentId: "dept-1",
         },
       ],
+      pagination: makePagination({ totalItems: 1, totalPages: 1 }),
     });
 
     renderPage(makeUser({ role: "admin", departmentId: "dept-1" }));
@@ -161,6 +169,7 @@ describe("CreateTicketPage", () => {
           departmentId: "dept-2",
         }),
       ],
+      pagination: makePagination({ totalItems: 2, totalPages: 1 }),
     });
     vi.mocked(departmentService.list).mockResolvedValue({
       message: "ok",
@@ -168,6 +177,7 @@ describe("CreateTicketPage", () => {
         makeDepartment({ departmentId: "dept-1" }),
         makeDepartment({ departmentId: "dept-2", departmentName: "IT" }),
       ],
+      pagination: makePagination({ totalItems: 2, totalPages: 1 }),
     });
 
     const user = userEvent.setup();

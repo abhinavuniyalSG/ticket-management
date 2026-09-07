@@ -40,7 +40,7 @@ export function DepartmentDetailsPage() {
     if (!id) return;
     setIsLoading(true);
     setError(null);
-    Promise.all([departmentService.getById(id), userService.list()])
+    Promise.all([departmentService.getById(id), userService.list({ limit: 100 })])
       .then(([deptRes, userRes]) => {
         setDepartment(deptRes.department);
         setName(deptRes.department.departmentName);

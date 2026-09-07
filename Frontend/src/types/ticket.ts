@@ -58,4 +58,6 @@ export interface TicketQueryParams {
   createdTo?: string;
   sortBy?: TicketSortBy;
   sortOrder?: SortOrder;
+  page?: number;
+  limit?: number;
 }

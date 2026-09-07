@@ -12,6 +12,7 @@ import { ApiError } from "../../types/api";
 import type { Department } from "../../types/department";
 import type { Ticket } from "../../types/ticket";
 import type { SafeUser, User } from "../../types/user";
+import { makePagination } from "../../test/paginationFixture";
 
 vi.mock("../../services/ticketService", () => ({
   ticketService: { list: vi.fn() },
@@ -112,23 +113,33 @@ describe("TicketsListPage", () => {
     vi.mocked(departmentService.list).mockResolvedValue({
       message: "ok",
       departments: [makeDepartment()],
+      pagination: makePagination({ totalItems: 1, totalPages: 1 }),
     });
-    vi.mocked(userService.list).mockResolvedValue({ message: "ok", users: [] });
+    vi.mocked(userService.list).mockResolvedValue({
+      message: "ok",
+      users: [],
+      pagination: makePagination(),
+    });
     vi.mocked(ticketService.list).mockResolvedValue({
       message: "ok",
       tickets: [makeTicket()],
+      pagination: makePagination({ totalItems: 1, totalPages: 1 }),
     });
   });
 
   it("shows a spinner while tickets are loading", async () => {
-    const deferred = createDeferred<{ message: string; tickets: Ticket[] }>();
+    const deferred = createDeferred<{
+      message: string;
+      tickets: Ticket[];
+      pagination: ReturnType<typeof makePagination>;
+    }>();
     vi.mocked(ticketService.list).mockReturnValue(deferred.promise);
 
     renderPage(makeUser());
 
     expect(screen.getByRole("status")).toBeInTheDocument();
 
-    deferred.resolve({ message: "ok", tickets: [] });
+    deferred.resolve({ message: "ok", tickets: [], pagination: makePagination() });
     await waitFor(() =>
       expect(screen.queryByRole("status")).not.toBeInTheDocument(),
     );
@@ -150,6 +161,7 @@ describe("TicketsListPage", () => {
       createdTo: undefined,
       sortBy: "createdAt",
       sortOrder: "desc",
+      page: 1,
     });
     expect(departmentService.list).toHaveBeenCalledTimes(1);
     expect(userService.list).not.toHaveBeenCalled();
@@ -169,6 +181,7 @@ describe("TicketsListPage", () => {
         makeTicket({ ticketId: "t-1", title: "First ticket" }),
         makeTicket({ ticketId: "t-2", title: "Second ticket" }),
       ],
+      pagination: makePagination({ totalItems: 2, totalPages: 1 }),
     });
 
     renderPage(makeUser());
@@ -181,6 +194,7 @@ describe("TicketsListPage", () => {
     vi.mocked(ticketService.list).mockResolvedValue({
       message: "ok",
       tickets: [],
+      pagination: makePagination(),
     });
 
     renderPage(makeUser());
@@ -213,6 +227,7 @@ describe("TicketsListPage", () => {
     vi.mocked(ticketService.list).mockResolvedValue({
       message: "ok",
       tickets: [makeTicket()],
+      pagination: makePagination({ totalItems: 1, totalPages: 1 }),
     });
     await user.click(screen.getByRole("button", { name: "Try again" }));
 
@@ -258,6 +273,7 @@ describe("TicketsListPage", () => {
     vi.mocked(userService.list).mockResolvedValue({
       message: "ok",
       users: [makeUser({ id: "member-1", firstName: "Sam", lastName: "Lee" })],
+      pagination: makePagination({ totalItems: 1, totalPages: 1 }),
     });
 
     const user = userEvent.setup();
@@ -338,6 +354,7 @@ describe("TicketsListPage", () => {
     vi.mocked(ticketService.list).mockResolvedValue({
       message: "ok",
       tickets: [],
+      pagination: makePagination(),
     });
     await user.selectOptions(screen.getByLabelText("Priority"), "high");
 
@@ -350,6 +367,7 @@ describe("TicketsListPage", () => {
     vi.mocked(ticketService.list).mockResolvedValue({
       message: "ok",
       tickets: [makeTicket()],
+      pagination: makePagination({ totalItems: 1, totalPages: 1 }),
     });
     await user.click(
       within(container).getByRole("button", { name: "Reset filters" }),
@@ -357,6 +375,54 @@ describe("TicketsListPage", () => {
 
     await waitFor(async () =>
       expect(await findTicketTitles("Printer is on fire")).not.toHaveLength(0),
+    );
+  });
+
+  it("shows pagination info and requests the next page on click", async () => {
+    vi.mocked(ticketService.list).mockResolvedValue({
+      message: "ok",
+      tickets: [makeTicket()],
+      pagination: makePagination({ page: 1, totalItems: 45, totalPages: 3, hasNextPage: true }),
+    });
+    const user = userEvent.setup();
+    renderPage(makeUser());
+    await findTicketTitles("Printer is on fire");
+
+    expect(screen.getByText("Page 1 of 3")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Next" }));
+
+    await waitFor(() =>
+      expect(ticketService.list).toHaveBeenLastCalledWith(
+        expect.objectContaining({ page: 2 }),
+      ),
+    );
+  });
+
+  it("resets back to page 1 when a filter changes", async () => {
+    vi.mocked(ticketService.list).mockResolvedValue({
+      message: "ok",
+      tickets: [makeTicket()],
+      pagination: makePagination({ page: 1, totalItems: 45, totalPages: 3, hasNextPage: true }),
+    });
+    const user = userEvent.setup();
+    renderPage(makeUser());
+    await findTicketTitles("Printer is on fire");
+
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    await waitFor(() =>
+      expect(ticketService.list).toHaveBeenLastCalledWith(
+        expect.objectContaining({ page: 2 }),
+      ),
+    );
+
+    await user.click(screen.getByRole("button", { name: "Filters" }));
+    await user.selectOptions(screen.getByLabelText("Status"), "closed");
+
+    await waitFor(() =>
+      expect(ticketService.list).toHaveBeenLastCalledWith(
+        expect.objectContaining({ status: "closed", page: 1 }),
+      ),
     );
   });
 });

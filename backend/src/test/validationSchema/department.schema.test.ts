@@ -68,6 +68,22 @@ describe("updateDepartmentSchema", () => {
   });
 });
 
+describe("departmentQuerySchema", () => {
+  it("accepts an empty query (all filters optional)", () => {
+    expect(schema.departmentQuerySchema.safeParse({}).success).toBe(true);
+  });
+
+  it("defaults page to 1 and limit to 20 when omitted", () => {
+    const result = schema.departmentQuerySchema.parse({});
+    expect(result.page).toBe(1);
+    expect(result.limit).toBe(20);
+  });
+
+  it("rejects a limit above 100", () => {
+    expect(schema.departmentQuerySchema.safeParse({ limit: "101" }).success).toBe(false);
+  });
+});
+
 describe("departmentIdParamSchema", () => {
   it("accepts a valid UUID", () => {
     expect(schema.departmentIdParamSchema.safeParse({ id: UUID_V7 }).success).toBe(true);
