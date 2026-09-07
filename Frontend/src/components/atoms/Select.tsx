@@ -40,8 +40,11 @@ export function Select({
       minHeight: "2.25rem",
       borderRadius: "0.5rem",
       borderColor: invalid ? "#f87171" : state.isFocused ? "#6366f1" : "#cbd5e1",
-      boxShadow: state.isFocused ? "0 0 0 2px rgba(99,102,241,0.35)" : "none",
-      "&:hover": { borderColor: invalid ? "#f87171" : state.isFocused ? "#6366f1" : "#cbd5e1" },
+      boxShadow: state.isFocused
+        ? "0 0 0 3px rgba(99,102,241,0.25)"
+        : "0 1px 2px rgba(15,23,42,0.04)",
+      transition: "box-shadow 150ms ease, border-color 150ms ease",
+      "&:hover": { borderColor: invalid ? "#f87171" : state.isFocused ? "#6366f1" : "#94a3b8" },
       fontSize: "0.875rem",
       backgroundColor: disabled ? "#f1f5f9" : "white",
       cursor: "pointer",
@@ -58,12 +61,20 @@ export function Select({
       transform: state.selectProps.menuIsOpen ? "rotate(180deg)" : undefined,
     }),
     clearIndicator: (base) => ({ ...base, color: "#94a3b8", cursor: "pointer" }),
-    menu: (base) => ({ ...base, zIndex: 20, fontSize: "0.875rem" }),
+    menu: (base) => ({
+      ...base,
+      zIndex: 20,
+      fontSize: "0.875rem",
+      borderRadius: "0.625rem",
+      overflow: "hidden",
+      boxShadow: "0 8px 24px -6px rgba(15,23,42,0.16), 0 2px 6px -2px rgba(15,23,42,0.08)",
+    }),
     option: (base, state) => ({
       ...base,
       cursor: "pointer",
       backgroundColor: state.isSelected ? "#4f46e5" : state.isFocused ? "#eef2ff" : "white",
       color: state.isSelected ? "white" : "#1e293b",
+      transition: "background-color 100ms ease",
     }),
   };
 

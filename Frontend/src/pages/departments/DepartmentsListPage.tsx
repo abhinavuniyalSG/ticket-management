@@ -1,13 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import type { FormEvent } from "react";
+import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import { PageContainer } from "../../components/layout/PageContainer";
 import { PageHeader } from "../../components/layout/PageHeader";
 import { SearchInput } from "../../components/molecules/SearchInput";
-import { FormField } from "../../components/molecules/FormField";
-import { Input } from "../../components/atoms/Input";
-import { Select } from "../../components/atoms/Select";
-import { Button } from "../../components/atoms/Button";
 import { IconButton } from "../../components/atoms/IconButton";
 import { Spinner } from "../../components/atoms/Spinner";
 import { EmptyState } from "../../components/molecules/EmptyState";
@@ -17,28 +13,17 @@ import { Pagination } from "../../components/molecules/Pagination";
 import { DepartmentTable } from "../../components/organisms/DepartmentTable";
 import { departmentService } from "../../services/departmentService";
 import type { DepartmentQueryParams } from "../../services/departmentService";
-import { userService } from "../../services/userService";
 import { useDebouncedValue } from "../../hooks/useDebouncedValue";
 import { ApiError, type PaginationMeta } from "../../types/api";
 import type { Department } from "../../types/department";
-import type { User } from "../../types/user";
-import { fullName } from "../../utils/format";
 
 export function DepartmentsListPage() {
   const [departments, setDepartments] = useState<Department[] | null>(null);
   const [pagination, setPagination] = useState<PaginationMeta | null>(null);
   const [page, setPage] = useState(1);
-  const [managers, setManagers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [managedBy, setManagedBy] = useState("");
-  const [createErrors, setCreateErrors] = useState<{ name?: string; email?: string }>({});
-  const [isCreating, setIsCreating] = useState(false);
 
   const [deleteTarget, setDeleteTarget] = useState<Department | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -80,41 +65,6 @@ export function DepartmentsListPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
-  useEffect(() => {
-    userService
-      .list({ limit: 100 })
-      .then((res) => setManagers(res.users.filter((u) => u.role === "admin" || u.role === "super_admin")))
-      .catch(() => undefined);
-  }, []);
-
-  const handleCreate = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const nextErrors: typeof createErrors = {};
-    if (name.trim().length < 2) nextErrors.name = "Must be at least 2 characters";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) nextErrors.email = "Enter a valid email address";
-    setCreateErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) return;
-
-    setIsCreating(true);
-    try {
-      const res = await departmentService.create({
-        departmentName: name.trim(),
-        departmentEmail: email.trim().toLowerCase(),
-        managedBy: managedBy || undefined,
-      });
-      toast.success(res.message);
-      loadDepartments();
-      setName("");
-      setEmail("");
-      setManagedBy("");
-      setIsCreateOpen(false);
-    } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Unable to create department.");
-    } finally {
-      setIsCreating(false);
-    }
-  };
-
   const handleDelete = async () => {
     if (!deleteTarget) return;
     setIsDeleting(true);
@@ -138,56 +88,14 @@ export function DepartmentsListPage() {
         title="Departments"
         description="Manage departments and their managers."
         actions={
-          <Button onClick={() => setIsCreateOpen((prev) => !prev)}>
-            {isCreateOpen ? "Cancel" : "New department"}
-          </Button>
+          <Link
+            to="/departments/new"
+            className="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm shadow-indigo-600/20 transition-all duration-150 hover:bg-indigo-700 hover:shadow-md hover:shadow-indigo-600/25 active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+          >
+            New department
+          </Link>
         }
       />
-
-      {isCreateOpen && (
-        <form
-          onSubmit={(e) => void handleCreate(e)}
-          className="mb-5 flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4 sm:p-5"
-        >
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <FormField label="Department name" htmlFor="dept-name" error={createErrors.name} required>
-              <Input
-                id="dept-name"
-                value={name}
-                maxLength={100}
-                invalid={Boolean(createErrors.name)}
-                onChange={(e) => setName(e.target.value)}
-                disabled={isCreating}
-              />
-            </FormField>
-            <FormField label="Department email" htmlFor="dept-email" error={createErrors.email} required>
-              <Input
-                id="dept-email"
-                type="email"
-                value={email}
-                invalid={Boolean(createErrors.email)}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isCreating}
-              />
-            </FormField>
-          </div>
-          <FormField label="Manager" htmlFor="dept-manager" hint="Must be an admin or super admin.">
-            <Select
-              id="dept-manager"
-              value={managedBy}
-              placeholder="No manager"
-              options={managers.map((m) => ({ value: m.id, label: fullName(m) }))}
-              onChange={(e) => setManagedBy(e.target.value)}
-              disabled={isCreating}
-            />
-          </FormField>
-          <div className="flex justify-end">
-            <Button type="submit" isLoading={isCreating}>
-              Create department
-            </Button>
-          </div>
-        </form>
-      )}
 
       <div className="mb-5">
         <SearchInput

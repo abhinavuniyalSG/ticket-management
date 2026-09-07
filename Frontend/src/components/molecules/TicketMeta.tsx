@@ -19,7 +19,7 @@ export function TicketMeta({ ticket, className = "" }: TicketMetaProps) {
   return (
     <dl className={`grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 ${className}`}>
       {rows.map(([label, value]) => (
-        <div key={label} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+        <div key={label} className="rounded-lg border border-slate-200/80 bg-slate-50/70 px-3 py-2.5">
           <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</dt>
           <dd className="mt-0.5 truncate text-sm text-slate-800" title={value}>
             {value}

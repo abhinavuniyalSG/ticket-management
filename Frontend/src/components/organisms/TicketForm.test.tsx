@@ -36,7 +36,9 @@ function makeUser(overrides: Partial<User> = {}): User {
   };
 }
 
-function makeValues(overrides: Partial<TicketFormValues> = {}): TicketFormValues {
+function makeValues(
+  overrides: Partial<TicketFormValues> = {},
+): TicketFormValues {
   return {
     title: "",
     description: "",
@@ -53,7 +55,10 @@ describe("TicketForm", () => {
       <TicketForm
         mode="create"
         departments={[makeDepartment()]}
-        initialValues={makeValues({ title: "Existing title", description: "Existing description" })}
+        initialValues={makeValues({
+          title: "Existing title",
+          description: "Existing description",
+        })}
         isSubmitting={false}
         submitLabel="Create ticket"
         onSubmit={vi.fn()}
@@ -61,7 +66,9 @@ describe("TicketForm", () => {
     );
 
     expect(screen.getByLabelText(/title/i)).toHaveValue("Existing title");
-    expect(screen.getByLabelText(/description/i)).toHaveValue("Existing description");
+    expect(screen.getByLabelText(/description/i)).toHaveValue(
+      "Existing description",
+    );
   });
 
   it("shows validation errors and does not submit when required fields are empty", async () => {
@@ -80,8 +87,12 @@ describe("TicketForm", () => {
 
     await user.click(screen.getByRole("button", { name: "Create ticket" }));
 
-    expect(screen.getByText("Title must be at least 2 characters")).toBeInTheDocument();
-    expect(screen.getByText("Description must be at least 5 characters")).toBeInTheDocument();
+    expect(
+      screen.getByText("Title must be at least 2 characters"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Description must be at least 5 characters"),
+    ).toBeInTheDocument();
     expect(screen.getByText("Please select a department")).toBeInTheDocument();
     expect(onSubmit).not.toHaveBeenCalled();
   });
@@ -106,7 +117,9 @@ describe("TicketForm", () => {
 
     await user.click(screen.getByRole("button", { name: "Create ticket" }));
 
-    expect(screen.getByText("Title must not exceed 200 characters")).toBeInTheDocument();
+    expect(
+      screen.getByText("Title must not exceed 200 characters"),
+    ).toBeInTheDocument();
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
@@ -125,7 +138,10 @@ describe("TicketForm", () => {
     );
 
     await user.type(screen.getByLabelText(/title/i), "Printer is broken");
-    await user.type(screen.getByLabelText(/description/i), "The office printer jams constantly.");
+    await user.type(
+      screen.getByLabelText(/description/i),
+      "The office printer jams constantly.",
+    );
     await selectReactOption(user, /department/i, "Support");
     await user.click(screen.getByRole("button", { name: "Create ticket" }));
 
@@ -176,7 +192,7 @@ describe("TicketForm", () => {
     );
 
     expect(screen.getByText("Select a department first.")).toBeInTheDocument();
-    expect(screen.getByLabelText(/assignee/i)).toBeDisabled();
+    expect(screen.getByLabelText(/assignedTo/i)).toBeDisabled();
   });
 
   it("shows the department as read-only text in edit mode and does not require it", async () => {
@@ -187,7 +203,10 @@ describe("TicketForm", () => {
         mode="edit"
         departments={[]}
         departmentName="Support"
-        initialValues={makeValues({ title: "Printer issue", description: "Still jamming." })}
+        initialValues={makeValues({
+          title: "Printer issue",
+          description: "Still jamming.",
+        })}
         isSubmitting={false}
         submitLabel="Save changes"
         onSubmit={onSubmit}

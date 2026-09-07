@@ -41,10 +41,13 @@ export function TicketDetailsPage() {
 
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<{ status?: number; message: string } | null>(null);
+  const [error, setError] = useState<{
+    status?: number;
+    message: string;
+  } | null>(null);
   const [isMutating, setIsMutating] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [assignees, setAssignees] = useState<User[]>([]);
+  const [assignedTo, setAssignedTo] = useState<User[]>([]);
   const [selectedAssignee, setSelectedAssignee] = useState("");
 
   const loadTicket = useCallback(() => {
@@ -74,7 +77,11 @@ export function TicketDetailsPage() {
     if (!canAssign || !ticket) return;
     userService
       .list({ limit: 100 })
-      .then((res) => setAssignees(res.users.filter((u) => u.departmentId === ticket.departmentId)))
+      .then((res) =>
+        setAssignedTo(
+          res.users.filter((u) => u.departmentId === ticket.departmentId),
+        ),
+      )
       .catch(() => undefined);
   }, [canAssign, ticket]);
 
@@ -94,7 +101,9 @@ export function TicketDetailsPage() {
     return (
       <PageContainer>
         <ErrorState
-          title={error?.status === 404 ? "Ticket not found" : "Something went wrong"}
+          title={
+            error?.status === 404 ? "Ticket not found" : "Something went wrong"
+          }
           message={error?.message ?? "Unable to load this ticket."}
           onRetry={loadTicket}
         />
@@ -115,7 +124,11 @@ export function TicketDetailsPage() {
       setTicket(res.ticket);
       toast.success(res.message);
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Unable to update ticket status.");
+      toast.error(
+        err instanceof ApiError
+          ? err.message
+          : "Unable to update ticket status.",
+      );
     } finally {
       setIsMutating(false);
     }
@@ -125,12 +138,16 @@ export function TicketDetailsPage() {
     if (!selectedAssignee) return;
     setIsMutating(true);
     try {
-      const res = await ticketService.update(ticket.ticketId, { assignedToId: selectedAssignee });
+      const res = await ticketService.update(ticket.ticketId, {
+        assignedToId: selectedAssignee,
+      });
       setTicket(res.ticket);
       setSelectedAssignee("");
       toast.success(res.message);
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Unable to assign this ticket.");
+      toast.error(
+        err instanceof ApiError ? err.message : "Unable to assign this ticket.",
+      );
     } finally {
       setIsMutating(false);
     }
@@ -139,11 +156,17 @@ export function TicketDetailsPage() {
   const handleUnassign = async () => {
     setIsMutating(true);
     try {
-      const res = await ticketService.update(ticket.ticketId, { assignedToId: null });
+      const res = await ticketService.update(ticket.ticketId, {
+        assignedToId: null,
+      });
       setTicket(res.ticket);
       toast.success(res.message);
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Unable to unassign this ticket.");
+      toast.error(
+        err instanceof ApiError
+          ? err.message
+          : "Unable to unassign this ticket.",
+      );
     } finally {
       setIsMutating(false);
     }
@@ -156,7 +179,9 @@ export function TicketDetailsPage() {
       toast.success(res.message);
       navigate("/tickets", { replace: true });
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Unable to delete this ticket.");
+      toast.error(
+        err instanceof ApiError ? err.message : "Unable to delete this ticket.",
+      );
       setIsDeleteOpen(false);
     } finally {
       setIsMutating(false);
@@ -189,18 +214,20 @@ export function TicketDetailsPage() {
       />
 
       <div className="flex flex-col gap-6">
-        <div className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6">
+        <div className="shadow-soft rounded-xl border border-slate-200/80 bg-white p-5 sm:p-6">
           <div className="mb-4 flex flex-wrap gap-2">
             <StatusBadge status={ticket.status} />
             <PriorityBadge priority={ticket.priority} />
           </div>
-          <p className="whitespace-pre-wrap text-sm text-slate-700">{ticket.description}</p>
+          <p className="whitespace-pre-wrap text-sm text-slate-700">
+            {ticket.description}
+          </p>
         </div>
 
         <TicketMeta ticket={ticket} />
 
         {(allowedTransitions.length > 0 || canAssign) && (
-          <div className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6">
+          <div className="shadow-soft rounded-xl border border-slate-200/80 bg-white p-5 sm:p-6">
             <h2 className="text-sm font-semibold text-slate-900">Actions</h2>
 
             {allowedTransitions.length > 0 && (
@@ -212,7 +239,8 @@ export function TicketDetailsPage() {
                     disabled={isMutating}
                     onClick={() => void handleStatusChange(status)}
                   >
-                    {STATUS_ACTION_LABELS[status] ?? `Move to ${STATUS_LABELS[status]}`}
+                    {STATUS_ACTION_LABELS[status] ??
+                      `Move to ${STATUS_LABELS[status]}`}
                   </Button>
                 ))}
               </div>
@@ -225,10 +253,13 @@ export function TicketDetailsPage() {
                 </p>
                 <div className="flex flex-col gap-2 sm:flex-row">
                   <Select
-                    aria-label="Select assignee"
+                    aria-label="Select assignedTo"
                     placeholder="Select a team member"
                     value={selectedAssignee}
-                    options={assignees.map((u) => ({ value: u.id, label: fullName(u) }))}
+                    options={assignedTo.map((u) => ({
+                      value: u.id,
+                      label: fullName(u),
+                    }))}
                     onChange={(e) => setSelectedAssignee(e.target.value)}
                     disabled={isMutating}
                     className="sm:max-w-xs"
@@ -241,7 +272,11 @@ export function TicketDetailsPage() {
                     {ticket.assignedToId ? "Reassign" : "Assign"}
                   </Button>
                   {ticket.assignedToId && (
-                    <Button variant="ghost" disabled={isMutating} onClick={() => void handleUnassign()}>
+                    <Button
+                      variant="ghost"
+                      disabled={isMutating}
+                      onClick={() => void handleUnassign()}
+                    >
                       Unassign
                     </Button>
                   )}

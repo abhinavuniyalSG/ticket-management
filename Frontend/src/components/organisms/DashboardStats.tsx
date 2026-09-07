@@ -18,11 +18,14 @@ export function DashboardStats({ metrics }: DashboardStatsProps) {
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
       {tiles.map((tile) => (
-        <div key={tile.label} className="rounded-xl border border-slate-200 bg-white p-4">
+        <div
+          key={tile.label}
+          className="shadow-soft hover:shadow-card rounded-xl border border-slate-200/80 bg-white p-4 transition-shadow"
+        >
           <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
             {tile.label}
           </p>
-          <p className="mt-1 text-2xl font-semibold text-slate-900">{tile.value}</p>
+          <p className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">{tile.value}</p>
         </div>
       ))}
     </div>

@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { fakeDepartment, fakeTicket, fakeUser, mockLoggedIn } from "./fixtures";
+import { fakeDepartment, fakeTicket, fakeUser, mockLoggedIn, selectReactOption } from "./fixtures";
 
 // Routes are scoped to "**/api/..." rather than just "**/tickets*" etc.
 // because page.goto() performs a real HTTP navigation to
@@ -61,7 +61,7 @@ test("creates a ticket and lands on its details page", async ({ page }) => {
 
   await page.getByLabel("Title").fill(created.title);
   await page.getByLabel("Description").fill(created.description);
-  await page.getByLabel("Department").selectOption(department.departmentId);
+  await selectReactOption(page.getByLabel("Department"), department.departmentName);
   await page.getByRole("button", { name: "Create ticket" }).click();
 
   await expect(page).toHaveURL(`/tickets/${created.ticketId}`);

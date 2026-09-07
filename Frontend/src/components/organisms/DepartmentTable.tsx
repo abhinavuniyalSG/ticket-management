@@ -11,21 +11,21 @@ interface DepartmentTableProps {
 export function DepartmentTable({ departments, renderActions }: DepartmentTableProps) {
   return (
     <>
-      <div className="hidden overflow-x-auto rounded-xl border border-slate-200 bg-white md:block">
+      <div className="shadow-soft hidden overflow-x-auto rounded-xl border border-slate-200/80 bg-white md:block">
         <table className="min-w-full divide-y divide-slate-200 text-sm">
-          <thead className="bg-slate-50">
+          <thead className="bg-slate-50/80">
             <tr>
-              <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700">
+              <th scope="col" className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wide text-slate-700">
                 Name
               </th>
-              <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700">
+              <th scope="col" className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wide text-slate-700">
                 Email
               </th>
-              <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700">
+              <th scope="col" className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wide text-slate-700">
                 Manager
               </th>
               {renderActions && (
-                <th scope="col" className="px-4 py-3 text-right font-semibold text-slate-700">
+                <th scope="col" className="px-4 py-3 text-right text-sm font-bold uppercase tracking-wide text-slate-700">
                   Actions
                 </th>
               )}
@@ -33,17 +33,17 @@ export function DepartmentTable({ departments, renderActions }: DepartmentTableP
           </thead>
           <tbody className="divide-y divide-slate-100">
             {departments.map((department) => (
-              <tr key={department.departmentId} className="hover:bg-slate-50">
+              <tr key={department.departmentId} className="transition-colors hover:bg-slate-50">
                 <td className="px-4 py-3">
                   <Link
                     to={`/departments/${department.departmentId}`}
-                    className="font-medium text-slate-900 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
+                    className="font-medium text-slate-700 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
                   >
                     {department.departmentName}
                   </Link>
                 </td>
-                <td className="px-4 py-3 text-slate-600">{department.departmentEmail}</td>
-                <td className="px-4 py-3 text-slate-600">
+                <td className="px-4 py-3 text-slate-400">{department.departmentEmail}</td>
+                <td className="px-4 py-3 text-slate-400">
                   {department.manager ? fullName(department.manager) : "Unmanaged"}
                 </td>
                 {renderActions && (
@@ -59,7 +59,7 @@ export function DepartmentTable({ departments, renderActions }: DepartmentTableP
 
       <ul className="flex flex-col gap-3 md:hidden">
         {departments.map((department) => (
-          <li key={department.departmentId} className="rounded-xl border border-slate-200 bg-white p-4">
+          <li key={department.departmentId} className="shadow-soft rounded-xl border border-slate-200/80 bg-white p-4">
             <div className="flex items-start justify-between gap-2">
               <Link
                 to={`/departments/${department.departmentId}`}

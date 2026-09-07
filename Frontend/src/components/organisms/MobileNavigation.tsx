@@ -33,21 +33,26 @@ export function MobileNavigation({ isOpen, onClose }: MobileNavigationProps) {
       <button
         type="button"
         aria-label="Close navigation"
-        className="absolute inset-0 bg-slate-900/50"
+        className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"
         onClick={onClose}
         tabIndex={-1}
       />
       <nav
         aria-label="Primary"
-        className="relative z-10 flex h-full w-72 max-w-[85vw] flex-col bg-white shadow-xl"
+        className="shadow-elevated relative z-10 flex h-full w-72 max-w-[85vw] flex-col bg-white"
       >
-        <div className="flex h-16 items-center justify-between border-b border-slate-200 px-5">
-          <span className="text-lg font-semibold text-slate-900">TicketDesk</span>
+        <div className="flex h-16 items-center gap-2 justify-between border-b border-slate-200 px-5">
+          <div className="flex items-center gap-2">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-indigo-500 to-violet-600 text-sm font-bold text-white shadow-sm shadow-indigo-600/30">
+              T
+            </span>
+            <span className="text-lg font-semibold text-slate-900">TicketDesk</span>
+          </div>
           <button
             type="button"
             aria-label="Close menu"
             onClick={onClose}
-            className="rounded-lg p-2 text-slate-500 hover:bg-slate-100"
+            className="cursor-pointer rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100"
           >
             <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-5 w-5">
               <path
@@ -66,8 +71,10 @@ export function MobileNavigation({ isOpen, onClose }: MobileNavigationProps) {
               to={item.to}
               onClick={onClose}
               className={({ isActive }) =>
-                `flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium ${
-                  isActive ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-slate-100"
+                `flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                  isActive
+                    ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/30"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`
               }
             >
@@ -82,7 +89,7 @@ export function MobileNavigation({ isOpen, onClose }: MobileNavigationProps) {
           <button
             type="button"
             onClick={() => void handleLogout()}
-            className="w-full cursor-pointer rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            className="w-full cursor-pointer rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:border-slate-400 hover:bg-slate-50"
           >
             Log out
           </button>

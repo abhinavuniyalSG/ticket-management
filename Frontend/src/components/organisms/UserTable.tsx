@@ -13,27 +13,27 @@ interface UserTableProps {
 export function UserTable({ users, renderActions }: UserTableProps) {
   return (
     <>
-      <div className="hidden overflow-x-auto rounded-xl border border-slate-200 bg-white md:block">
+      <div className="shadow-soft hidden overflow-x-auto rounded-xl border border-slate-200/80 bg-white md:block">
         <table className="min-w-full divide-y divide-slate-200 text-sm">
-          <thead className="bg-slate-50">
+          <thead className="bg-slate-50/80">
             <tr>
-              <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700">
+              <th scope="col" className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wide text-slate-700">
                 Name
               </th>
-              <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700">
+              <th scope="col" className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wide text-slate-700">
                 Email
               </th>
-              <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700">
+              <th scope="col" className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wide text-slate-700">
                 Role
               </th>
-              <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700">
+              <th scope="col" className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wide text-slate-700">
                 Department
               </th>
-              <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700">
+              <th scope="col" className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wide text-slate-700">
                 Verified
               </th>
               {renderActions && (
-                <th scope="col" className="px-4 py-3 text-right font-semibold text-slate-700">
+                <th scope="col" className="px-4 py-3 text-right text-sm font-bold uppercase tracking-wide text-slate-700">
                   Actions
                 </th>
               )}
@@ -41,22 +41,22 @@ export function UserTable({ users, renderActions }: UserTableProps) {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {users.map((user) => (
-              <tr key={user.id} className="hover:bg-slate-50">
+              <tr key={user.id} className="transition-colors hover:bg-slate-50">
                 <td className="px-4 py-3">
                   <Link
                     to={`/users/${user.id}`}
-                    className="font-medium text-slate-900 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
+                    className="font-medium text-slate-700 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
                   >
                     {fullName(user)}
                   </Link>
                 </td>
-                <td className="px-4 py-3 text-slate-600">{user.email}</td>
+                <td className="px-4 py-3 text-slate-400">{user.email}</td>
                 <td className="px-4 py-3">
                   <Badge color={user.role === "super_admin" ? "purple" : user.role === "admin" ? "blue" : "slate"}>
                     {ROLE_LABELS[user.role]}
                   </Badge>
                 </td>
-                <td className="px-4 py-3 text-slate-600">
+                <td className="px-4 py-3 text-slate-400">
                   {user.department?.departmentName ?? "—"}
                 </td>
                 <td className="px-4 py-3">
@@ -79,7 +79,7 @@ export function UserTable({ users, renderActions }: UserTableProps) {
         {users.map((user) => (
           <li
             key={user.id}
-            className="rounded-xl border border-slate-200 bg-white p-4"
+            className="shadow-soft rounded-xl border border-slate-200/80 bg-white p-4"
           >
             <div className="flex items-start justify-between gap-2">
               <Link

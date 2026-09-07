@@ -105,6 +105,15 @@ describe("CreateTicketPage", () => {
     });
   });
 
+  it("renders a back link to the tickets list", async () => {
+    renderPage(makeUser());
+
+    const backLink = await screen.findByRole("link", {
+      name: /Back to tickets/,
+    });
+    expect(backLink).toHaveAttribute("href", "/tickets");
+  });
+
   it("shows a spinner while form data is loading", async () => {
     const deferred = createDeferred<{
       message: string;
@@ -117,7 +126,11 @@ describe("CreateTicketPage", () => {
 
     expect(screen.getByRole("status")).toBeInTheDocument();
 
-    deferred.resolve({ message: "ok", departments: [], pagination: makePagination() });
+    deferred.resolve({
+      message: "ok",
+      departments: [],
+      pagination: makePagination(),
+    });
     await waitFor(() =>
       expect(screen.queryByRole("status")).not.toBeInTheDocument(),
     );
@@ -130,7 +143,7 @@ describe("CreateTicketPage", () => {
 
     expect(departmentService.list).toHaveBeenCalledTimes(1);
     expect(userService.list).not.toHaveBeenCalled();
-    expect(screen.queryByLabelText("Assignee")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("AssignedTo")).not.toBeInTheDocument();
   });
 
   it("loads assignable users for an admin and shows the assignee field", async () => {
@@ -150,7 +163,7 @@ describe("CreateTicketPage", () => {
     await screen.findByLabelText(/^Title/);
 
     expect(userService.list).toHaveBeenCalledTimes(1);
-    expect(screen.getByLabelText("Assignee")).toBeInTheDocument();
+    expect(screen.getByLabelText("AssignedTo")).toBeInTheDocument();
   });
 
   it("only offers assignees from the department selected in the form", async () => {
@@ -187,7 +200,7 @@ describe("CreateTicketPage", () => {
     await screen.findByLabelText(/^Title/);
     await selectReactOption(user, /^Department/, "Support");
 
-    await user.click(screen.getByLabelText("Assignee"));
+    await user.click(screen.getByLabelText("AssignedTo"));
     expect(screen.getByRole("option", { name: "Sam Lee" })).toBeInTheDocument();
     expect(
       screen.queryByRole("option", { name: "Ann Kim" }),

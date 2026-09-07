@@ -312,8 +312,8 @@ paths:
                 value:
                   title: "Login page crash on Safari 17+"
                   description: "Detailed repro steps added. Happens only on macOS Ventura."
-              assigneeStartsWork:
-                summary: Assignee moves ticket to in_progress
+              assignedToStartsWork:
+                summary: AssignedTo moves ticket to in_progress
                 value:
                   status: in_progress
               adminAssigns:

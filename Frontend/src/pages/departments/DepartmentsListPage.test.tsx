@@ -5,24 +5,18 @@ import { MemoryRouter } from "react-router-dom";
 import toast from "react-hot-toast";
 import { DepartmentsListPage } from "./DepartmentsListPage";
 import { departmentService } from "../../services/departmentService";
-import { userService } from "../../services/userService";
 import { ApiError } from "../../types/api";
 import type { Department } from "../../types/department";
-import type { User } from "../../types/user";
 import { makePagination } from "../../test/paginationFixture";
 
 vi.mock("../../services/departmentService", () => ({
-  departmentService: { list: vi.fn(), create: vi.fn(), remove: vi.fn() },
-}));
-vi.mock("../../services/userService", () => ({
-  userService: { list: vi.fn() },
+  departmentService: { list: vi.fn(), remove: vi.fn() },
 }));
 vi.mock("react-hot-toast", () => ({
   default: { success: vi.fn(), error: vi.fn() },
 }));
 
 const mockedDepartmentService = vi.mocked(departmentService);
-const mockedUserService = vi.mocked(userService);
 const mockedToast = vi.mocked(toast);
 
 function makeDepartment(overrides: Partial<Department> = {}): Department {
@@ -31,21 +25,6 @@ function makeDepartment(overrides: Partial<Department> = {}): Department {
     departmentName: "Support",
     departmentEmail: "support@example.com",
     managedBy: null,
-    createdAt: "2024-01-01T00:00:00.000Z",
-    updatedAt: "2024-01-01T00:00:00.000Z",
-    ...overrides,
-  };
-}
-
-function makeUser(overrides: Partial<User> = {}): User {
-  return {
-    id: "user-1",
-    firstName: "Jane",
-    lastName: "Doe",
-    role: "admin",
-    email: "jane@example.com",
-    isVerified: true,
-    departmentId: null,
     createdAt: "2024-01-01T00:00:00.000Z",
     updatedAt: "2024-01-01T00:00:00.000Z",
     ...overrides,
@@ -62,11 +41,6 @@ function renderPage() {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockedUserService.list.mockResolvedValue({
-    message: "ok",
-    users: [],
-    pagination: makePagination(),
-  });
 });
 
 describe("DepartmentsListPage", () => {
@@ -139,105 +113,16 @@ describe("DepartmentsListPage", () => {
     );
   });
 
-  it("only offers admins and super admins as manager options", async () => {
+  it("links to the create-department route instead of an inline form", async () => {
     mockedDepartmentService.list.mockResolvedValue({
       message: "ok",
       departments: [],
       pagination: makePagination(),
     });
-    mockedUserService.list.mockResolvedValue({
-      message: "ok",
-      users: [
-        makeUser({ id: "u1", firstName: "Ada", lastName: "Admin", role: "admin" }),
-        makeUser({ id: "u2", firstName: "Sue", lastName: "Super", role: "super_admin" }),
-        makeUser({ id: "u3", firstName: "Ray", lastName: "Regular", role: "user" }),
-      ],
-      pagination: makePagination({ totalItems: 3, totalPages: 1 }),
-    });
-    const user = userEvent.setup();
     renderPage();
 
-    await user.click(screen.getByRole("button", { name: "New department" }));
-
-    const managerSelect = await screen.findByLabelText("Manager");
-    await user.click(managerSelect);
-    await waitFor(() => expect(screen.getAllByRole("option")).toHaveLength(2));
-    expect(screen.getByRole("option", { name: "Ada Admin" })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: "Sue Super" })).toBeInTheDocument();
-    expect(screen.queryByRole("option", { name: "Ray Regular" })).not.toBeInTheDocument();
-  });
-
-  it("validates the create form before submitting", async () => {
-    mockedDepartmentService.list.mockResolvedValue({
-      message: "ok",
-      departments: [],
-      pagination: makePagination(),
-    });
-    const user = userEvent.setup();
-    renderPage();
-
-    await user.click(screen.getByRole("button", { name: "New department" }));
-    // Leave the email blank rather than typing an invalid value: an
-    // <input type="email"> blocks form submission via native constraint
-    // validation before our onSubmit handler ever runs, so an empty (but
-    // non-required) field is the only reliable way to exercise the app's
-    // own "invalid email" branch through a real submit.
-    await user.type(screen.getByLabelText(/Department name/), "S");
-    await user.click(screen.getByRole("button", { name: "Create department" }));
-
-    expect(await screen.findByText("Must be at least 2 characters")).toBeInTheDocument();
-    expect(screen.getByText("Enter a valid email address")).toBeInTheDocument();
-    expect(mockedDepartmentService.create).not.toHaveBeenCalled();
-  });
-
-  it("creates a department, refreshes the list, and closes the form", async () => {
-    mockedDepartmentService.list.mockResolvedValue({
-      message: "ok",
-      departments: [],
-      pagination: makePagination(),
-    });
-    mockedDepartmentService.create.mockResolvedValue({
-      message: "Department created.",
-      department: makeDepartment(),
-    });
-    const user = userEvent.setup();
-    renderPage();
-
-    await user.click(screen.getByRole("button", { name: "New department" }));
-    await user.type(screen.getByLabelText(/Department name/), "Sales");
-    await user.type(screen.getByLabelText(/Department email/), "SALES@Example.com");
-    await user.click(screen.getByRole("button", { name: "Create department" }));
-
-    await waitFor(() =>
-      expect(mockedDepartmentService.create).toHaveBeenCalledWith({
-        departmentName: "Sales",
-        departmentEmail: "sales@example.com",
-        managedBy: undefined,
-      }),
-    );
-    expect(mockedToast.success).toHaveBeenCalledWith("Department created.");
-    expect(mockedDepartmentService.list).toHaveBeenCalledTimes(2);
-    expect(screen.queryByRole("button", { name: "Create department" })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "New department" })).toBeInTheDocument();
-  });
-
-  it("shows an error toast and keeps the form open when creation fails", async () => {
-    mockedDepartmentService.list.mockResolvedValue({
-      message: "ok",
-      departments: [],
-      pagination: makePagination(),
-    });
-    mockedDepartmentService.create.mockRejectedValue(new ApiError(409, "Name already in use"));
-    const user = userEvent.setup();
-    renderPage();
-
-    await user.click(screen.getByRole("button", { name: "New department" }));
-    await user.type(screen.getByLabelText(/Department name/), "Sales");
-    await user.type(screen.getByLabelText(/Department email/), "sales@example.com");
-    await user.click(screen.getByRole("button", { name: "Create department" }));
-
-    await waitFor(() => expect(mockedToast.error).toHaveBeenCalledWith("Name already in use"));
-    expect(screen.getByRole("button", { name: "Create department" })).toBeInTheDocument();
+    const link = await screen.findByRole("link", { name: "New department" });
+    expect(link).toHaveAttribute("href", "/departments/new");
   });
 
   it("deletes a department after confirming and removes it from the list", async () => {

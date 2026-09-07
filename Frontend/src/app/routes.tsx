@@ -22,6 +22,7 @@ import { ProfileChangePasswordPage } from "../pages/ProfileChangePasswordPage";
 import { UsersListPage } from "../pages/users/UsersListPage";
 import { UserDetailsPage } from "../pages/users/UserDetailsPage";
 import { DepartmentsListPage } from "../pages/departments/DepartmentsListPage";
+import { CreateDepartmentPage } from "../pages/departments/CreateDepartmentPage";
 import { DepartmentDetailsPage } from "../pages/departments/DepartmentDetailsPage";
 import { UnauthorizedPage } from "../pages/UnauthorizedPage";
 import { NotFoundPage } from "../pages/NotFoundPage";
@@ -86,6 +87,7 @@ export function AppRoutes() {
       {/* Super admin only */}
       <Route element={<ProtectedLayout roles={["super_admin"]} />}>
         <Route path="/departments" element={<DepartmentsListPage />} />
+        <Route path="/departments/new" element={<CreateDepartmentPage />} />
         <Route path="/departments/:id" element={<DepartmentDetailsPage />} />
       </Route>
 

@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
 /**
  * Every page mounts <AuthProvider>, which immediately calls POST
@@ -57,6 +57,20 @@ export function fakeDepartment(overrides: Record<string, unknown> = {}) {
     updatedAt: "2026-01-01T00:00:00.000Z",
     ...overrides,
   };
+}
+
+/**
+ * The app's Select atom renders react-select, not a native <select>, so its
+ * options only exist in the DOM while its menu is open and are matched by
+ * their visible label text rather than the underlying value - `combobox`
+ * should resolve the same way page.getByLabel() would for a native select.
+ */
+export async function selectReactOption(
+  combobox: Locator,
+  optionName: string | RegExp,
+): Promise<void> {
+  await combobox.click();
+  await combobox.page().getByRole("option", { name: optionName }).click();
 }
 
 export function fakeTicket(overrides: Record<string, unknown> = {}) {

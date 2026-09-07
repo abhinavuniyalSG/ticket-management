@@ -161,7 +161,7 @@ export function ProfilePage() {
       <PageHeader title="Profile" description="Manage your account details and contact information." />
 
       <div className="flex flex-col gap-6">
-        <section className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6">
+        <section className="shadow-soft rounded-xl border border-slate-200/80 bg-white p-5 sm:p-6">
           <h2 className="mb-4 text-sm font-semibold text-slate-900">Personal information</h2>
           <form onSubmit={(e) => void handleSaveName(e)} className="flex flex-col gap-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -210,7 +210,7 @@ export function ProfilePage() {
           </form>
         </section>
 
-        <section className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6">
+        <section className="shadow-soft rounded-xl border border-slate-200/80 bg-white p-5 sm:p-6">
           <h2 className="text-sm font-semibold text-slate-900">Security</h2>
           <p className="mt-1 text-sm text-slate-500">Change the password used to sign in to your account.</p>
           <Button className="mt-4" variant="secondary" onClick={() => navigate("/profile/change-password")}>
@@ -218,7 +218,7 @@ export function ProfilePage() {
           </Button>
         </section>
 
-        <section className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6">
+        <section className="shadow-soft rounded-xl border border-slate-200/80 bg-white p-5 sm:p-6">
           <h2 className="mb-4 text-sm font-semibold text-slate-900">Contacts</h2>
 
           {profile.contacts && profile.contacts.length > 0 ? (

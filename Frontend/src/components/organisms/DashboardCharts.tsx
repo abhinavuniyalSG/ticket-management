@@ -102,7 +102,7 @@ function DistributionChart<T extends string>({
   const chartHeight = Math.max(chartData.length * 44, 1);
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
+    <div className="shadow-soft rounded-xl border border-slate-200/80 bg-white p-4 sm:p-5">
       <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
       {chartData.length === 0 ? (
         <p className="mt-4 text-xs text-slate-400">No data yet.</p>
@@ -163,7 +163,7 @@ function TrendChart({
   }));
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
+    <div className="shadow-soft rounded-xl border border-slate-200/80 bg-white p-4 sm:p-5">
       <h3 className="text-sm font-semibold text-slate-900">
         Tickets over time ({DASHBOARD_PERIOD_WINDOW_LABELS[period]})
       </h3>

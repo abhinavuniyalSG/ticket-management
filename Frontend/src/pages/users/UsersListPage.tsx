@@ -117,7 +117,7 @@ export function UsersListPage() {
     <PageContainer>
       <PageHeader title="Users" description="Manage user accounts." />
 
-      <div className="mb-5 flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 sm:flex-row sm:items-center">
+      <div className="mb-5 flex flex-col gap-3 shadow-soft rounded-xl border border-slate-200/80 bg-white p-4 sm:flex-row sm:items-center">
         <SearchInput
           label="Search users"
           placeholder="Search by first name"

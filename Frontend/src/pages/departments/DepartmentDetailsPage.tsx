@@ -125,7 +125,7 @@ export function DepartmentDetailsPage() {
         }
       />
 
-      <section className="max-w-2xl rounded-xl border border-slate-200 bg-white p-5 sm:p-6">
+      <section className="max-w-2xl shadow-soft rounded-xl border border-slate-200/80 bg-white p-5 sm:p-6">
         <form onSubmit={(e) => void handleSave(e)} className="flex flex-col gap-4">
           <FormField label="Department name" htmlFor="dept-detail-name" error={formErrors.name} required>
             <Input

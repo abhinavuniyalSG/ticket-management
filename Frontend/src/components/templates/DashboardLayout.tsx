@@ -11,12 +11,12 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
       <Sidebar />
       <MobileNavigation isOpen={isMobileNavOpen} onClose={() => setIsMobileNavOpen(false)} />
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <header className="flex h-16 shrink-0 items-center gap-3 border-b border-slate-200 bg-white px-4 sm:px-6 md:hidden">
+        <header className="flex h-16 shrink-0 items-center gap-3 border-b border-slate-200 bg-white px-4 shadow-sm sm:px-6 md:hidden">
           <button
             type="button"
             aria-label="Open navigation"
             onClick={() => setIsMobileNavOpen(true)}
-            className="cursor-pointer rounded-lg p-2 text-slate-600 hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            className="cursor-pointer rounded-lg p-2 text-slate-600 transition-colors hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
           >
             <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-5 w-5">
               <path
@@ -27,7 +27,10 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
               />
             </svg>
           </button>
-          <span className="text-base font-semibold text-slate-900">TicketDesk</span>
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-indigo-500 to-violet-600 text-sm font-bold text-white shadow-sm shadow-indigo-600/30">
+            T
+          </span>
+          <span className="text-base font-semibold tracking-tight text-slate-900">TicketDesk</span>
         </header>
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>

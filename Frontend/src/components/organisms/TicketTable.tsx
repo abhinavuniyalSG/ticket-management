@@ -12,49 +12,49 @@ export function TicketTable({ tickets }: TicketTableProps) {
   return (
     <>
       {/* Desktop / tablet table */}
-      <div className="hidden overflow-x-auto rounded-xl border border-slate-200 bg-white md:block">
+      <div className="shadow-soft hidden overflow-x-auto rounded-xl border border-slate-200/80 bg-white md:block">
         <table className="min-w-full divide-y divide-slate-200 text-sm">
-          <thead className="bg-slate-50">
+          <thead className="bg-slate-50/80">
             <tr>
               <th
                 scope="col"
-                className="px-4 py-3 text-left font-semibold text-slate-700"
+                className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wide text-slate-700"
               >
                 Title
               </th>
               <th
                 scope="col"
-                className="px-4 py-3 text-left font-semibold text-slate-700"
+                className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wide text-slate-700"
               >
                 Status
               </th>
               <th
                 scope="col"
-                className="px-4 py-3 text-left font-semibold text-slate-700"
+                className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wide text-slate-700"
               >
                 Priority
               </th>
               <th
                 scope="col"
-                className="px-4 py-3 text-left font-semibold text-slate-700"
+                className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wide text-slate-700"
               >
                 Department
               </th>
               <th
                 scope="col"
-                className="px-4 py-3 text-left font-semibold text-slate-700"
+                className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wide text-slate-700"
               >
                 Creator
               </th>
               <th
                 scope="col"
-                className="px-4 py-3 text-left font-semibold text-slate-700"
+                className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wide text-slate-700"
               >
                 AssignedTo
               </th>
               <th
                 scope="col"
-                className="px-4 py-3 text-left font-semibold text-slate-700"
+                className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wide text-slate-700"
               >
                 Created
               </th>
@@ -62,11 +62,11 @@ export function TicketTable({ tickets }: TicketTableProps) {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {tickets.map((ticket) => (
-              <tr key={ticket.ticketId} className="hover:bg-slate-50">
+              <tr key={ticket.ticketId} className="transition-colors hover:bg-slate-50">
                 <td className="max-w-xs px-4 py-3">
                   <Link
                     to={`/tickets/${ticket.ticketId}`}
-                    className="line-clamp-1 font-medium text-slate-900 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
+                    className="line-clamp-1 font-medium text-slate-700 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
                   >
                     {ticket.title}
                   </Link>
@@ -77,16 +77,16 @@ export function TicketTable({ tickets }: TicketTableProps) {
                 <td className="px-4 py-3">
                   <PriorityBadge priority={ticket.priority} />
                 </td>
-                <td className="px-4 py-3 text-slate-600">
+                <td className="px-4 py-3 text-slate-400">
                   {ticket.department?.departmentName ?? "—"}
                 </td>
-                <td className="px-4 py-3 text-slate-600">
+                <td className="px-4 py-3 text-slate-400">
                   {fullName(ticket.createdBy)}
                 </td>
-                <td className="px-4 py-3 text-slate-600">
+                <td className="px-4 py-3 text-slate-400">
                   {fullName(ticket.assignedTo)}
                 </td>
-                <td className="px-4 py-3 whitespace-nowrap text-slate-500">
+                <td className="px-4 py-3 whitespace-nowrap text-slate-400">
                   {formatDate(ticket.createdAt)}
                 </td>
               </tr>
@@ -101,7 +101,7 @@ export function TicketTable({ tickets }: TicketTableProps) {
           <li key={ticket.ticketId}>
             <Link
               to={`/tickets/${ticket.ticketId}`}
-              className="block rounded-xl border border-slate-200 bg-white p-4 hover:border-slate-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
+              className="shadow-soft block rounded-xl border border-slate-200/80 bg-white p-4 transition-colors hover:border-slate-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
             >
               <p className="line-clamp-2 font-medium text-slate-900">
                 {ticket.title}

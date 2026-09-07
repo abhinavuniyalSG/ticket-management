@@ -27,6 +27,25 @@ Object.defineProperty(SVGElement.prototype, "getBBox", {
   value: () => ({ x: 0, y: 0, width: 100, height: 20 }),
 });
 
+// jsdom doesn't implement window.matchMedia, which useMediaQuery relies on
+// for responsive behavior (e.g. TicketForm's textarea row count). Stub it
+// with a static, always-non-matching MediaQueryList so components using it
+// render instead of throwing.
+Object.defineProperty(window, "matchMedia", {
+  writable: true,
+  configurable: true,
+  value: (query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    addListener: () => {},
+    removeListener: () => {},
+    dispatchEvent: () => false,
+  }),
+});
+
 // recharts also appends a singleton `#recharts_measurement_span` straight to
 // `document.body` (outside React's tree) to measure tick/label text width,
 // and never removes it - so it survives RTL's unmount-based cleanup and

@@ -96,7 +96,7 @@ export function ProfileChangePasswordPage() {
       />
 
       <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-5 sm:p-6">
+        <div className="w-full max-w-md shadow-soft rounded-xl border border-slate-200/80 bg-white p-5 sm:p-6">
           <form onSubmit={(e) => void handleSubmit(e)} noValidate className="flex flex-col gap-5">
             {formError && (
               <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">

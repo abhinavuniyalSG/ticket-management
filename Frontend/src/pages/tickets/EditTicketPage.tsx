@@ -87,7 +87,7 @@ export function EditTicketPage() {
   return (
     <PageContainer>
       <PageHeader title="Edit ticket" description="Update the ticket details." />
-      <div className="max-w-2xl rounded-xl border border-slate-200 bg-white p-5 sm:p-6">
+      <div className="mx-auto max-w-3xl shadow-soft rounded-xl border border-slate-200/80 bg-white p-5 sm:p-8">
         <TicketForm
           mode="edit"
           departments={[]}

@@ -44,7 +44,7 @@ export function ConfirmDialog({
       <button
         type="button"
         aria-label="Close dialog"
-        className="absolute inset-0 bg-slate-900/50"
+        className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"
         onClick={onCancel}
         tabIndex={-1}
       />
@@ -53,7 +53,7 @@ export function ConfirmDialog({
         aria-modal="true"
         aria-labelledby="confirm-dialog-title"
         aria-describedby="confirm-dialog-message"
-        className="relative z-10 flex max-h-[calc(100vh-2rem)] w-full max-w-sm flex-col gap-4 overflow-y-auto rounded-xl bg-white p-6 shadow-xl"
+        className="shadow-elevated relative z-10 flex max-h-[calc(100vh-2rem)] w-full max-w-sm flex-col gap-4 overflow-y-auto rounded-xl bg-white p-6"
       >
         <h2 id="confirm-dialog-title" className="text-base font-semibold text-slate-900">
           {title}

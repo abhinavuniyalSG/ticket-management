@@ -128,11 +128,16 @@ describe("TicketDetailsPage", () => {
     expect(screen.getByRole("status")).toBeInTheDocument();
 
     deferred.resolve({ message: "ok", ticket: makeTicket() });
-    await waitFor(() => expect(screen.queryByRole("status")).not.toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.queryByRole("status")).not.toBeInTheDocument(),
+    );
   });
 
   it("navigates back to the tickets list via the back link", async () => {
-    vi.mocked(ticketService.getById).mockResolvedValue({ message: "ok", ticket: makeTicket() });
+    vi.mocked(ticketService.getById).mockResolvedValue({
+      message: "ok",
+      ticket: makeTicket(),
+    });
     const user = userEvent.setup();
     renderPage(makeUser());
 
@@ -143,7 +148,10 @@ describe("TicketDetailsPage", () => {
   });
 
   it("fetches the ticket by the id route param", async () => {
-    vi.mocked(ticketService.getById).mockResolvedValue({ message: "ok", ticket: makeTicket() });
+    vi.mocked(ticketService.getById).mockResolvedValue({
+      message: "ok",
+      ticket: makeTicket(),
+    });
 
     renderPage(makeUser(), "ticket-42");
 
@@ -152,7 +160,9 @@ describe("TicketDetailsPage", () => {
   });
 
   it("shows 'Ticket not found' for a 404 error", async () => {
-    vi.mocked(ticketService.getById).mockRejectedValue(new ApiError(404, "No such ticket"));
+    vi.mocked(ticketService.getById).mockRejectedValue(
+      new ApiError(404, "No such ticket"),
+    );
 
     renderPage(makeUser());
 
@@ -161,7 +171,9 @@ describe("TicketDetailsPage", () => {
   });
 
   it("shows a generic error with retry for a non-404 failure", async () => {
-    vi.mocked(ticketService.getById).mockRejectedValue(new ApiError(500, "Server exploded"));
+    vi.mocked(ticketService.getById).mockRejectedValue(
+      new ApiError(500, "Server exploded"),
+    );
 
     const user = userEvent.setup();
     renderPage(makeUser());
@@ -184,7 +196,9 @@ describe("TicketDetailsPage", () => {
     await screen.findByText("Printer is on fire");
     expect(screen.getByText("In Progress")).toBeInTheDocument();
     expect(screen.getByText("Urgent")).toBeInTheDocument();
-    expect(screen.getByText("Smoke coming from the third floor printer.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Smoke coming from the third floor printer."),
+    ).toBeInTheDocument();
   });
 
   it("shows an Edit link only when the viewer can edit the ticket content", async () => {
@@ -211,7 +225,9 @@ describe("TicketDetailsPage", () => {
     renderPage(makeUser({ id: "someone-else" }));
 
     await screen.findByText("Printer is on fire");
-    expect(screen.queryByRole("link", { name: "Edit" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: "Edit" }),
+    ).not.toBeInTheDocument();
   });
 
   it("shows a Delete button only when the viewer can delete the ticket", async () => {
@@ -229,13 +245,19 @@ describe("TicketDetailsPage", () => {
   it("hides the Delete button for a viewer who cannot delete the ticket", async () => {
     vi.mocked(ticketService.getById).mockResolvedValue({
       message: "ok",
-      ticket: makeTicket({ createdById: "creator-1", status: "open", assignedToId: "someone" }),
+      ticket: makeTicket({
+        createdById: "creator-1",
+        status: "open",
+        assignedToId: "someone",
+      }),
     });
 
     renderPage(makeUser({ id: "creator-1" }));
 
     await screen.findByText("Printer is on fire");
-    expect(screen.queryByRole("button", { name: "Delete" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Delete" }),
+    ).not.toBeInTheDocument();
   });
 
   it("deletes the ticket after confirming and navigates back to the list", async () => {
@@ -243,7 +265,9 @@ describe("TicketDetailsPage", () => {
       message: "ok",
       ticket: makeTicket({ status: "in_progress", assignedToId: "someone" }),
     });
-    vi.mocked(ticketService.remove).mockResolvedValue({ message: "Ticket deleted" });
+    vi.mocked(ticketService.remove).mockResolvedValue({
+      message: "Ticket deleted",
+    });
 
     const user = userEvent.setup();
     renderPage(makeUser({ role: "super_admin" }));
@@ -252,9 +276,13 @@ describe("TicketDetailsPage", () => {
     await user.click(screen.getByRole("button", { name: "Delete" }));
 
     const dialog = await screen.findByRole("alertdialog");
-    await user.click(within(dialog).getByRole("button", { name: "Delete ticket" }));
+    await user.click(
+      within(dialog).getByRole("button", { name: "Delete ticket" }),
+    );
 
-    await waitFor(() => expect(ticketService.remove).toHaveBeenCalledWith("ticket-1"));
+    await waitFor(() =>
+      expect(ticketService.remove).toHaveBeenCalledWith("ticket-1"),
+    );
     expect(toast.success).toHaveBeenCalledWith("Ticket deleted");
     expect(mockNavigate).toHaveBeenCalledWith("/tickets", { replace: true });
   });
@@ -264,7 +292,9 @@ describe("TicketDetailsPage", () => {
       message: "ok",
       ticket: makeTicket({ status: "in_progress", assignedToId: "someone" }),
     });
-    vi.mocked(ticketService.remove).mockRejectedValue(new ApiError(500, "Delete failed"));
+    vi.mocked(ticketService.remove).mockRejectedValue(
+      new ApiError(500, "Delete failed"),
+    );
 
     const user = userEvent.setup();
     renderPage(makeUser({ role: "super_admin" }));
@@ -273,9 +303,13 @@ describe("TicketDetailsPage", () => {
     await user.click(screen.getByRole("button", { name: "Delete" }));
 
     const dialog = await screen.findByRole("alertdialog");
-    await user.click(within(dialog).getByRole("button", { name: "Delete ticket" }));
+    await user.click(
+      within(dialog).getByRole("button", { name: "Delete ticket" }),
+    );
 
-    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Delete failed"));
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith("Delete failed"),
+    );
     expect(mockNavigate).not.toHaveBeenCalled();
     expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
   });
@@ -297,7 +331,9 @@ describe("TicketDetailsPage", () => {
     await user.click(screen.getByRole("button", { name: "Start progress" }));
 
     await waitFor(() =>
-      expect(ticketService.update).toHaveBeenCalledWith("ticket-1", { status: "in_progress" }),
+      expect(ticketService.update).toHaveBeenCalledWith("ticket-1", {
+        status: "in_progress",
+      }),
     );
     expect(toast.success).toHaveBeenCalledWith("Status updated");
     expect(await screen.findByText("In Progress")).toBeInTheDocument();
@@ -312,7 +348,9 @@ describe("TicketDetailsPage", () => {
     renderPage(makeUser({ id: "bystander" }));
 
     await screen.findByText("Printer is on fire");
-    expect(screen.queryByRole("heading", { name: "Actions" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "Actions" }),
+    ).not.toBeInTheDocument();
   });
 
   it("lets a same-department admin assign the ticket, then unassign it", async () => {
@@ -322,7 +360,14 @@ describe("TicketDetailsPage", () => {
     });
     vi.mocked(userService.list).mockResolvedValue({
       message: "ok",
-      users: [makeUser({ id: "member-1", firstName: "Sam", lastName: "Lee", departmentId: "dept-1" })],
+      users: [
+        makeUser({
+          id: "member-1",
+          firstName: "Sam",
+          lastName: "Lee",
+          departmentId: "dept-1",
+        }),
+      ],
       pagination: makePagination({ totalItems: 1, totalPages: 1 }),
     });
     vi.mocked(ticketService.update).mockResolvedValueOnce({
@@ -334,16 +379,20 @@ describe("TicketDetailsPage", () => {
     renderPage(makeUser({ role: "admin", departmentId: "dept-1" }));
 
     await screen.findByText("Printer is on fire");
-    await screen.findByLabelText("Select assignee");
-    await selectReactOption(user, "Select assignee", "Sam Lee");
+    await screen.findByLabelText("Select assignedTo");
+    await selectReactOption(user, "Select assignedTo", "Sam Lee");
     await user.click(screen.getByRole("button", { name: "Assign" }));
 
     await waitFor(() =>
-      expect(ticketService.update).toHaveBeenCalledWith("ticket-1", { assignedToId: "member-1" }),
+      expect(ticketService.update).toHaveBeenCalledWith("ticket-1", {
+        assignedToId: "member-1",
+      }),
     );
     expect(toast.success).toHaveBeenCalledWith("Ticket assigned");
 
-    const unassignButton = await screen.findByRole("button", { name: "Unassign" });
+    const unassignButton = await screen.findByRole("button", {
+      name: "Unassign",
+    });
     vi.mocked(ticketService.update).mockResolvedValueOnce({
       message: "Ticket unassigned",
       ticket: makeTicket({ departmentId: "dept-1", assignedToId: null }),
@@ -351,7 +400,9 @@ describe("TicketDetailsPage", () => {
     await user.click(unassignButton);
 
     await waitFor(() =>
-      expect(ticketService.update).toHaveBeenCalledWith("ticket-1", { assignedToId: null }),
+      expect(ticketService.update).toHaveBeenCalledWith("ticket-1", {
+        assignedToId: null,
+      }),
     );
     expect(toast.success).toHaveBeenCalledWith("Ticket unassigned");
   });

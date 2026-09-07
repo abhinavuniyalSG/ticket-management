@@ -141,7 +141,7 @@ export function UserDetailsPage() {
           </Badge>
         </div>
 
-        <section className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6">
+        <section className="shadow-soft rounded-xl border border-slate-200/80 bg-white p-5 sm:p-6">
           <h2 className="mb-4 text-sm font-semibold text-slate-900">Details</h2>
           <form onSubmit={(e) => void handleSave(e)} className="flex flex-col gap-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -193,7 +193,7 @@ export function UserDetailsPage() {
           </form>
         </section>
 
-        <section className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6">
+        <section className="shadow-soft rounded-xl border border-slate-200/80 bg-white p-5 sm:p-6">
           <h2 className="mb-4 text-sm font-semibold text-slate-900">Contacts</h2>
           {target.contacts && target.contacts.length > 0 ? (
             <ul className="flex flex-col gap-2">

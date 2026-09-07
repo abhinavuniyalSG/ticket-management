@@ -33,14 +33,18 @@ export function CreateTicketPage() {
     setError(null);
     Promise.all([
       departmentService.list({ limit: 100 }),
-      showAssignee ? userService.list({ limit: 100 }) : Promise.resolve({ message: "", users: [] }),
+      showAssignee
+        ? userService.list({ limit: 100 })
+        : Promise.resolve({ message: "", users: [] }),
     ])
       .then(([deptRes, userRes]) => {
         setDepartments(deptRes.departments);
         setUsers(userRes.users);
       })
       .catch((err: unknown) => {
-        setError(err instanceof ApiError ? err.message : "Unable to load form data.");
+        setError(
+          err instanceof ApiError ? err.message : "Unable to load form data.",
+        );
       })
       .finally(() => setIsLoading(false));
   }, [showAssignee]);
@@ -63,7 +67,8 @@ export function CreateTicketPage() {
       toast.success(res.message);
       navigate(`/tickets/${res.ticket.ticketId}`, { replace: true });
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : "Unable to create the ticket.";
+      const message =
+        err instanceof ApiError ? err.message : "Unable to create the ticket.";
       toast.error(message);
     } finally {
       setIsSubmitting(false);
@@ -72,7 +77,12 @@ export function CreateTicketPage() {
 
   return (
     <PageContainer>
-      <PageHeader title="Create ticket" description="Describe the issue and route it to a department." />
+      <PageHeader
+        title="Create ticket"
+        description="Describe the issue and route it to a department."
+        backTo="/tickets"
+        backLabel="Back to tickets"
+      />
 
       {isLoading && (
         <div className="flex justify-center py-16">
@@ -83,7 +93,7 @@ export function CreateTicketPage() {
       {!isLoading && error && <ErrorState message={error} />}
 
       {!isLoading && !error && (
-        <div className="max-w-2xl rounded-xl border border-slate-200 bg-white p-5 sm:p-6">
+        <div className="mx-auto max-w-xl shadow-soft rounded-xl border border-slate-200/80 bg-white p-5 sm:p-8">
           <TicketForm
             mode="create"
             departments={departments}
