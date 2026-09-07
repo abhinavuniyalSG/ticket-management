@@ -246,7 +246,7 @@ export function TicketsListPage() {
             </FilterField>
             <FilterField label="AssignedTo">
               <Select
-                placeholder="All assignees"
+                placeholder="All assigned to"
                 value={filters.assignedToId}
                 options={userFilterOptions}
                 onChange={(e) => setFilter("assignedToId")(e.target.value)}

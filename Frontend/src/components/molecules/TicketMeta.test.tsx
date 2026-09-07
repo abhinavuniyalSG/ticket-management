@@ -90,7 +90,7 @@ describe("TicketMeta", () => {
 
   it("renders all expected meta labels", () => {
     render(<TicketMeta ticket={makeTicket()} />);
-    ["Department", "Creator", "Assignee", "Created", "Updated", "Closed"].forEach((label) => {
+    ["Department", "Creator", "AssignedTo", "Created", "Updated", "Closed"].forEach((label) => {
       expect(screen.getByText(label)).toBeInTheDocument();
     });
   });

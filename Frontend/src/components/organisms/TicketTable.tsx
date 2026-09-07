@@ -118,7 +118,7 @@ export function TicketTable({ tickets }: TicketTableProps) {
                   </dd>
                 </div>
                 <div className="flex justify-between gap-2">
-                  <dt>Assignee</dt>
+                  <dt>AssignedTo</dt>
                   <dd className="truncate text-right text-slate-700">
                     {fullName(ticket.assignedTo)}
                   </dd>

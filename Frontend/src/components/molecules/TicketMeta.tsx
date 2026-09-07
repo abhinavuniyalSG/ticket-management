@@ -10,7 +10,7 @@ export function TicketMeta({ ticket, className = "" }: TicketMetaProps) {
   const rows: Array<[string, string]> = [
     ["Department", ticket.department?.departmentName ?? "—"],
     ["Creator", fullName(ticket.createdBy)],
-    ["Assignee", fullName(ticket.assignedTo)],
+    ["AssignedTo", fullName(ticket.assignedTo)],
     ["Created", formatDate(ticket.createdAt)],
     ["Updated", formatDate(ticket.updatedAt)],
     ["Closed", formatDate(ticket.closedAt)],

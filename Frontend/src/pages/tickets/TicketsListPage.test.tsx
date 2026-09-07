@@ -245,7 +245,7 @@ describe("TicketsListPage", () => {
     const creatorField = screen.getByLabelText("Creator") as HTMLSelectElement;
 
     expect(within(assignedToField).getAllByRole("option").map((o) => o.textContent)).toEqual([
-      "All assignees",
+      "All assigned to",
       "Jane Doe",
     ]);
     expect(within(creatorField).getAllByRole("option").map((o) => o.textContent)).toEqual([
