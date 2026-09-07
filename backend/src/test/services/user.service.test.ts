@@ -550,6 +550,42 @@ describe("deleteUser", () => {
     ).rejects.toMatchObject({ statusCode: 403 });
   });
 
+  it("lets an admin delete a user in a department they manage, even if it isn't their home department", async () => {
+    vi.mocked(UserRepository.findById)
+      .mockResolvedValueOnce(
+        makeUser({
+          id: "target-1",
+          departmentId: DEPT_B,
+          department: { managedBy: "admin-1" },
+        }),
+      )
+      .mockResolvedValueOnce(makeUser({ id: "admin-1", departmentId: DEPT_A }));
+    vi.mocked(UserRepository.deleteUser).mockResolvedValue(true);
+
+    const result = await UserService.deleteUser(
+      "target-1",
+      requester({ id: "admin-1", role: roleEnum.admin }),
+    );
+
+    expect(result.message).toBe("User deleted successfully");
+  });
+
+  it("blocks an admin who manages a different department than the target's", async () => {
+    vi.mocked(UserRepository.findById)
+      .mockResolvedValueOnce(
+        makeUser({
+          id: "target-1",
+          departmentId: DEPT_B,
+          department: { managedBy: "someone-else" },
+        }),
+      )
+      .mockResolvedValueOnce(makeUser({ id: "admin-1", departmentId: DEPT_A }));
+
+    await expect(
+      UserService.deleteUser("target-1", requester({ id: "admin-1", role: roleEnum.admin })),
+    ).rejects.toMatchObject({ statusCode: 403 });
+  });
+
   it("lets a regular user delete their own account", async () => {
     vi.mocked(UserRepository.findById).mockResolvedValue(makeUser({ id: "user-1" }));
     vi.mocked(UserRepository.deleteUser).mockResolvedValue(true);

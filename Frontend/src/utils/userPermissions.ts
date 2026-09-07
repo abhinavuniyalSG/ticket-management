@@ -4,7 +4,9 @@ export function canDeleteUser(actor: User, target: User): boolean {
   if (actor.role === "super_admin") return true;
   if (actor.role === "admin") {
     if (actor.id === target.id) return true;
-    return Boolean(actor.departmentId) && actor.departmentId === target.departmentId;
+    const isSameDept = Boolean(actor.departmentId) && actor.departmentId === target.departmentId;
+    const managesTargetDepartment = target.department?.managedBy === actor.id;
+    return isSameDept || managesTargetDepartment;
   }
   return actor.id === target.id;
 }

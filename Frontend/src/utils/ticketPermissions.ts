@@ -17,6 +17,11 @@ function getRoleFlags(ticket: Ticket, user: User): RoleFlags {
   };
 }
 
+/** True when `user` is an admin set as the manager of the ticket's department (Department.managedBy). */
+function managesTicketDepartment(ticket: Ticket, user: User): boolean {
+  return user.role === "admin" && ticket.department.managedBy === user.id;
+}
+
 const ALL_STATUSES: TicketStatus[] = [
   "open",
   "assigned",
@@ -33,6 +38,9 @@ const ALL_STATUSES: TicketStatus[] = [
  */
 export function getAllowedStatusTransitions(ticket: Ticket, user: User): TicketStatus[] {
   const { isCreator, isAssignee, isSameDeptAdmin, isSuperAdmin } = getRoleFlags(ticket, user);
+  // A department manager gets the same status-transition rights as a
+  // same-department admin.
+  const isDeptAdmin = isSameDeptAdmin || managesTicketDepartment(ticket, user);
   const current = ticket.status;
 
   if (isSuperAdmin) {
@@ -43,14 +51,12 @@ export function getAllowedStatusTransitions(ticket: Ticket, user: User): TicketS
     });
   }
 
-  if (isSameDeptAdmin) {
-    return ALL_STATUSES.filter((status) => {
-      if (status === current) return false;
-      if (status === "closed" && current !== "reviewed") return false;
-      if (current === "open" && status !== "open") return false;
-      if (status !== "open" && !ticket.assignedToId) return false;
-      return true;
-    });
+  // A department admin (own department or one they manage) may only close a
+  // ticket once it has been reviewed. Every other status change for them -
+  // including moving a ticket out of 'open' - happens through the dedicated
+  // assign/unassign action instead, not a manual status change.
+  if (isDeptAdmin) {
+    return current === "reviewed" ? ["closed"] : [];
   }
 
   const allowed = new Set<TicketStatus>();
@@ -71,10 +77,14 @@ export function canEditTicketContent(ticket: Ticket, user: User): boolean {
   return ticket.createdById === user.id && ticket.status === "open";
 }
 
-/** Department admins (own department) and super admins may assign/unassign. */
+/**
+ * Department admins (own department, or a department they've been set as
+ * the manager of via Department.managedBy) and super admins may
+ * assign/unassign.
+ */
 export function canManageAssignment(ticket: Ticket, user: User): boolean {
   const { isSameDeptAdmin, isSuperAdmin } = getRoleFlags(ticket, user);
-  return isSameDeptAdmin || isSuperAdmin;
+  return isSameDeptAdmin || managesTicketDepartment(ticket, user) || isSuperAdmin;
 }
 
 export function canDeleteTicket(ticket: Ticket, user: User): boolean {

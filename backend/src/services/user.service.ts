@@ -326,10 +326,17 @@ export class UserService {
       }
 
       const adminUser = await UserRepository.findById(requester.id);
-      if (
-        adminUser?.departmentId &&
-        adminUser.departmentId === targetUser.departmentId
-      ) {
+      const isSameDept =
+        Boolean(adminUser?.departmentId) &&
+        adminUser?.departmentId === targetUser.departmentId;
+
+      // An admin set as a department's manager (Department.managedBy) may
+      // also delete users in that department, even if it isn't their own
+      // home department - mirrors the same scoping used for tickets.
+      const managesTargetDepartment =
+        targetUser.department?.managedBy === requester.id;
+
+      if (isSameDept || managesTargetDepartment) {
         await UserRepository.deleteUser(id);
         logger.info("User deleted", { userId: id, deletedBy: requester.id });
         return { message: "User deleted successfully" };

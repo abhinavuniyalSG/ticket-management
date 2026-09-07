@@ -103,20 +103,26 @@ export class TicketService {
   ) {
     if (roles.isSuperAdmin) return;
 
+    // A department admin (their own department, or one they manage) may only
+    // manually close a ticket once it has been reviewed. Every other status
+    // change for them - including moving a ticket out of 'open' - happens
+    // through the dedicated assign/unassign action instead, not a manual
+    // status update, so no other manual transition is permitted here.
     if (roles.isSameDeptAdmin) {
-      if (target === TicketStatus.closed && current !== TicketStatus.reviewed) {
-        throw new HttpError(
-          400,
-          "Tickets can only be closed from the 'reviewed' status",
-        );
+      if (target === TicketStatus.closed) {
+        if (current !== TicketStatus.reviewed) {
+          throw new HttpError(
+            400,
+            "Tickets can only be closed from the 'reviewed' status",
+          );
+        }
+        return;
       }
-      if (current === TicketStatus.open && target !== TicketStatus.open) {
-        throw new HttpError(
-          400,
-          "An open ticket can only become assigned when an assignee is assigned it cant be changes manually",
-        );
-      }
-      return;
+
+      throw new HttpError(
+        403,
+        "Forbidden: a department admin can only close a ticket once it has been reviewed; other status changes happen through assigning/unassigning the ticket or the assignee/creator workflow",
+      );
     }
 
     let allowed = false;
@@ -371,6 +377,15 @@ export class TicketService {
       requester.role === roleEnum.admin &&
       requesterUser.departmentId === ticket.departmentId;
 
+    // An admin set as a department's manager (Department.managedBy) gets the
+    // same assignment and status-transition rights (e.g. closing a reviewed
+    // ticket) in that department even if it isn't their own home department -
+    // mirrors the scoping already used for viewing and listing tickets (see
+    // getAdminScopedDepartmentIds).
+    const managesTicketDepartment =
+      requester.role === roleEnum.admin &&
+      ticket.department?.managedBy === requester.id;
+
     const isSuperAdmin = requester.role === roleEnum.superAdmin;
 
     let targetStatus = ticket.status;
@@ -416,7 +431,7 @@ export class TicketService {
     const isAssignmentUpdating = input.assignedToId !== undefined;
 
     if (isAssignmentUpdating) {
-      if (!isSameDeptAdmin && !isSuperAdmin) {
+      if (!isSameDeptAdmin && !managesTicketDepartment && !isSuperAdmin) {
         throw new HttpError(
           403,
           "Forbidden: Only a department admin or super admin can assign or unassign tickets",
@@ -480,7 +495,10 @@ export class TicketService {
         this.validateStatusTransition(ticket.status, requestedStatus, {
           isCreator,
           isAssignee,
-          isSameDeptAdmin,
+          // A department manager gets the same status-transition rights
+          // (including closing a reviewed ticket) as a same-department
+          // admin - see managesTicketDepartment above.
+          isSameDeptAdmin: isSameDeptAdmin || managesTicketDepartment,
           isSuperAdmin,
         });
 

@@ -87,6 +87,38 @@ describe("canManageAssignment", () => {
     expect(canManageAssignment(ticket, user)).toBe(false);
   });
 
+  it("allows an admin who manages the ticket's department even if it isn't their home department", () => {
+    const user = makeUser({ id: "manager-1", role: "admin", departmentId: "dept-2" });
+    const ticket = makeTicket({
+      departmentId: "dept-1",
+      department: {
+        departmentId: "dept-1",
+        departmentName: "Facilities",
+        departmentEmail: "facilities@example.com",
+        managedBy: "manager-1",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      },
+    });
+    expect(canManageAssignment(ticket, user)).toBe(true);
+  });
+
+  it("blocks an admin who manages a different department than the ticket's", () => {
+    const user = makeUser({ id: "manager-1", role: "admin", departmentId: "dept-2" });
+    const ticket = makeTicket({
+      departmentId: "dept-1",
+      department: {
+        departmentId: "dept-1",
+        departmentName: "Facilities",
+        departmentEmail: "facilities@example.com",
+        managedBy: "someone-else",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      },
+    });
+    expect(canManageAssignment(ticket, user)).toBe(false);
+  });
+
   it("always allows a super admin", () => {
     const user = makeUser({ role: "super_admin", departmentId: "dept-2" });
     const ticket = makeTicket({ departmentId: "dept-1" });
@@ -177,7 +209,71 @@ describe("getAllowedStatusTransitions", () => {
       status: "reviewed",
       assignedToId: "assignee-1",
     });
+    expect(getAllowedStatusTransitions(ticket, user)).toEqual(["closed"]);
+  });
+
+  it("gives a same-department admin no manual transitions at all when the ticket isn't reviewed", () => {
+    const user = makeUser({ role: "admin", departmentId: "dept-1" });
+    const ticket = makeTicket({
+      departmentId: "dept-1",
+      status: "assigned",
+      assignedToId: "assignee-1",
+    });
+    expect(getAllowedStatusTransitions(ticket, user)).toEqual([]);
+  });
+
+  it("gives an admin who manages the ticket's department no manual transitions when the ticket isn't reviewed", () => {
+    const user = makeUser({ id: "manager-1", role: "admin", departmentId: "dept-2" });
+    const ticket = makeTicket({
+      departmentId: "dept-1",
+      status: "completed",
+      assignedToId: "assignee-1",
+      department: {
+        departmentId: "dept-1",
+        departmentName: "Facilities",
+        departmentEmail: "facilities@example.com",
+        managedBy: "manager-1",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      },
+    });
+    expect(getAllowedStatusTransitions(ticket, user)).toEqual([]);
+  });
+
+  it("lets an admin close a reviewed ticket in a department they manage, even outside their home department", () => {
+    const user = makeUser({ id: "manager-1", role: "admin", departmentId: "dept-2" });
+    const ticket = makeTicket({
+      departmentId: "dept-1",
+      status: "reviewed",
+      assignedToId: "assignee-1",
+      department: {
+        departmentId: "dept-1",
+        departmentName: "Facilities",
+        departmentEmail: "facilities@example.com",
+        managedBy: "manager-1",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      },
+    });
     expect(getAllowedStatusTransitions(ticket, user)).toContain("closed");
+  });
+
+  it("does not let an admin close a reviewed ticket in a department they neither belong to nor manage", () => {
+    const user = makeUser({ id: "bystander-admin", role: "admin", departmentId: "dept-2" });
+    const ticket = makeTicket({
+      departmentId: "dept-1",
+      status: "reviewed",
+      assignedToId: "assignee-1",
+      department: {
+        departmentId: "dept-1",
+        departmentName: "Facilities",
+        departmentEmail: "facilities@example.com",
+        managedBy: "someone-else",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      },
+    });
+    expect(getAllowedStatusTransitions(ticket, user)).not.toContain("closed");
   });
 
   it("never offers a super admin a non-open status while the ticket is unassigned", () => {

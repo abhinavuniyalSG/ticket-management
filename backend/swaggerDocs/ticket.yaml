@@ -7,11 +7,11 @@ tags:
       ### Roles & Visibility
       | Action | user | admin | super_admin |
       |---|---|---|---|
-      | Get all tickets | Own created/assigned | Own created/assigned + dept tickets | All tickets |
-      | Get ticket details | Own created/assigned | Own created/assigned + dept tickets | Any ticket |
-      | Create ticket | ✓ (cannot assign) | ✓ (can assign within dept) | ✓ (can assign anywhere) |
+      | Get all tickets | Own created/assigned | Own created/assigned + dept tickets (own dept **and** any dept they manage via `Department.managedBy`) | All tickets |
+      | Get ticket details | Own created/assigned | Own created/assigned + dept tickets (own dept **and** any dept they manage via `Department.managedBy`) | Any ticket |
+      | Create ticket | ✓ (cannot assign) | ✓ (can assign within own dept) | ✓ (can assign anywhere) |
       | Update ticket | See rules below | See rules below | See rules below |
-      | Delete ticket | Own open+unassigned | Own + dept open+unassigned | Any ticket |
+      | Delete ticket | Own open+unassigned | Own + own-dept open+unassigned (does **not** currently extend to managed depts) | Any ticket |
 
       ### Status State Machine
       Tickets flow through these statuses:
@@ -27,7 +27,7 @@ tags:
       - **Creator** can update title/description/priority only when ticket is `open`.
       - **Creator** can change status from `completed` → `open` or `completed` → `reviewed`.
       - **Assignee** can only transition: `assigned` → `in_progress`, `in_progress` → `completed`, `completed` → `in_progress`. **Cannot** go back `in_progress` → `assigned`.
-      - **Admin (same dept)** can manage assignments and close tickets (only from `reviewed` status).
+      - **Admin (own dept, or a dept they manage via `Department.managedBy`)** can assign/unassign tickets in that department, and can **only** manually close a ticket once it's `reviewed` - no other manual status change is permitted for them.
       - **super_admin** can perform any status transition, but the `open` rule still clears the assignee.
       - Only the **creator** can change `title`, `description`, and `priority`.
 
@@ -280,22 +280,24 @@ paths:
         |---|---|
         | **creator** | `completed` → `open`, `completed` → `reviewed` |
         | **assignee** | `assigned` → `in_progress`, `in_progress` → `completed`, `completed` → `in_progress` |
-        | **admin (same dept)** | Any transition, except closing requires `reviewed` → `closed`, and a **manual** (non-assignment) move away from `open` is rejected (see assignment rules below) |
+        | **admin (own dept, or a dept they manage)** | Only `reviewed` → `closed`. Every other status change - including moving a ticket out of `open` - is rejected; those happen through the assignment flow below instead. |
         | **super_admin** | Any transition |
 
         > ⚠️ Setting status to `open` **always forces `assignedToId` to `null`**, regardless of role.
 
         #### Assignment (assignedToId)
-        - Only **admin (same dept)** or **super_admin** can set or unset `assignedToId`.
+        - Only an **admin** for the ticket's department - either their own home department, or one they've
+          been set as the manager of via `Department.managedBy` - or **super_admin** can set or unset
+          `assignedToId`.
         - The assignee must belong to the ticket's department.
         - Setting `assignedToId` to a non-null value **always** forces status to `assigned`, regardless of
           the ticket's current status (e.g. reassigning a `reviewed` or `in_progress` ticket also resets it
           to `assigned`) — not only for previously-`open` tickets.
         - Setting `assignedToId` to `null` **always** forces status back to `open`, regardless of the
           ticket's current status beforehand (not only from `assigned`).
-        - This is also why an **admin (same dept)** cannot manually change status away from `open` without
-          also assigning the ticket in the same request: an unassigned `open` ticket can only leave `open`
-          via the assignment flow above.
+        - An **admin** can never manually move a ticket's status between two arbitrary states (e.g. `assigned`
+          → `completed`, or out of `open`): the only ways they can change status are (a) the assignment flow
+          above, or (b) `reviewed` → `closed`.
       security:
         - bearerAuth: []
       parameters:
@@ -433,7 +435,8 @@ components:
           format: uuid
           nullable: true
           description: >
-            User to assign the ticket to. Only `admin` (same dept) and `super_admin` may set this.
+            User to assign the ticket to. Only an `admin` for the ticket's department (own dept, or one
+            they manage via `Department.managedBy`) and `super_admin` may set this.
           example: null
 
     UpdateTicketRequest:

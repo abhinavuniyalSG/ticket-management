@@ -32,7 +32,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           </span>
           <span className="text-base font-semibold tracking-tight text-slate-900">TicketDesk</span>
         </header>
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        <main className="flex flex-1 flex-col overflow-y-auto">{children}</main>
       </div>
     </div>
   );

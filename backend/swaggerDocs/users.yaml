@@ -10,7 +10,7 @@ tags:
       | Get all users | ✗ | own dept | ✓ all |
       | Get user by ID | own only | own dept + self | ✓ any |
       | Update user | own (firstName/lastName/contacts only; no password field exists anywhere in this API) | own + dept users | ✓ any |
-      | Delete user | own only | own dept + self | ✓ any |
+      | Delete user | own only | own dept (incl. depts they manage via `Department.managedBy`) + self | ✓ any |
       | Add contact | own only | own only | own only |
       | Update contact | own only | own only | own only |
       | Delete contact | own only | own only | own only |
@@ -183,7 +183,8 @@ paths:
       summary: Delete a user
       description: >
         - **user**: can only delete their own account.
-        - **admin**: can delete their own account and accounts of users in the same department.
+        - **admin**: can delete their own account and accounts of users in their own department, or a
+          department they've been set as the manager of (`Department.managedBy`).
         - **super_admin**: can delete any account.
       security:
         - bearerAuth: []

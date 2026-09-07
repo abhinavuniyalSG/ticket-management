@@ -46,6 +46,40 @@ describe("canDeleteUser", () => {
     expect(canDeleteUser(actor, target)).toBe(false);
   });
 
+  it("lets an admin delete someone in a department they manage, even if it isn't their home department", () => {
+    const actor = makeUser({ id: "manager-1", role: "admin", departmentId: "dept-2" });
+    const target = makeUser({
+      id: "other",
+      departmentId: "dept-1",
+      department: {
+        departmentId: "dept-1",
+        departmentName: "Facilities",
+        departmentEmail: "facilities@example.com",
+        managedBy: "manager-1",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      },
+    });
+    expect(canDeleteUser(actor, target)).toBe(true);
+  });
+
+  it("blocks an admin who manages a different department than the target's", () => {
+    const actor = makeUser({ id: "manager-1", role: "admin", departmentId: "dept-2" });
+    const target = makeUser({
+      id: "other",
+      departmentId: "dept-1",
+      department: {
+        departmentId: "dept-1",
+        departmentName: "Facilities",
+        departmentEmail: "facilities@example.com",
+        managedBy: "someone-else",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      },
+    });
+    expect(canDeleteUser(actor, target)).toBe(false);
+  });
+
   it("blocks an admin with no department from deleting anyone else", () => {
     const actor = makeUser({ role: "admin", departmentId: null });
     const target = makeUser({ id: "other", departmentId: null });

@@ -31,7 +31,10 @@ export function DepartmentDetailsPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [managedBy, setManagedBy] = useState("");
-  const [formErrors, setFormErrors] = useState<{ name?: string; email?: string }>({});
+  const [formErrors, setFormErrors] = useState<{
+    name?: string;
+    email?: string;
+  }>({});
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -40,16 +43,27 @@ export function DepartmentDetailsPage() {
     if (!id) return;
     setIsLoading(true);
     setError(null);
-    Promise.all([departmentService.getById(id), userService.list({ limit: 100 })])
+    Promise.all([
+      departmentService.getById(id),
+      userService.list({ limit: 100 }),
+    ])
       .then(([deptRes, userRes]) => {
         setDepartment(deptRes.department);
         setName(deptRes.department.departmentName);
         setEmail(deptRes.department.departmentEmail);
         setManagedBy(deptRes.department.managedBy ?? "");
-        setManagers(userRes.users.filter((u) => u.role === "admin" || u.role === "super_admin"));
+        setManagers(
+          userRes.users.filter(
+            (u) => u.role === "admin" || u.role === "super_admin",
+          ),
+        );
       })
       .catch((err: unknown) => {
-        setError(err instanceof ApiError ? err.message : "Unable to load this department.");
+        setError(
+          err instanceof ApiError
+            ? err.message
+            : "Unable to load this department.",
+        );
       })
       .finally(() => setIsLoading(false));
   }, [id]);
@@ -77,7 +91,8 @@ export function DepartmentDetailsPage() {
   const handleSave = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const nextErrors: typeof formErrors = {};
-    if (name.trim().length < 2) nextErrors.name = "Must be at least 2 characters";
+    if (name.trim().length < 2)
+      nextErrors.name = "Must be at least 2 characters";
     if (!isValidEmail(email)) nextErrors.email = "Enter a valid email address";
     setFormErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
@@ -92,7 +107,11 @@ export function DepartmentDetailsPage() {
       setDepartment(res.department);
       toast.success(res.message);
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Unable to update this department.");
+      toast.error(
+        err instanceof ApiError
+          ? err.message
+          : "Unable to update this department.",
+      );
     } finally {
       setIsSaving(false);
     }
@@ -105,7 +124,11 @@ export function DepartmentDetailsPage() {
       toast.success(res.message);
       navigate("/departments", { replace: true });
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Unable to delete this department.");
+      toast.error(
+        err instanceof ApiError
+          ? err.message
+          : "Unable to delete this department.",
+      );
       setIsDeleting(false);
       setIsDeleteOpen(false);
     }
@@ -126,8 +149,16 @@ export function DepartmentDetailsPage() {
       />
 
       <section className="max-w-2xl shadow-soft rounded-xl border border-slate-200/80 bg-white p-5 sm:p-6">
-        <form onSubmit={(e) => void handleSave(e)} className="flex flex-col gap-4">
-          <FormField label="Department name" htmlFor="dept-detail-name" error={formErrors.name} required>
+        <form
+          onSubmit={(e) => void handleSave(e)}
+          className="flex flex-col gap-4"
+        >
+          <FormField
+            label="Department name"
+            htmlFor="dept-detail-name"
+            error={formErrors.name}
+            required
+          >
             <Input
               id="dept-detail-name"
               value={name}
@@ -137,7 +168,12 @@ export function DepartmentDetailsPage() {
               disabled={isSaving}
             />
           </FormField>
-          <FormField label="Department email" htmlFor="dept-detail-email" error={formErrors.email} required>
+          <FormField
+            label="Department email"
+            htmlFor="dept-detail-email"
+            error={formErrors.email}
+            required
+          >
             <Input
               id="dept-detail-email"
               type="email"
@@ -147,12 +183,19 @@ export function DepartmentDetailsPage() {
               disabled={isSaving}
             />
           </FormField>
-          <FormField label="Manager" htmlFor="dept-detail-manager" hint="Must be an admin or super admin.">
+          <FormField
+            label="Manager"
+            htmlFor="dept-detail-manager"
+            hint="Must be an admin or super admin."
+          >
             <Select
               id="dept-detail-manager"
               value={managedBy}
               placeholder="No manager"
-              options={managers.map((m) => ({ value: m.id, label: fullName(m) }))}
+              options={managers.map((m) => ({
+                value: m.id,
+                label: fullName(m),
+              }))}
               onChange={(e) => setManagedBy(e.target.value)}
               disabled={isSaving}
             />
