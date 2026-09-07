@@ -16,7 +16,6 @@ export enum DashboardOverviewPeriod {
   month = "month",
   year = "year",
   all = "all",
-  custom = "custom",
 }
 
 export interface DashboardQueryInput {
@@ -27,9 +26,6 @@ export interface DashboardQueryInput {
 export interface DashboardOverviewQueryInput {
   departmentId?: string;
   period?: DashboardOverviewPeriod;
-  year?: number;
-  month?: number;
-  day?: number;
 }
 
 interface CreatedAtRange {
@@ -73,35 +69,6 @@ function startOfThisYear(): Date {
   return new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
 }
 
-/**
- * A custom period is as specific as the caller supplies: a single day (year +
- * month + day), a whole month (year + month), or a whole year (year only).
- */
-function getCustomPeriodRange(
-  year: number,
-  month?: number,
-  day?: number,
-): Required<CreatedAtRange> {
-  if (month === undefined) {
-    return {
-      createdFrom: new Date(Date.UTC(year, 0, 1)),
-      createdTo: new Date(Date.UTC(year + 1, 0, 1)),
-    };
-  }
-
-  if (day === undefined) {
-    return {
-      createdFrom: new Date(Date.UTC(year, month - 1, 1)),
-      createdTo: new Date(Date.UTC(year, month, 1)),
-    };
-  }
-
-  return {
-    createdFrom: new Date(Date.UTC(year, month - 1, day)),
-    createdTo: new Date(Date.UTC(year, month - 1, day + 1)),
-  };
-}
-
 function getCreatedAtRangeForOverviewPeriod(
   query: DashboardOverviewQueryInput,
 ): CreatedAtRange {
@@ -118,11 +85,6 @@ function getCreatedAtRangeForOverviewPeriod(
       return { createdFrom: startOfThisYear() };
     case DashboardOverviewPeriod.all:
       return {};
-    case DashboardOverviewPeriod.custom:
-      if (query.year === undefined) {
-        throw new HttpError(400, "year is required when period is 'custom'");
-      }
-      return getCustomPeriodRange(query.year, query.month, query.day);
   }
 }
 

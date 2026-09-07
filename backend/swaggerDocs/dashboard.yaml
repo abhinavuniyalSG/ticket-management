@@ -156,9 +156,6 @@ paths:
         - `month` - created this calendar month.
         - `year` - created this calendar year.
         - `all` - every ticket, regardless of when it was created.
-        - `custom` - an explicit historical period, given via `year` (required), and optionally `month`
-          (1-12) and `day` (1-31, requires `month`): `year` alone scopes to that whole year, `year` +
-          `month` to that whole month, and all three to that single day.
       security:
         - bearerAuth: []
       parameters:
@@ -179,31 +176,8 @@ paths:
           description: Which tickets are counted, by `createdAt`. Defaults to `day`.
           schema:
             type: string
-            enum: [day, week, month, year, all, custom]
+            enum: [day, week, month, year, all]
             default: day
-        - name: year
-          in: query
-          required: false
-          description: Required when `period=custom`. The calendar year, e.g. `2024`.
-          schema:
-            type: integer
-            example: 2024
-        - name: month
-          in: query
-          required: false
-          description: Only used when `period=custom`. 1-12. Requires `year`.
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 12
-        - name: day
-          in: query
-          required: false
-          description: Only used when `period=custom`. 1-31. Requires `year` and `month`.
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 31
       responses:
         "200":
           description: Ticket counts for the resolved department/period
@@ -223,17 +197,7 @@ paths:
                 completedTickets: 17
                 closedTickets: 339
         "400":
-          description: >
-            Validation error, e.g. an invalid `period`, `year`/`month`/`day` supplied without
-            `period=custom`, or `period=custom` missing `year`.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-              example:
-                message: "Validation failed"
-                errors:
-                  - "year is required when period is 'custom'"
+          $ref: "#/components/responses/ValidationError"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -300,7 +264,7 @@ components:
             `departmentId` (totals across every department).
         period:
           type: string
-          enum: [day, week, month, year, all, custom]
+          enum: [day, week, month, year, all]
         totalTickets:
           type: integer
           minimum: 0

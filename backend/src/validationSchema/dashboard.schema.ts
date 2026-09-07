@@ -37,48 +37,10 @@ export class DashboardSchema {
             DashboardOverviewPeriod.month,
             DashboardOverviewPeriod.year,
             DashboardOverviewPeriod.all,
-            DashboardOverviewPeriod.custom,
           ],
-          { error: "Period must be one of day, week, month, year, all, custom" },
+          { error: "Period must be one of day, week, month, year, all" },
         )
         .default(DashboardOverviewPeriod.day),
-      year: z.coerce
-        .number({ error: "Year must be a number" })
-        .int("Year must be a whole number")
-        .min(1000, "Year must be a 4-digit year")
-        .max(9999, "Year must be a 4-digit year")
-        .optional(),
-      month: z.coerce
-        .number({ error: "Month must be a number" })
-        .int("Month must be a whole number")
-        .min(1, "Month must be between 1 and 12")
-        .max(12, "Month must be between 1 and 12")
-        .optional(),
-      day: z.coerce
-        .number({ error: "Day must be a number" })
-        .int("Day must be a whole number")
-        .min(1, "Day must be between 1 and 31")
-        .max(31, "Day must be between 1 and 31")
-        .optional(),
     })
-    .strict()
-    .refine(
-      (data) =>
-        data.period === DashboardOverviewPeriod.custom ||
-        (data.year === undefined &&
-          data.month === undefined &&
-          data.day === undefined),
-      {
-        message: "year, month, and day are only allowed when period is 'custom'",
-      },
-    )
-    .refine(
-      (data) =>
-        data.period !== DashboardOverviewPeriod.custom ||
-        data.year !== undefined,
-      { message: "year is required when period is 'custom'" },
-    )
-    .refine((data) => data.day === undefined || data.month !== undefined, {
-      message: "day requires month to also be provided",
-    });
+    .strict();
 }
