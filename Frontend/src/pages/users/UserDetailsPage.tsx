@@ -43,7 +43,7 @@ export function UserDetailsPage() {
     if (!id) return;
     setIsLoading(true);
     setError(null);
-    Promise.all([userService.getById(id), departmentService.list({ limit: 100 })])
+    Promise.all([userService.getById(id), departmentService.list()])
       .then(([userRes, deptRes]) => {
         setTarget(userRes.user);
         setFirstName(userRes.user.firstName);

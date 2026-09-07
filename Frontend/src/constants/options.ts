@@ -23,6 +23,13 @@ export const USER_ROLES: UserRole[] = ["user", "admin", "super_admin"];
 
 export const CONTACT_TYPES: ContactType[] = ["phone", "whatsapp", "linkedin"];
 
+/**
+ * The list pages' page size. The backend no longer applies a default limit
+ * itself (omitting `limit` now means "return everything, unpaginated"), so
+ * paginated views must send this explicitly to keep working as pages.
+ */
+export const DEFAULT_PAGE_SIZE = 20;
+
 export const STATUS_LABELS: Record<TicketStatus, string> = {
   open: "Open",
   assigned: "Assigned",

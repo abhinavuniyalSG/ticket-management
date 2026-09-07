@@ -1395,7 +1395,7 @@ describe("getAllTickets", () => {
     );
   });
 
-  it("defaults page/limit and returns pagination metadata", async () => {
+  it("defaults page to 1 and, with no limit given, returns every ticket in one unpaginated batch", async () => {
     vi.mocked(TicketRepository.findAll).mockResolvedValue({ data: [], total: 45 });
 
     const result = await TicketService.getAllTickets(
@@ -1404,14 +1404,14 @@ describe("getAllTickets", () => {
     );
 
     expect(TicketRepository.findAll).toHaveBeenCalledWith(
-      expect.objectContaining({ page: 1, limit: 20 }),
+      expect.objectContaining({ page: 1, limit: undefined }),
     );
     expect(result.pagination).toEqual({
       page: 1,
-      limit: 20,
+      limit: 45,
       totalItems: 45,
-      totalPages: 3,
-      hasNextPage: true,
+      totalPages: 1,
+      hasNextPage: false,
       hasPrevPage: false,
     });
   });

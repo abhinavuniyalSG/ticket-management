@@ -163,6 +163,7 @@ describe("TicketsListPage", () => {
       sortBy: "createdAt",
       sortOrder: "desc",
       page: 1,
+      limit: 20,
     });
     expect(departmentService.list).toHaveBeenCalledTimes(1);
     expect(userService.list).not.toHaveBeenCalled();

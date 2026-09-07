@@ -78,7 +78,7 @@ export function DashboardPage() {
   useEffect(() => {
     if (!canFilterByDepartment) return;
     departmentService
-      .list({ limit: 100 })
+      .list()
       .then((res) => setDepartments(res.departments))
       .catch(() => undefined);
   }, [canFilterByDepartment]);

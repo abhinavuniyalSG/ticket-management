@@ -16,6 +16,7 @@ import type { DepartmentQueryParams } from "../../services/departmentService";
 import { useDebouncedValue } from "../../hooks/useDebouncedValue";
 import { ApiError, type PaginationMeta } from "../../types/api";
 import type { Department } from "../../types/department";
+import { DEFAULT_PAGE_SIZE } from "../../constants/options";
 
 export function DepartmentsListPage() {
   const [departments, setDepartments] = useState<Department[] | null>(null);
@@ -41,7 +42,7 @@ export function DepartmentsListPage() {
   }, [filterQuery]);
 
   const query = useMemo<DepartmentQueryParams>(
-    () => ({ ...filterQuery, page }),
+    () => ({ ...filterQuery, page, limit: DEFAULT_PAGE_SIZE }),
     [filterQuery, page],
   );
 

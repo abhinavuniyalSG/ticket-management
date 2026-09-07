@@ -27,7 +27,7 @@ export function CreateDepartmentPage() {
 
   useEffect(() => {
     userService
-      .list({ limit: 100 })
+      .list()
       .then((res) =>
         setManagers(
           res.users.filter(

@@ -108,6 +108,7 @@ describe("UsersListPage", () => {
       role: undefined,
       department: undefined,
       page: 1,
+      limit: 20,
     });
   });
 
@@ -168,6 +169,7 @@ describe("UsersListPage", () => {
           role: undefined,
           department: undefined,
           page: 1,
+          limit: 20,
         }),
       { timeout: 2000 },
     );
@@ -191,6 +193,7 @@ describe("UsersListPage", () => {
         role: "admin",
         department: undefined,
         page: 1,
+        limit: 20,
       }),
     );
   });
@@ -231,6 +234,7 @@ describe("UsersListPage", () => {
         role: undefined,
         department: "Support",
         page: 1,
+        limit: 20,
       }),
     );
   });
@@ -264,6 +268,7 @@ describe("UsersListPage", () => {
         role: undefined,
         department: undefined,
         page: 1,
+        limit: 20,
       }),
     );
     expect(clearButton).toBeDisabled();

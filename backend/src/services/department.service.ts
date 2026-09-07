@@ -7,7 +7,6 @@ import { logger } from "../core/logger.js";
 import type { RequesterInfo } from "./user.service.js";
 import {
   buildPaginationMeta,
-  DEFAULT_LIMIT,
   DEFAULT_PAGE,
 } from "../utils/pagination.util.js";
 
@@ -128,7 +127,10 @@ export class DepartmentService {
    */
   public static async getAllDepartments(query: DepartmentQueryInput = {}) {
     const page = query.page ?? DEFAULT_PAGE;
-    const limit = query.limit ?? DEFAULT_LIMIT;
+    // Left undefined when the caller doesn't send a limit: the repository
+    // only paginates when both page and limit are set, so this returns
+    // every matching department in one response instead of defaulting to 20.
+    const limit = query.limit;
 
     const { data: departments, total } = await DepartmentRepository.findAll({
       departmentName: query.departmentName,
@@ -139,7 +141,7 @@ export class DepartmentService {
     return {
       message: "Departments fetched successfully",
       departments: departments.map((d) => this.sanitizeDepartment(d)),
-      pagination: buildPaginationMeta(total, page, limit),
+      pagination: buildPaginationMeta(total, page, limit ?? total),
     };
   }
 

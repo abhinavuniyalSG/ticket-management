@@ -75,7 +75,7 @@ authenticated user to have a verified email, and returns **403** with
           name: "page",
           in: "query",
           required: false,
-          description: "Page number to return (1-indexed)",
+          description: "Page number to return (1-indexed). Ignored unless `limit` is also provided.",
           schema: {
             type: "integer",
             minimum: 1,
@@ -86,12 +86,14 @@ authenticated user to have a verified email, and returns **403** with
           name: "limit",
           in: "query",
           required: false,
-          description: "Number of items per page",
+          description:
+            "Number of items per page. **Omit this parameter to disable pagination** and receive every " +
+            "matching record in a single response - there is no default limit applied. When provided, " +
+            "results are paginated as normal (with `page` defaulting to 1).",
           schema: {
             type: "integer",
             minimum: 1,
             maximum: 100,
-            default: 20,
           },
         },
       },

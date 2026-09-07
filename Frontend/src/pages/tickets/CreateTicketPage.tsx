@@ -32,9 +32,9 @@ export function CreateTicketPage() {
     setIsLoading(true);
     setError(null);
     Promise.all([
-      departmentService.list({ limit: 100 }),
+      departmentService.list(),
       showAssignee
-        ? userService.list({ limit: 100 })
+        ? userService.list()
         : Promise.resolve({ message: "", users: [] }),
     ])
       .then(([deptRes, userRes]) => {

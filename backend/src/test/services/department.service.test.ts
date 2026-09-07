@@ -140,21 +140,39 @@ describe("getAllDepartments / getDepartmentById", () => {
     expect((result.departments[0] as any).manager).not.toHaveProperty("password");
   });
 
-  it("defaults page/limit and returns pagination metadata", async () => {
+  it("defaults page to 1 and, with no limit given, returns every department in one unpaginated batch", async () => {
     vi.mocked(DepartmentRepository.findAll).mockResolvedValue({ data: [], total: 5 });
 
     const result = await DepartmentService.getAllDepartments();
 
     expect(DepartmentRepository.findAll).toHaveBeenCalledWith(
-      expect.objectContaining({ page: 1, limit: 20 }),
+      expect.objectContaining({ page: 1, limit: undefined }),
     );
     expect(result.pagination).toEqual({
       page: 1,
-      limit: 20,
+      limit: 5,
       totalItems: 5,
       totalPages: 1,
       hasNextPage: false,
       hasPrevPage: false,
+    });
+  });
+
+  it("passes through an explicit page/limit and returns pagination metadata", async () => {
+    vi.mocked(DepartmentRepository.findAll).mockResolvedValue({ data: [], total: 45 });
+
+    const result = await DepartmentService.getAllDepartments({ page: 2, limit: 10 });
+
+    expect(DepartmentRepository.findAll).toHaveBeenCalledWith(
+      expect.objectContaining({ page: 2, limit: 10 }),
+    );
+    expect(result.pagination).toEqual({
+      page: 2,
+      limit: 10,
+      totalItems: 45,
+      totalPages: 5,
+      hasNextPage: true,
+      hasPrevPage: true,
     });
   });
 

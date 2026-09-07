@@ -26,6 +26,7 @@ import type {
 import type { Department } from "../../types/department";
 import type { User } from "../../types/user";
 import {
+  DEFAULT_PAGE_SIZE,
   SORT_BY_LABELS,
   STATUS_LABELS,
   PRIORITY_LABELS,
@@ -108,13 +109,13 @@ export function TicketsListPage() {
 
   useEffect(() => {
     departmentService
-      .list({ limit: 100 })
+      .list()
       .then((res) => setDepartments(res.departments))
       .catch(() => undefined);
 
     if (canSeeUserFilters) {
       userService
-        .list({ limit: 100 })
+        .list()
         .then((res) => setUsers(res.users))
         .catch(() => undefined);
     }
@@ -156,7 +157,7 @@ export function TicketsListPage() {
   }, [filterQuery]);
 
   const query = useMemo<TicketQueryParams>(
-    () => ({ ...filterQuery, page }),
+    () => ({ ...filterQuery, page, limit: DEFAULT_PAGE_SIZE }),
     [filterQuery, page],
   );
 

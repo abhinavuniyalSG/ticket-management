@@ -64,7 +64,7 @@ beforeEach(() => {
 });
 
 describe("getAllUsers", () => {
-  it("returns every user for a super_admin", async () => {
+  it("returns every user for a super_admin, unpaginated when no limit is given", async () => {
     vi.mocked(UserRepository.findAll).mockResolvedValue({ data: [makeUser()], total: 1 });
 
     const result = await UserService.getAllUsers(requester({ role: roleEnum.superAdmin }), {});
@@ -76,8 +76,11 @@ describe("getAllUsers", () => {
         firstName: undefined,
         role: undefined,
         page: 1,
-        limit: 20,
+        limit: undefined,
       }),
+    );
+    expect(result.pagination).toEqual(
+      expect.objectContaining({ limit: 1, totalItems: 1, totalPages: 1 }),
     );
   });
 
@@ -113,7 +116,7 @@ describe("getAllUsers", () => {
 
     expect(result.users).toEqual([]);
     expect(result.pagination).toEqual(
-      expect.objectContaining({ totalItems: 0, page: 1, limit: 20 }),
+      expect.objectContaining({ totalItems: 0, page: 1, limit: 0 }),
     );
     expect(UserRepository.findAll).not.toHaveBeenCalled();
   });

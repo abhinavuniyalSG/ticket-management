@@ -20,7 +20,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { ApiError, type PaginationMeta } from "../../types/api";
 import type { User } from "../../types/user";
 import type { Department } from "../../types/department";
-import { ROLE_LABELS, USER_ROLES } from "../../constants/options";
+import { DEFAULT_PAGE_SIZE, ROLE_LABELS, USER_ROLES } from "../../constants/options";
 import { canDeleteUser } from "../../utils/userPermissions";
 
 export function UsersListPage() {
@@ -57,7 +57,7 @@ export function UsersListPage() {
   }, [filterQuery]);
 
   const query = useMemo<UserQueryParams>(
-    () => ({ ...filterQuery, page }),
+    () => ({ ...filterQuery, page, limit: DEFAULT_PAGE_SIZE }),
     [filterQuery, page],
   );
 
@@ -84,7 +84,7 @@ export function UsersListPage() {
   useEffect(() => {
     if (isSuperAdmin) {
       departmentService
-        .list({ limit: 100 })
+        .list()
         .then((res) => setDepartments(res.departments))
         .catch(() => undefined);
     }

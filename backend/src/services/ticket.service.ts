@@ -9,7 +9,6 @@ import { logger } from "../core/logger.js";
 import { NotificationService } from "./notification.service.js";
 import {
   buildPaginationMeta,
-  DEFAULT_LIMIT,
   DEFAULT_PAGE,
 } from "../utils/pagination.util.js";
 
@@ -199,7 +198,10 @@ export class TicketService {
         : undefined;
 
     const page = query.page ?? DEFAULT_PAGE;
-    const limit = query.limit ?? DEFAULT_LIMIT;
+    // Left undefined when the caller doesn't send a limit: the repository
+    // only paginates when both page and limit are set, so this returns
+    // every matching ticket in one response instead of defaulting to 20.
+    const limit = query.limit;
 
     const { data: tickets, total } = await TicketRepository.findAll({
       requesterRole: requester.role as roleEnum,
@@ -222,7 +224,10 @@ export class TicketService {
     return {
       message: "Tickets fetched successfully",
       tickets: tickets.map((t) => this.sanitizeTicket(t)),
-      pagination: buildPaginationMeta(total, page, limit),
+      // When no limit was requested, everything came back in one batch -
+      // report that batch's size as the "limit" so the meta reads as a
+      // single full page rather than falsely implying more pages exist.
+      pagination: buildPaginationMeta(total, page, limit ?? total),
     };
   }
 

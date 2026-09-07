@@ -76,7 +76,7 @@ export function TicketDetailsPage() {
   useEffect(() => {
     if (!canAssign || !ticket) return;
     userService
-      .list({ limit: 100 })
+      .list()
       .then((res) =>
         setAssignedTo(
           res.users.filter((u) => u.departmentId === ticket.departmentId),

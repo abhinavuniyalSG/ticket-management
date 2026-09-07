@@ -45,7 +45,7 @@ export function DepartmentDetailsPage() {
     setError(null);
     Promise.all([
       departmentService.getById(id),
-      userService.list({ limit: 100 }),
+      userService.list(),
     ])
       .then(([deptRes, userRes]) => {
         setDepartment(deptRes.department);

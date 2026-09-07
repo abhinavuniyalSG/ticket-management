@@ -8,7 +8,6 @@ import type { ContactType } from "../types/contact.js";
 import type { User } from "../database/models/user.model.js";
 import {
   buildPaginationMeta,
-  DEFAULT_LIMIT,
   DEFAULT_PAGE,
 } from "../utils/pagination.util.js";
 
@@ -77,7 +76,10 @@ export class UserService {
     query: UserQueryInput,
   ) {
     const page = query.page ?? DEFAULT_PAGE;
-    const limit = query.limit ?? DEFAULT_LIMIT;
+    // Left undefined when the caller doesn't send a limit: the repository
+    // only paginates when both page and limit are set, so this returns
+    // every matching user in one response instead of defaulting to 20.
+    const limit = query.limit;
 
     if (requester.role === roleEnum.superAdmin) {
       const { data: users, total } = await UserRepository.findAll({
@@ -90,7 +92,7 @@ export class UserService {
       return {
         message: "Users fetched successfully",
         users: users.map((u) => UserService.sanitizeUser(u)),
-        pagination: buildPaginationMeta(total, page, limit),
+        pagination: buildPaginationMeta(total, page, limit ?? total),
       };
     }
 
@@ -105,7 +107,7 @@ export class UserService {
         return {
           message: "Users fetched successfully",
           users: [],
-          pagination: buildPaginationMeta(0, page, limit),
+          pagination: buildPaginationMeta(0, page, limit ?? 0),
         };
       }
 
@@ -120,7 +122,7 @@ export class UserService {
       return {
         message: "Users fetched successfully",
         users: users.map((u) => UserService.sanitizeUser(u)),
-        pagination: buildPaginationMeta(total, page, limit),
+        pagination: buildPaginationMeta(total, page, limit ?? total),
       };
     }
 

@@ -60,7 +60,11 @@ describe("DepartmentsListPage", () => {
     renderPage();
 
     await screen.findAllByRole("link", { name: "Support" });
-    expect(mockedDepartmentService.list).toHaveBeenCalledWith({ departmentName: undefined, page: 1 });
+    expect(mockedDepartmentService.list).toHaveBeenCalledWith({
+      departmentName: undefined,
+      page: 1,
+      limit: 20,
+    });
   });
 
   it("shows an empty state when there are no departments", async () => {
@@ -108,6 +112,7 @@ describe("DepartmentsListPage", () => {
         expect(mockedDepartmentService.list).toHaveBeenLastCalledWith({
           departmentName: "Sales",
           page: 1,
+          limit: 20,
         }),
       { timeout: 2000 },
     );

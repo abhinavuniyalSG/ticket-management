@@ -95,10 +95,10 @@ describe("ticketQuerySchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("defaults page to 1 and limit to 20 when omitted", () => {
+  it("defaults page to 1 and leaves limit undefined (no pagination) when omitted", () => {
     const result = schema.ticketQuerySchema.parse({});
     expect(result.page).toBe(1);
-    expect(result.limit).toBe(20);
+    expect(result.limit).toBeUndefined();
   });
 
   it("coerces string page/limit query values to numbers", () => {

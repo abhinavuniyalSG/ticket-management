@@ -10,12 +10,15 @@ export const paginationQuerySchema = {
     .int("page must be an integer")
     .min(1, "page must be at least 1")
     .default(DEFAULT_PAGE),
+  // No default here on purpose: when the caller omits `limit` entirely, the
+  // service layer treats that as "no pagination" and returns every matching
+  // row in one response, rather than silently falling back to DEFAULT_LIMIT.
   limit: z.coerce
     .number({ error: "limit must be a number" })
     .int("limit must be an integer")
     .min(1, "limit must be at least 1")
     .max(MAX_LIMIT, `limit must not exceed ${MAX_LIMIT}`)
-    .default(DEFAULT_LIMIT),
+    .optional(),
 };
 
 export interface PaginationInput {
