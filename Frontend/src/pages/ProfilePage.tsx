@@ -211,6 +211,14 @@ export function ProfilePage() {
         </section>
 
         <section className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6">
+          <h2 className="text-sm font-semibold text-slate-900">Security</h2>
+          <p className="mt-1 text-sm text-slate-500">Change the password used to sign in to your account.</p>
+          <Button className="mt-4" variant="secondary" onClick={() => navigate("/profile/change-password")}>
+            Change password
+          </Button>
+        </section>
+
+        <section className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6">
           <h2 className="mb-4 text-sm font-semibold text-slate-900">Contacts</h2>
 
           {profile.contacts && profile.contacts.length > 0 ? (

@@ -138,6 +138,76 @@ export class AuthenticationSchema {
       path: ["newPassword"],
     });
 
+  public forgotPasswordSchema = z
+    .object({
+      email: z
+        .string({
+          error: (issue) =>
+            issue.input === undefined
+              ? "Email is required"
+              : "Email must be a string",
+        })
+        .trim()
+        .min(1, "Email is required")
+        .max(255, "Email must not exceed 255 characters")
+        .toLowerCase()
+        .pipe(z.email("Invalid email address")),
+    })
+    .strict();
+
+  public resetPasswordParamSchema = z
+    .object({
+      token: z
+        .string({
+          error: (issue) =>
+            issue.input === undefined
+              ? "Reset token is required"
+              : "Reset token must be a string",
+        })
+        .min(1, "Reset token is required"),
+    })
+    .strict();
+
+  public resetPasswordSchema = z
+    .object({
+      email: z
+        .string({
+          error: (issue) =>
+            issue.input === undefined
+              ? "Email is required"
+              : "Email must be a string",
+        })
+        .trim()
+        .min(1, "Email is required")
+        .max(255, "Email must not exceed 255 characters")
+        .toLowerCase()
+        .pipe(z.email("Invalid email address")),
+
+      newPassword: z
+        .string({
+          error: (issue) =>
+            issue.input === undefined
+              ? "New password is required"
+              : "New password must be a string",
+        })
+        .min(8, "New password must be at least 8 characters long")
+        .max(255, "New password must not exceed 255 characters")
+        .regex(
+          /[A-Z]/,
+          "New password must contain at least one uppercase letter",
+        )
+        .regex(
+          /[a-z]/,
+          "New password must contain at least one lowercase letter",
+        )
+        .regex(/[0-9]/, "New password must contain at least one number")
+        .regex(
+          /[^A-Za-z0-9]/,
+          "New password must contain at least one special character",
+        ),
+    })
+    .strict();
+
   public verifyEmailParamSchema = z
     .object({
       token: z

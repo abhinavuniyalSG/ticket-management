@@ -237,7 +237,7 @@ export function TicketsListPage() {
               />
             </FilterField>
             {canSeeUserFilters && (
-              <FilterField label="Assignee">
+              <FilterField label="AssignedTo">
                 <Select
                   placeholder="All assignees"
                   value={filters.assignedToId}

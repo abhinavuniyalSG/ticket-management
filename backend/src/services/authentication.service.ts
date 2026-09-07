@@ -31,6 +31,12 @@ export interface ChangePasswordInput {
   newPassword: string;
 }
 
+export interface ResetPasswordInput {
+  token: string;
+  email: string;
+  newPassword: string;
+}
+
 export class AuthenticationService {
   private static sendVerificationEmail = async (
     email: string,
@@ -42,6 +48,19 @@ export class AuthenticationService {
       subject: "Verify your email address",
       text: `Welcome! Please verify your email by visiting the following link: ${verificationLink}\n\nThis link will expire in 24 hours.`,
       html: `<p>Welcome! Please verify your email address by clicking the link below.</p><p><a href="${verificationLink}">Verify Email</a></p><p>This link will expire in 24 hours.</p>`,
+    });
+  };
+
+  private static sendPasswordResetEmail = async (
+    email: string,
+    resetToken: string,
+  ) => {
+    const resetLink = `${APP_VARIABLES.FRONTEND_URL}/changepassword/verify/${resetToken}?email=${encodeURIComponent(email)}`;
+    await EmailService.send({
+      to: email,
+      subject: "Reset your password",
+      text: `We received a request to reset your password. Click the link below to set a new password: ${resetLink}\n\nThis link will expire in 3 minutes. If you didn't request this, you can safely ignore this email.`,
+      html: `<p>We received a request to reset your password. Click the link below to set a new password.</p><p><a href="${resetLink}">Reset Password</a></p><p>This link will expire in 3 minutes. If you didn't request this, you can safely ignore this email.</p>`,
     });
   };
 
@@ -269,6 +288,67 @@ export class AuthenticationService {
     logger.info("User logged out successfully", { userId });
     return {
       message: "Logout successful",
+    };
+  };
+
+  public static forgotPassword = async (email: string) => {
+    const genericResponse = {
+      message:
+        "If an account with that email exists, a password reset email has been sent",
+    };
+
+    const user = await UserRepository.findByEmail(email);
+
+    if (!user) {
+      return genericResponse;
+    }
+
+    const resetToken = generateRandomToken();
+    const resetTokenHash = generateTokenHash(resetToken);
+    const resetTokenExpires = new Date(
+      Date.now() + APP_VARIABLES.PASSWORD_RESET_TOKEN_EXPIRES_IN_MS,
+    );
+
+    await UserRepository.setPasswordResetToken(
+      user.id,
+      resetTokenHash,
+      resetTokenExpires,
+    );
+
+    await AuthenticationService.sendPasswordResetEmail(user.email, resetToken);
+
+    logger.info("Sent password reset email", {
+      userId: user.id,
+      email: user.email,
+    });
+
+    return genericResponse;
+  };
+
+  public static resetPassword = async (input: ResetPasswordInput) => {
+    const tokenHash = generateTokenHash(input.token);
+    const user = await UserRepository.findByPasswordResetTokenHash(tokenHash);
+
+    if (
+      !user ||
+      user.email !== input.email ||
+      !user.passwordResetTokenExpires ||
+      user.passwordResetTokenExpires.getTime() < Date.now()
+    ) {
+      throw new HttpError(400, "Invalid or expired reset link");
+    }
+
+    const hashedPassword = await generateHashPassword(input.newPassword);
+    await UserRepository.updatePassword(user.id, hashedPassword);
+    await UserRepository.clearPasswordResetToken(user.id);
+
+    // Invalidate the existing refresh token so other sessions must re-authenticate.
+    await UserRepository.updateRefreshToken(user.id, null);
+
+    logger.info("User reset password successfully", { userId: user.id });
+
+    return {
+      message: "Password reset successful. Please sign in with your new password.",
     };
   };
 

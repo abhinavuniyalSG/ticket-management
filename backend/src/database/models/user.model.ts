@@ -58,6 +58,22 @@ export class User {
   })
   verificationTokenExpires!: Date | null;
 
+  @Column({
+    name: "password_reset_token",
+    type: "varchar",
+    nullable: true,
+    select: false,
+  })
+  passwordResetToken!: string | null;
+
+  @Column({
+    name: "password_reset_token_expires",
+    type: "timestamp with time zone",
+    nullable: true,
+    select: false,
+  })
+  passwordResetTokenExpires!: Date | null;
+
   @Column({ name: "department_id", type: "uuid", nullable: true })
   departmentId!: string | null;
 

@@ -99,7 +99,10 @@ describe("CreateTicketPage", () => {
   });
 
   it("shows a spinner while form data is loading", async () => {
-    const deferred = createDeferred<{ message: string; departments: Department[] }>();
+    const deferred = createDeferred<{
+      message: string;
+      departments: Department[];
+    }>();
     vi.mocked(departmentService.list).mockReturnValue(deferred.promise);
 
     renderPage(makeUser());
@@ -107,7 +110,9 @@ describe("CreateTicketPage", () => {
     expect(screen.getByRole("status")).toBeInTheDocument();
 
     deferred.resolve({ message: "ok", departments: [] });
-    await waitFor(() => expect(screen.queryByRole("status")).not.toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.queryByRole("status")).not.toBeInTheDocument(),
+    );
   });
 
   it("loads departments for a regular user without fetching assignable users", async () => {
@@ -124,7 +129,10 @@ describe("CreateTicketPage", () => {
     vi.mocked(userService.list).mockResolvedValue({
       message: "ok",
       users: [
-        { ...makeUser({ id: "member-1", firstName: "Sam", lastName: "Lee" }), departmentId: "dept-1" },
+        {
+          ...makeUser({ id: "member-1", firstName: "Sam", lastName: "Lee" }),
+          departmentId: "dept-1",
+        },
       ],
     });
 
@@ -140,13 +148,26 @@ describe("CreateTicketPage", () => {
     vi.mocked(userService.list).mockResolvedValue({
       message: "ok",
       users: [
-        makeUser({ id: "member-1", firstName: "Sam", lastName: "Lee", departmentId: "dept-1" }),
-        makeUser({ id: "member-2", firstName: "Ann", lastName: "Kim", departmentId: "dept-2" }),
+        makeUser({
+          id: "member-1",
+          firstName: "Sam",
+          lastName: "Lee",
+          departmentId: "dept-1",
+        }),
+        makeUser({
+          id: "member-2",
+          firstName: "Ann",
+          lastName: "Kim",
+          departmentId: "dept-2",
+        }),
       ],
     });
     vi.mocked(departmentService.list).mockResolvedValue({
       message: "ok",
-      departments: [makeDepartment({ departmentId: "dept-1" }), makeDepartment({ departmentId: "dept-2", departmentName: "IT" })],
+      departments: [
+        makeDepartment({ departmentId: "dept-1" }),
+        makeDepartment({ departmentId: "dept-2", departmentName: "IT" }),
+      ],
     });
 
     const user = userEvent.setup();
@@ -156,23 +177,33 @@ describe("CreateTicketPage", () => {
     await user.selectOptions(screen.getByLabelText(/^Department/), "dept-1");
 
     expect(screen.getByRole("option", { name: "Sam Lee" })).toBeInTheDocument();
-    expect(screen.queryByRole("option", { name: "Ann Kim" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("option", { name: "Ann Kim" }),
+    ).not.toBeInTheDocument();
   });
 
   it("shows an error state when loading form data fails", async () => {
-    vi.mocked(departmentService.list).mockRejectedValue(new ApiError(500, "Server exploded"));
+    vi.mocked(departmentService.list).mockRejectedValue(
+      new ApiError(500, "Server exploded"),
+    );
 
     renderPage(makeUser());
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("Server exploded");
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Server exploded",
+    );
   });
 
   it("shows a generic error message for a non-API error", async () => {
-    vi.mocked(departmentService.list).mockRejectedValue(new Error("network down"));
+    vi.mocked(departmentService.list).mockRejectedValue(
+      new Error("network down"),
+    );
 
     renderPage(makeUser());
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("Unable to load form data.");
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Unable to load form data.",
+    );
   });
 
   it("submits the trimmed form values and navigates to the created ticket", async () => {
@@ -184,8 +215,14 @@ describe("CreateTicketPage", () => {
     const user = userEvent.setup();
     renderPage(makeUser());
 
-    await user.type(await screen.findByLabelText(/^Title/), "  Printer is broken  ");
-    await user.type(screen.getByLabelText(/^Description/), "  It jams every time.  ");
+    await user.type(
+      await screen.findByLabelText(/^Title/),
+      "  Printer is broken  ",
+    );
+    await user.type(
+      screen.getByLabelText(/^Description/),
+      "  It jams every time.  ",
+    );
     await user.selectOptions(screen.getByLabelText(/^Department/), "dept-1");
     await user.click(screen.getByRole("button", { name: "Create ticket" }));
 
@@ -199,21 +236,33 @@ describe("CreateTicketPage", () => {
       }),
     );
     expect(toast.success).toHaveBeenCalledWith("Ticket created");
-    expect(mockNavigate).toHaveBeenCalledWith("/tickets/ticket-99", { replace: true });
+    expect(mockNavigate).toHaveBeenCalledWith("/tickets/ticket-99", {
+      replace: true,
+    });
   });
 
   it("shows an error toast and does not navigate when creation fails", async () => {
-    vi.mocked(ticketService.create).mockRejectedValue(new ApiError(400, "Title is required"));
+    vi.mocked(ticketService.create).mockRejectedValue(
+      new ApiError(400, "Title is required"),
+    );
 
     const user = userEvent.setup();
     renderPage(makeUser());
 
-    await user.type(await screen.findByLabelText(/^Title/), "Printer is broken");
-    await user.type(screen.getByLabelText(/^Description/), "It jams every time.");
+    await user.type(
+      await screen.findByLabelText(/^Title/),
+      "Printer is broken",
+    );
+    await user.type(
+      screen.getByLabelText(/^Description/),
+      "It jams every time.",
+    );
     await user.selectOptions(screen.getByLabelText(/^Department/), "dept-1");
     await user.click(screen.getByRole("button", { name: "Create ticket" }));
 
-    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Title is required"));
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith("Title is required"),
+    );
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 });

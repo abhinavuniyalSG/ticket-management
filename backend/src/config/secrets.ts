@@ -32,9 +32,12 @@ const SMTP_PASSWORD = process.env.SMTP_PASSWORD || "";
 const MAIL_FROM = process.env.MAIL_FROM || "";
 
 const APP_URL = process.env.APP_URL || `http://localhost:${process.env.PORT || 3000}`;
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 const EMAIL_VERIFICATION_TOKEN_EXPIRES_IN_MS =
   Number(process.env.EMAIL_VERIFICATION_TOKEN_EXPIRES_IN_MS) ||
   24 * 60 * 60 * 1000;
+const PASSWORD_RESET_TOKEN_EXPIRES_IN_MS =
+  Number(process.env.PASSWORD_RESET_TOKEN_EXPIRES_IN_MS) || 3 * 60 * 1000;
 
 export const DB_VARIABLES = {
   DB_HOST,
@@ -69,5 +72,7 @@ export const SMTP_VARIABLES = {
 
 export const APP_VARIABLES = {
   APP_URL,
+  FRONTEND_URL,
   EMAIL_VERIFICATION_TOKEN_EXPIRES_IN_MS,
+  PASSWORD_RESET_TOKEN_EXPIRES_IN_MS,
 };

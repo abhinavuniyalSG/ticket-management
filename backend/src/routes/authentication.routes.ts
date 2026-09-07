@@ -26,9 +26,23 @@ class AuthenticationRoutes {
     this.router.post("/logout", authMiddleware, AuthenticationController.logoutController);
     this.router.post(
       "/change-password",
+      authMiddleware,
       this.limiter,
       this.validator("body", this.requestSchema.changePasswordSchema),
       AuthenticationController.changePasswordController,
+    );
+    this.router.post(
+      "/changepassword/email",
+      RateLimiterMiddleware.forgotPasswordLimiter,
+      this.validator("body", this.requestSchema.forgotPasswordSchema),
+      AuthenticationController.forgotPasswordController,
+    );
+    this.router.post(
+      "/changepassword/verify/:token",
+      this.limiter,
+      this.validator("params", this.requestSchema.resetPasswordParamSchema),
+      this.validator("body", this.requestSchema.resetPasswordSchema),
+      AuthenticationController.resetPasswordController,
     );
     this.router.get(
       "/verify-email/:token",

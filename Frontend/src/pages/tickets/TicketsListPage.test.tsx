@@ -114,7 +114,10 @@ describe("TicketsListPage", () => {
       departments: [makeDepartment()],
     });
     vi.mocked(userService.list).mockResolvedValue({ message: "ok", users: [] });
-    vi.mocked(ticketService.list).mockResolvedValue({ message: "ok", tickets: [makeTicket()] });
+    vi.mocked(ticketService.list).mockResolvedValue({
+      message: "ok",
+      tickets: [makeTicket()],
+    });
   });
 
   it("shows a spinner while tickets are loading", async () => {
@@ -126,7 +129,9 @@ describe("TicketsListPage", () => {
     expect(screen.getByRole("status")).toBeInTheDocument();
 
     deferred.resolve({ message: "ok", tickets: [] });
-    await waitFor(() => expect(screen.queryByRole("status")).not.toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.queryByRole("status")).not.toBeInTheDocument(),
+    );
   });
 
   it("loads tickets and departments on mount with the default query, but does not fetch users for a regular user", async () => {
@@ -160,7 +165,10 @@ describe("TicketsListPage", () => {
   it("renders tickets returned by the service", async () => {
     vi.mocked(ticketService.list).mockResolvedValue({
       message: "ok",
-      tickets: [makeTicket({ ticketId: "t-1", title: "First ticket" }), makeTicket({ ticketId: "t-2", title: "Second ticket" })],
+      tickets: [
+        makeTicket({ ticketId: "t-1", title: "First ticket" }),
+        makeTicket({ ticketId: "t-2", title: "Second ticket" }),
+      ],
     });
 
     renderPage(makeUser());
@@ -170,31 +178,47 @@ describe("TicketsListPage", () => {
   });
 
   it("shows an empty state with a 'new ticket' action when there are no tickets and no active filters", async () => {
-    vi.mocked(ticketService.list).mockResolvedValue({ message: "ok", tickets: [] });
+    vi.mocked(ticketService.list).mockResolvedValue({
+      message: "ok",
+      tickets: [],
+    });
 
     renderPage(makeUser());
 
     expect(await screen.findByText("No tickets found")).toBeInTheDocument();
-    expect(screen.getByText("Create your first ticket to get started.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Create your first ticket to get started."),
+    ).toBeInTheDocument();
     // The page header also has a "New ticket" link, so there are two.
     const newTicketLinks = screen.getAllByRole("link", { name: "New ticket" });
     expect(newTicketLinks).toHaveLength(2);
-    newTicketLinks.forEach((link) => expect(link).toHaveAttribute("href", "/tickets/new"));
+    newTicketLinks.forEach((link) =>
+      expect(link).toHaveAttribute("href", "/tickets/new"),
+    );
   });
 
   it("shows an error state with a working retry button", async () => {
-    vi.mocked(ticketService.list).mockRejectedValue(new ApiError(500, "Server exploded"));
+    vi.mocked(ticketService.list).mockRejectedValue(
+      new ApiError(500, "Server exploded"),
+    );
 
     const user = userEvent.setup();
     renderPage(makeUser());
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("Server exploded");
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Server exploded",
+    );
     expect(ticketService.list).toHaveBeenCalledTimes(1);
 
-    vi.mocked(ticketService.list).mockResolvedValue({ message: "ok", tickets: [makeTicket()] });
+    vi.mocked(ticketService.list).mockResolvedValue({
+      message: "ok",
+      tickets: [makeTicket()],
+    });
     await user.click(screen.getByRole("button", { name: "Try again" }));
 
-    await waitFor(async () => expect(await findTicketTitles("Printer is on fire")).not.toHaveLength(0));
+    await waitFor(async () =>
+      expect(await findTicketTitles("Printer is on fire")).not.toHaveLength(0),
+    );
   });
 
   it("toggles the filters panel open and closed", async () => {
@@ -217,7 +241,7 @@ describe("TicketsListPage", () => {
     await findTicketTitles("Printer is on fire");
     await user.click(screen.getByRole("button", { name: "Filters" }));
 
-    expect(screen.queryByLabelText("Assignee")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("AssignedTo")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Creator")).not.toBeInTheDocument();
   });
 
@@ -227,7 +251,7 @@ describe("TicketsListPage", () => {
     await findTicketTitles("Printer is on fire");
     await user.click(screen.getByRole("button", { name: "Filters" }));
 
-    expect(screen.getByLabelText("Assignee")).toBeInTheDocument();
+    expect(screen.getByLabelText("AssignedTo")).toBeInTheDocument();
     expect(screen.getByLabelText("Creator")).toBeInTheDocument();
   });
 
@@ -276,12 +300,18 @@ describe("TicketsListPage", () => {
     expect(resetButton).toBeEnabled();
 
     await user.click(screen.getByRole("button", { name: "Hide filters" }));
-    expect(screen.getByRole("button", { name: "Filters (1)" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Filters (1)" }),
+    ).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Filters (1)" }));
     await user.click(screen.getByRole("button", { name: "Reset filters" }));
-    await waitFor(() => expect(screen.getByLabelText("Priority")).toHaveValue(""));
-    expect(screen.getByRole("button", { name: "Reset filters" })).toBeDisabled();
+    await waitFor(() =>
+      expect(screen.getByLabelText("Priority")).toHaveValue(""),
+    );
+    expect(
+      screen.getByRole("button", { name: "Reset filters" }),
+    ).toBeDisabled();
   });
 
   it("shows a 'reset filters' empty state when filters are active and no tickets match", async () => {
@@ -290,16 +320,28 @@ describe("TicketsListPage", () => {
     await findTicketTitles("Printer is on fire");
 
     await user.click(screen.getByRole("button", { name: "Filters" }));
-    vi.mocked(ticketService.list).mockResolvedValue({ message: "ok", tickets: [] });
+    vi.mocked(ticketService.list).mockResolvedValue({
+      message: "ok",
+      tickets: [],
+    });
     await user.selectOptions(screen.getByLabelText("Priority"), "high");
 
     const emptyState = await screen.findByText("No tickets found");
     const container = emptyState.closest("div") as HTMLElement;
-    expect(within(container).getByText("Try adjusting or resetting your filters.")).toBeInTheDocument();
+    expect(
+      within(container).getByText("Try adjusting or resetting your filters."),
+    ).toBeInTheDocument();
 
-    vi.mocked(ticketService.list).mockResolvedValue({ message: "ok", tickets: [makeTicket()] });
-    await user.click(within(container).getByRole("button", { name: "Reset filters" }));
+    vi.mocked(ticketService.list).mockResolvedValue({
+      message: "ok",
+      tickets: [makeTicket()],
+    });
+    await user.click(
+      within(container).getByRole("button", { name: "Reset filters" }),
+    );
 
-    await waitFor(async () => expect(await findTicketTitles("Printer is on fire")).not.toHaveLength(0));
+    await waitFor(async () =>
+      expect(await findTicketTitles("Printer is on fire")).not.toHaveLength(0),
+    );
   });
 });

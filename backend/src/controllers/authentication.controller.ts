@@ -79,6 +79,33 @@ export class AuthenticationController {
       return res.status(200).json(result);
   });
 
+  public static forgotPasswordController = catchAsync(async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) => {
+      const data = req.normalized?.body ?? req.body;
+      const result = await AuthenticationService.forgotPassword(data.email);
+      return res.status(200).json(result);
+  });
+
+  public static resetPasswordController = catchAsync(async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) => {
+      const params = (req.normalized?.params ?? req.params) as {
+        token: string;
+      };
+      const data = req.normalized?.body ?? req.body;
+      const result = await AuthenticationService.resetPassword({
+        token: params.token,
+        email: data.email,
+        newPassword: data.newPassword,
+      });
+      return res.status(200).json(result);
+  });
+
   public static verifyEmailController = catchAsync(async (
     req: Request,
     res: Response,

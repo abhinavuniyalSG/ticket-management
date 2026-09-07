@@ -9,6 +9,8 @@ import { RegisterPage } from "../pages/auth/RegisterPage";
 import { VerifyEmailPage } from "../pages/auth/VerifyEmailPage";
 import { ResendVerificationPage } from "../pages/auth/ResendVerificationPage";
 import { ChangePasswordPage } from "../pages/auth/ChangePasswordPage";
+import { ForgotPasswordPage } from "../pages/auth/ForgotPasswordPage";
+import { ResetPasswordPage } from "../pages/auth/ResetPasswordPage";
 import { VerificationRequiredPage } from "../pages/auth/VerificationRequiredPage";
 import { DashboardPage } from "../pages/DashboardPage";
 import { TicketsListPage } from "../pages/tickets/TicketsListPage";
@@ -16,6 +18,7 @@ import { TicketDetailsPage } from "../pages/tickets/TicketDetailsPage";
 import { CreateTicketPage } from "../pages/tickets/CreateTicketPage";
 import { EditTicketPage } from "../pages/tickets/EditTicketPage";
 import { ProfilePage } from "../pages/ProfilePage";
+import { ProfileChangePasswordPage } from "../pages/ProfileChangePasswordPage";
 import { UsersListPage } from "../pages/users/UsersListPage";
 import { UserDetailsPage } from "../pages/users/UserDetailsPage";
 import { DepartmentsListPage } from "../pages/departments/DepartmentsListPage";
@@ -49,6 +52,8 @@ export function AppRoutes() {
       <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
       <Route path="/resend-verification" element={<ResendVerificationPage />} />
       <Route path="/change-password" element={<ChangePasswordPage />} />
+      <Route path="/changepassword/email" element={<ForgotPasswordPage />} />
+      <Route path="/changepassword/verify/:token" element={<ResetPasswordPage />} />
 
       {/* Authenticated, but not necessarily verified */}
       <Route path="/verify-required" element={<VerificationRequiredPage />} />
@@ -60,6 +65,7 @@ export function AppRoutes() {
         <Route path="/tickets/:id" element={<TicketDetailsPage />} />
         <Route path="/tickets/:id/edit" element={<EditTicketPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/profile/change-password" element={<ProfileChangePasswordPage />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
       </Route>
 

@@ -151,6 +151,34 @@ export class UserRepository {
     });
   }
 
+  public static async findByPasswordResetTokenHash(
+    tokenHash: string,
+  ): Promise<User | null> {
+    return this.repository
+      .createQueryBuilder("user")
+      .addSelect(["user.passwordResetToken", "user.passwordResetTokenExpires"])
+      .where("user.passwordResetToken = :tokenHash", { tokenHash })
+      .getOne();
+  }
+
+  public static async setPasswordResetToken(
+    id: string,
+    tokenHash: string,
+    expiresAt: Date,
+  ): Promise<void> {
+    await this.repository.update(id, {
+      passwordResetToken: tokenHash,
+      passwordResetTokenExpires: expiresAt,
+    });
+  }
+
+  public static async clearPasswordResetToken(id: string): Promise<void> {
+    await this.repository.update(id, {
+      passwordResetToken: null,
+      passwordResetTokenExpires: null,
+    });
+  }
+
   public static async updateUserWithContacts(
     id: string,
     userUpdates: Partial<User>,

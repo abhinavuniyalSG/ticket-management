@@ -19,6 +19,12 @@ export interface ChangePasswordPayload {
   newPassword: string;
 }
 
+export interface ResetPasswordPayload {
+  token: string;
+  email: string;
+  newPassword: string;
+}
+
 interface MessageResponse {
   message: string;
 }
@@ -41,6 +47,15 @@ export const authService = {
 
   changePassword: (payload: ChangePasswordPayload) =>
     apiRequest<MessageResponse>("/auth/change-password", { method: "POST", body: payload }),
+
+  forgotPassword: (email: string) =>
+    apiRequest<MessageResponse>("/auth/changepassword/email", { method: "POST", body: { email } }),
+
+  resetPassword: (payload: ResetPasswordPayload) =>
+    apiRequest<MessageResponse>(`/auth/changepassword/verify/${encodeURIComponent(payload.token)}`, {
+      method: "POST",
+      body: { email: payload.email, newPassword: payload.newPassword },
+    }),
 
   verifyEmail: (token: string) =>
     apiRequest<MessageResponse>(`/auth/verify-email/${encodeURIComponent(token)}`),

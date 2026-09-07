@@ -14,6 +14,9 @@ vi.mock("../../database/repositry/user.repository.js", () => ({
     setVerificationToken: vi.fn(),
     findByIdWithRefreshToken: vi.fn(),
     updatePassword: vi.fn(),
+    findByPasswordResetTokenHash: vi.fn(),
+    setPasswordResetToken: vi.fn(),
+    clearPasswordResetToken: vi.fn(),
   },
 }));
 
@@ -231,6 +234,92 @@ describe("logout", () => {
 
     expect(UserRepository.updateRefreshToken).toHaveBeenCalledWith("user-1", null);
     expect(result.message).toBe("Logout successful");
+  });
+});
+
+describe("forgotPassword", () => {
+  it("returns a generic response when no account exists, without leaking that fact", async () => {
+    vi.mocked(UserRepository.findByEmail).mockResolvedValue(null);
+
+    const result = await AuthenticationService.forgotPassword("nobody@example.com");
+
+    expect(result.message).toMatch(/if an account/i);
+    expect(EmailService.send).not.toHaveBeenCalled();
+  });
+
+  it("issues a reset token and emails the reset link for an existing user", async () => {
+    vi.mocked(UserRepository.findByEmail).mockResolvedValue(makeUser());
+
+    const result = await AuthenticationService.forgotPassword("jane@example.com");
+
+    expect(result.message).toMatch(/if an account/i);
+    expect(UserRepository.setPasswordResetToken).toHaveBeenCalledWith(
+      "user-1",
+      "hashed-token",
+      expect.any(Date),
+    );
+    expect(EmailService.send).toHaveBeenCalledWith(
+      expect.objectContaining({ to: "jane@example.com", subject: expect.stringContaining("Reset") }),
+    );
+  });
+});
+
+describe("resetPassword", () => {
+  it("throws 400 when the token doesn't match any user", async () => {
+    vi.mocked(UserRepository.findByPasswordResetTokenHash).mockResolvedValue(null);
+
+    await expect(
+      AuthenticationService.resetPassword({
+        token: "bad-token",
+        email: "jane@example.com",
+        newPassword: "New1!Pass",
+      }),
+    ).rejects.toMatchObject({ statusCode: 400 });
+  });
+
+  it("throws 400 when the email doesn't match the token's owner", async () => {
+    vi.mocked(UserRepository.findByPasswordResetTokenHash).mockResolvedValue(
+      makeUser({ passwordResetTokenExpires: new Date(Date.now() + 60_000) }),
+    );
+
+    await expect(
+      AuthenticationService.resetPassword({
+        token: "token",
+        email: "someone-else@example.com",
+        newPassword: "New1!Pass",
+      }),
+    ).rejects.toMatchObject({ statusCode: 400 });
+  });
+
+  it("throws 400 when the reset token has expired", async () => {
+    vi.mocked(UserRepository.findByPasswordResetTokenHash).mockResolvedValue(
+      makeUser({ passwordResetTokenExpires: new Date(Date.now() - 1000) }),
+    );
+
+    await expect(
+      AuthenticationService.resetPassword({
+        token: "token",
+        email: "jane@example.com",
+        newPassword: "New1!Pass",
+      }),
+    ).rejects.toMatchObject({ statusCode: 400 });
+  });
+
+  it("updates the password, clears the reset token, and invalidates the existing refresh token", async () => {
+    vi.mocked(UserRepository.findByPasswordResetTokenHash).mockResolvedValue(
+      makeUser({ passwordResetTokenExpires: new Date(Date.now() + 60_000) }),
+    );
+
+    const result = await AuthenticationService.resetPassword({
+      token: "token",
+      email: "jane@example.com",
+      newPassword: "New1!Pass",
+    });
+
+    expect(UserRepository.updatePassword).toHaveBeenCalledWith("user-1", "hashed-password");
+    expect(UserRepository.clearPasswordResetToken).toHaveBeenCalledWith("user-1");
+    expect(UserRepository.updateRefreshToken).toHaveBeenCalledWith("user-1", null);
+    expect(result.message).toBe("Password reset successful. Please sign in with your new password.");
   });
 });
 

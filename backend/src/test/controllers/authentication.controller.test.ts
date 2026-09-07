@@ -13,6 +13,8 @@ vi.mock("../../services/authentication.service.js", () => ({
     changePassword: vi.fn(),
     verifyEmail: vi.fn(),
     resendVerification: vi.fn(),
+    forgotPassword: vi.fn(),
+    resetPassword: vi.fn(),
   },
 }));
 
@@ -147,6 +149,45 @@ describe("changePasswordController", () => {
     await flush();
 
     expect(AuthenticationService.changePassword).toHaveBeenCalledWith(body);
+    expect(res.status).toHaveBeenCalledWith(200);
+  });
+});
+
+describe("forgotPasswordController", () => {
+  it("reads the email from the body and returns 200", async () => {
+    const res = makeRes();
+    vi.mocked(AuthenticationService.forgotPassword).mockResolvedValue({ message: "sent" });
+    const req = { normalized: { body: { email: "a@example.com" } }, body: {} } as any;
+
+    AuthenticationController.forgotPasswordController(req, res, next);
+    await flush();
+
+    expect(AuthenticationService.forgotPassword).toHaveBeenCalledWith("a@example.com");
+    expect(res.status).toHaveBeenCalledWith(200);
+  });
+});
+
+describe("resetPasswordController", () => {
+  it("reads the token param and body, and returns 200", async () => {
+    const res = makeRes();
+    vi.mocked(AuthenticationService.resetPassword).mockResolvedValue({ message: "reset" });
+    const req = {
+      normalized: {
+        params: { token: "tok" },
+        body: { email: "a@example.com", newPassword: "New1!Pass" },
+      },
+      params: {},
+      body: {},
+    } as any;
+
+    AuthenticationController.resetPasswordController(req, res, next);
+    await flush();
+
+    expect(AuthenticationService.resetPassword).toHaveBeenCalledWith({
+      token: "tok",
+      email: "a@example.com",
+      newPassword: "New1!Pass",
+    });
     expect(res.status).toHaveBeenCalledWith(200);
   });
 });
