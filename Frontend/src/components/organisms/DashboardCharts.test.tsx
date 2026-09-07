@@ -48,6 +48,43 @@ describe("DashboardCharts", () => {
     expect(within(section).getByText("9")).toBeInTheDocument();
   });
 
+  it("colors each status bar to match the app's fixed status color", () => {
+    render(
+      <DashboardCharts
+        statusDistribution={[
+          makeStatusEntry({ status: "open", count: 4 }),
+          makeStatusEntry({ status: "completed", count: 2 }),
+        ]}
+        priorityDistribution={[]}
+        ticketsOverTime={[]}
+        period="week"
+      />,
+    );
+
+    const section = screen
+      .getByText("Status distribution")
+      .closest("div") as HTMLElement;
+    const bars = section.querySelectorAll(".recharts-bar-rectangle path");
+    const fills = Array.from(bars).map((bar) => bar.getAttribute("fill"));
+    expect(fills).toEqual(expect.arrayContaining(["#64748b", "#22c55e"]));
+  });
+
+  it("shows a 'no data yet' message instead of an empty chart", () => {
+    render(
+      <DashboardCharts
+        statusDistribution={[]}
+        priorityDistribution={[]}
+        ticketsOverTime={[]}
+        period="week"
+      />,
+    );
+
+    const section = screen
+      .getByText("Status distribution")
+      .closest("div") as HTMLElement;
+    expect(within(section).getByText("No data yet.")).toBeInTheDocument();
+  });
+
   it("renders the priority distribution with labels and counts", () => {
     render(
       <DashboardCharts
@@ -105,7 +142,7 @@ describe("DashboardCharts", () => {
     expect(within(table).getByRole("cell", { name: "6" })).toBeInTheDocument();
   });
 
-  it("labels the chart svg for the given period", () => {
+  it("renders the trend chart with a Created/Closed legend", () => {
     render(
       <DashboardCharts
         statusDistribution={[]}
@@ -115,11 +152,10 @@ describe("DashboardCharts", () => {
       />,
     );
 
-    expect(
-      screen.getByRole("img", {
-        name: "Bar chart of tickets created and closed per year",
-      }),
-    ).toBeInTheDocument();
+    const chart = screen.getByTestId("tickets-trend-chart");
+    expect(chart.querySelector("svg.recharts-surface")).toBeInTheDocument();
+    expect(within(chart).getByText("Created")).toBeInTheDocument();
+    expect(within(chart).getByText("Closed")).toBeInTheDocument();
   });
 
   it("shows a full month and year in the accessible table for the month period", () => {
@@ -163,10 +199,14 @@ describe("DashboardCharts", () => {
       />,
     );
 
-    expect(screen.getByText("Dec")).toBeInTheDocument();
-    expect(screen.getByText("Jan")).toBeInTheDocument();
-    expect(screen.queryByText("Dec 2025")).not.toBeInTheDocument();
-    expect(screen.queryByText("Jan 2026")).not.toBeInTheDocument();
+    // Scoped to the chart itself: recharts also leaves a singleton
+    // `#recharts_measurement_span` on `document.body` (used to measure tick
+    // text width) whose leftover content can otherwise also match "Dec".
+    const chart = screen.getByTestId("tickets-trend-chart");
+    expect(within(chart).getByText("Dec")).toBeInTheDocument();
+    expect(within(chart).getByText("Jan")).toBeInTheDocument();
+    expect(within(chart).queryByText("Dec 2025")).not.toBeInTheDocument();
+    expect(within(chart).queryByText("Jan 2026")).not.toBeInTheDocument();
   });
 
   it("bookends the month trend chart with the first and last entries' years", () => {

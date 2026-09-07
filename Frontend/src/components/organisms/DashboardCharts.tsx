@@ -1,4 +1,16 @@
 import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  LabelList,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import {
   DASHBOARD_PERIOD_WINDOW_LABELS,
   PRIORITY_LABELS,
   STATUS_LABELS,
@@ -68,7 +80,10 @@ const PRIORITY_COLORS: Record<TicketPriority, string> = {
   urgent: "#ef4444",
 };
 
-function DistributionBars<T extends string>({
+const AXIS_TICK_STYLE = { fontSize: 10, fill: "#94a3b8" };
+const COUNT_LABEL_STYLE = { fill: "#334155", fontSize: 12, fontWeight: 600 };
+
+function DistributionChart<T extends string>({
   title,
   entries,
   colors,
@@ -79,32 +94,56 @@ function DistributionBars<T extends string>({
   colors: Record<T, string>;
   labels: Record<T, string>;
 }) {
-  const max = Math.max(1, ...entries.map((e) => e.count));
+  const chartData = entries.map((entry) => ({
+    key: entry.key,
+    label: labels[entry.key],
+    count: entry.count,
+  }));
+  const chartHeight = Math.max(chartData.length * 44, 1);
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
       <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
-      <ul className="mt-4 flex flex-col gap-3">
-        {entries.map((entry) => (
-          <li key={entry.key} className="flex items-center gap-3">
-            <span className="w-24 shrink-0 truncate text-xs font-medium text-slate-600">
-              {labels[entry.key]}
-            </span>
-            <span className="h-2.5 flex-1 overflow-hidden rounded-full bg-slate-100">
-              <span
-                className="block h-full rounded-full"
-                style={{
-                  width: `${(entry.count / max) * 100}%`,
-                  backgroundColor: colors[entry.key],
-                }}
+      {chartData.length === 0 ? (
+        <p className="mt-4 text-xs text-slate-400">No data yet.</p>
+      ) : (
+        <div className="mt-4" style={{ width: "100%", height: chartHeight }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={chartData}
+              layout="vertical"
+              margin={{ top: 0, right: 28, bottom: 0, left: 0 }}
+            >
+              <XAxis type="number" hide allowDecimals={false} />
+              <YAxis
+                type="category"
+                dataKey="label"
+                tickLine={false}
+                axisLine={false}
+                interval={0}
+                width={88}
+                tick={{ fontSize: 12, fill: "#475569" }}
               />
-            </span>
-            <span className="w-8 shrink-0 text-right text-xs font-semibold text-slate-700">
-              {entry.count}
-            </span>
-          </li>
-        ))}
-      </ul>
+              <Tooltip cursor={{ fill: "#f1f5f9" }} />
+              <Bar
+                dataKey="count"
+                radius={[0, 4, 4, 0]}
+                maxBarSize={18}
+                isAnimationActive={false}
+              >
+                {chartData.map((entry) => (
+                  <Cell key={entry.key} fill={colors[entry.key]} />
+                ))}
+                <LabelList
+                  dataKey="count"
+                  position="right"
+                  style={COUNT_LABEL_STYLE}
+                />
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
     </div>
   );
 }
@@ -116,131 +155,80 @@ function TrendChart({
   data: TicketsOverTimeEntry[];
   period: DashboardPeriod;
 }) {
-  const max = Math.max(1, ...data.flatMap((d) => [d.created, d.closed]));
-  const width = 560;
-  const height = 200;
-  const paddingLeft = 32;
-  const paddingBottom = 24;
-  const chartWidth = width - paddingLeft - 8;
-  const chartHeight = height - paddingBottom - 8;
-  const groupWidth = chartWidth / data.length;
-  const barWidth = Math.min(18, groupWidth / 3);
-  const minLabelWidth = period === "month" || period === "year" ? 24 : 40;
-  const labelStep = Math.max(1, Math.ceil(minLabelWidth / groupWidth));
-
-  const gridLines = [0, 0.25, 0.5, 0.75, 1];
+  const chartData = data.map((entry) => ({
+    date: entry.date,
+    label: formatBucketLabel(entry.date, period),
+    created: entry.created,
+    closed: entry.closed,
+  }));
 
   return (
-    <div className="relative rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-slate-900">
-          Tickets over time ({DASHBOARD_PERIOD_WINDOW_LABELS[period]})
-        </h3>
-        <div className="flex items-center gap-3 text-xs text-slate-600">
-          <span className="flex items-center gap-1.5">
-            <span
-              className="h-2.5 w-2.5 rounded-full bg-blue-500"
-              aria-hidden="true"
+    <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
+      <h3 className="text-sm font-semibold text-slate-900">
+        Tickets over time ({DASHBOARD_PERIOD_WINDOW_LABELS[period]})
+      </h3>
+
+      <div
+        data-testid="tickets-trend-chart"
+        className="mt-3"
+        style={{ width: "100%", height: 240 }}
+      >
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart
+            data={chartData}
+            margin={{ top: 8, right: 8, bottom: 0, left: 0 }}
+            barGap={2}
+          >
+            <CartesianGrid vertical={false} stroke="#e2e8f0" />
+            <XAxis
+              dataKey="label"
+              tickLine={false}
+              axisLine={false}
+              interval="preserveStartEnd"
+              tick={AXIS_TICK_STYLE}
             />
-            Created
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span
-              className="h-2.5 w-2.5 rounded-full bg-green-500"
-              aria-hidden="true"
+            <YAxis
+              tickLine={false}
+              axisLine={false}
+              allowDecimals={false}
+              width={28}
+              tick={AXIS_TICK_STYLE}
             />
-            Closed
-          </span>
+            <Tooltip cursor={{ fill: "#f8fafc" }} />
+            <Legend
+              verticalAlign="top"
+              align="right"
+              height={28}
+              iconType="circle"
+              iconSize={8}
+              wrapperStyle={{ fontSize: 12, color: "#475569" }}
+            />
+            <Bar
+              dataKey="created"
+              name="Created"
+              fill="#3b82f6"
+              radius={[4, 4, 0, 0]}
+              maxBarSize={18}
+              isAnimationActive={false}
+            />
+            <Bar
+              dataKey="closed"
+              name="Closed"
+              fill="#22c55e"
+              radius={[4, 4, 0, 0]}
+              maxBarSize={18}
+              isAnimationActive={false}
+            />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      {period === "month" && data.length > 0 && (
+        <div className="mt-1 flex justify-between px-7 text-[10px] font-medium text-slate-400">
+          <span>{yearOf(data[0]!.date)}</span>
+          <span>{yearOf(data[data.length - 1]!.date)}</span>
         </div>
-      </div>
-
-      <div className="overflow-x-auto">
-        <svg
-          role="img"
-          aria-label={`Bar chart of tickets created and closed ${PERIOD_RANGE_PHRASE[period]}`}
-          viewBox={`0 0 ${width} ${height}`}
-          className="w-full min-w-[420px]"
-        >
-          {gridLines.map((fraction) => {
-            const y = 8 + chartHeight * (1 - fraction);
-            return (
-              <line
-                key={fraction}
-                x1={paddingLeft}
-                x2={width - 8}
-                y1={y}
-                y2={y}
-                stroke="#e2e8f0"
-                strokeWidth={1}
-              />
-            );
-          })}
-          <text x={4} y={12} className="fill-slate-400 text-[9px]">
-            {max}
-          </text>
-          <text
-            x={4}
-            y={height - paddingBottom + 4}
-            className="fill-slate-400 text-[9px]"
-          >
-            0
-          </text>
-
-          {data.map((entry, index) => {
-            const groupX = paddingLeft + index * groupWidth;
-            const createdHeight = (entry.created / max) * chartHeight;
-            const closedHeight = (entry.closed / max) * chartHeight;
-            const showLabel =
-              index === data.length - 1 || index % labelStep === 0;
-            const label = showLabel
-              ? formatBucketLabel(entry.date, period)
-              : null;
-
-            return (
-              <g key={entry.date}>
-                <rect
-                  x={groupX + groupWidth / 2 - barWidth - 2}
-                  y={8 + chartHeight - createdHeight}
-                  width={barWidth}
-                  height={createdHeight}
-                  rx={3}
-                  fill="#3b82f6"
-                />
-                <rect
-                  x={groupX + groupWidth / 2 + 2}
-                  y={8 + chartHeight - closedHeight}
-                  width={barWidth}
-                  height={closedHeight}
-                  rx={3}
-                  fill="#22c55e"
-                />
-                {label !== null && (
-                  <text
-                    x={groupX + groupWidth / 2}
-                    y={height - 6}
-                    textAnchor="middle"
-                    className="fill-slate-500 text-[9px]"
-                  >
-                    {label}
-                  </text>
-                )}
-              </g>
-            );
-          })}
-        </svg>
-        {period === "month" && data.length > 0 && (
-          <div
-            className="flex min-w-[420px] justify-between text-[10px] font-medium text-slate-400"
-            style={{
-              paddingLeft: `${(paddingLeft / width) * 100}%`,
-              paddingRight: `${(8 / width) * 100}%`,
-            }}
-          >
-            <span>{yearOf(data[0]!.date)}</span>
-            <span>{yearOf(data[data.length - 1]!.date)}</span>
-          </div>
-        )}
-      </div>
+      )}
 
       <div className="sr-only">
         <table>
@@ -292,7 +280,7 @@ export function DashboardCharts({
     <div className="flex flex-col gap-4">
       <TrendChart data={ticketsOverTime} period={period} />
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <DistributionBars
+        <DistributionChart
           title="Status distribution"
           entries={statusDistribution.map((e) => ({
             key: e.status,
@@ -301,7 +289,7 @@ export function DashboardCharts({
           colors={STATUS_COLORS}
           labels={STATUS_LABELS}
         />
-        <DistributionBars
+        <DistributionChart
           title="Priority distribution"
           entries={priorityDistribution.map((e) => ({
             key: e.priority,
