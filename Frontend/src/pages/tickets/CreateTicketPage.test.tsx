@@ -12,6 +12,7 @@ import { ApiError } from "../../types/api";
 import type { Department } from "../../types/department";
 import type { SafeUser, User } from "../../types/user";
 import { makePagination } from "../../test/paginationFixture";
+import { selectReactOption } from "../../test/reactSelectHelpers";
 
 vi.mock("../../services/ticketService", () => ({
   ticketService: { create: vi.fn() },
@@ -184,8 +185,9 @@ describe("CreateTicketPage", () => {
     renderPage(makeUser({ role: "admin" }));
 
     await screen.findByLabelText(/^Title/);
-    await user.selectOptions(screen.getByLabelText(/^Department/), "dept-1");
+    await selectReactOption(user, /^Department/, "Support");
 
+    await user.click(screen.getByLabelText("Assignee"));
     expect(screen.getByRole("option", { name: "Sam Lee" })).toBeInTheDocument();
     expect(
       screen.queryByRole("option", { name: "Ann Kim" }),
@@ -233,7 +235,7 @@ describe("CreateTicketPage", () => {
       screen.getByLabelText(/^Description/),
       "  It jams every time.  ",
     );
-    await user.selectOptions(screen.getByLabelText(/^Department/), "dept-1");
+    await selectReactOption(user, /^Department/, "Support");
     await user.click(screen.getByRole("button", { name: "Create ticket" }));
 
     await waitFor(() =>
@@ -267,7 +269,7 @@ describe("CreateTicketPage", () => {
       screen.getByLabelText(/^Description/),
       "It jams every time.",
     );
-    await user.selectOptions(screen.getByLabelText(/^Department/), "dept-1");
+    await selectReactOption(user, /^Department/, "Support");
     await user.click(screen.getByRole("button", { name: "Create ticket" }));
 
     await waitFor(() =>

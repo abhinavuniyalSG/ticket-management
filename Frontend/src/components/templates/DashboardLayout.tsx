@@ -16,7 +16,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             type="button"
             aria-label="Open navigation"
             onClick={() => setIsMobileNavOpen(true)}
-            className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
+            className="cursor-pointer rounded-lg p-2 text-slate-600 hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
           >
             <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-5 w-5">
               <path

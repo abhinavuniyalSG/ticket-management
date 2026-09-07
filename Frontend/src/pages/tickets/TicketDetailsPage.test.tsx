@@ -12,6 +12,7 @@ import type { Department } from "../../types/department";
 import type { Ticket } from "../../types/ticket";
 import type { SafeUser, User } from "../../types/user";
 import { makePagination } from "../../test/paginationFixture";
+import { selectReactOption } from "../../test/reactSelectHelpers";
 
 vi.mock("../../services/ticketService", () => ({
   ticketService: { getById: vi.fn(), update: vi.fn(), remove: vi.fn() },
@@ -333,8 +334,8 @@ describe("TicketDetailsPage", () => {
     renderPage(makeUser({ role: "admin", departmentId: "dept-1" }));
 
     await screen.findByText("Printer is on fire");
-    const assigneeSelect = await screen.findByLabelText("Select assignee");
-    await user.selectOptions(assigneeSelect, "member-1");
+    await screen.findByLabelText("Select assignee");
+    await selectReactOption(user, "Select assignee", "Sam Lee");
     await user.click(screen.getByRole("button", { name: "Assign" }));
 
     await waitFor(() =>

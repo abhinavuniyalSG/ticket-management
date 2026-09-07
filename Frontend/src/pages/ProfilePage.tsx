@@ -242,10 +242,11 @@ export function ProfilePage() {
                     icon={
                       <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="h-4 w-4">
                         <path
-                          d="M5 5l10 10M15 5L5 15"
+                          d="M4 6h12M8 6V4.5a1 1 0 011-1h2a1 1 0 011 1V6M5.5 6l.6 9.5a1 1 0 001 .9h5.8a1 1 0 001-.9l.6-9.5"
                           stroke="currentColor"
-                          strokeWidth="1.7"
+                          strokeWidth="1.4"
                           strokeLinecap="round"
+                          strokeLinejoin="round"
                         />
                       </svg>
                     }

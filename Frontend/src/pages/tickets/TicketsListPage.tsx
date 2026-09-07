@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { cloneElement, isValidElement, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { PageContainer } from "../../components/layout/PageContainer";
@@ -67,10 +67,18 @@ function FilterField({
   label: string;
   children: ReactNode;
 }) {
+  // react-select's rich internal markup makes an implicit wrapping <label>
+  // an unreliable way to name the control (its accessible name ends up
+  // concatenating the placeholder/value text too), so give the field an
+  // explicit aria-label instead of relying on the wrap alone.
+  const field = isValidElement<{ "aria-label"?: string }>(children)
+    ? cloneElement(children, { "aria-label": children.props["aria-label"] ?? label })
+    : children;
+
   return (
-    <label className="flex flex-col gap-1 text-xs font-medium text-slate-500">
+    <label className="flex flex-col gap-1 text-xs font-semibold text-slate-700">
       <span>{label}</span>
-      {children}
+      {field}
     </label>
   );
 }
@@ -208,7 +216,7 @@ export function TicketsListPage() {
             </Button>
             <Link
               to="/tickets/new"
-              className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
+              className="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
             >
               New ticket
             </Link>
@@ -352,7 +360,7 @@ export function TicketsListPage() {
             ) : (
               <Link
                 to="/tickets/new"
-                className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+                className="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
               >
                 New ticket
               </Link>

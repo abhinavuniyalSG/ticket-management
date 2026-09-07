@@ -206,7 +206,7 @@ function TrendChart({
             <Bar
               dataKey="created"
               name="Created"
-              fill="#3b82f6"
+              fill="#4f46e5"
               radius={[4, 4, 0, 0]}
               maxBarSize={18}
               isAnimationActive={false}

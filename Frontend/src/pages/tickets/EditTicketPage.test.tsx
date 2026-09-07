@@ -179,7 +179,7 @@ describe("EditTicketPage", () => {
     expect(screen.getByLabelText(/^Description/)).toHaveValue(
       "Smoke coming from the third floor printer.",
     );
-    expect(screen.getByLabelText("Priority")).toHaveValue("high");
+    expect(screen.getByText("High")).toBeInTheDocument();
     expect(screen.getByLabelText(/^Department/)).toHaveValue("Facilities");
     expect(screen.getByLabelText(/^Department/)).toBeDisabled();
   });

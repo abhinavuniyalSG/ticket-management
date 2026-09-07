@@ -18,43 +18,43 @@ export function TicketTable({ tickets }: TicketTableProps) {
             <tr>
               <th
                 scope="col"
-                className="px-4 py-3 text-left font-medium text-slate-600"
+                className="px-4 py-3 text-left font-semibold text-slate-700"
               >
                 Title
               </th>
               <th
                 scope="col"
-                className="px-4 py-3 text-left font-medium text-slate-600"
+                className="px-4 py-3 text-left font-semibold text-slate-700"
               >
                 Status
               </th>
               <th
                 scope="col"
-                className="px-4 py-3 text-left font-medium text-slate-600"
+                className="px-4 py-3 text-left font-semibold text-slate-700"
               >
                 Priority
               </th>
               <th
                 scope="col"
-                className="px-4 py-3 text-left font-medium text-slate-600"
+                className="px-4 py-3 text-left font-semibold text-slate-700"
               >
                 Department
               </th>
               <th
                 scope="col"
-                className="px-4 py-3 text-left font-medium text-slate-600"
+                className="px-4 py-3 text-left font-semibold text-slate-700"
               >
                 Creator
               </th>
               <th
                 scope="col"
-                className="px-4 py-3 text-left font-medium text-slate-600"
+                className="px-4 py-3 text-left font-semibold text-slate-700"
               >
                 AssignedTo
               </th>
               <th
                 scope="col"
-                className="px-4 py-3 text-left font-medium text-slate-600"
+                className="px-4 py-3 text-left font-semibold text-slate-700"
               >
                 Created
               </th>

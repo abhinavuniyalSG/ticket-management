@@ -115,7 +115,7 @@ describe("DepartmentDetailsPage", () => {
     await screen.findByRole("heading", { name: "Support" });
     expect(screen.getByLabelText(/Department name/)).toHaveValue("Support");
     expect(screen.getByLabelText(/Department email/)).toHaveValue("support@example.com");
-    expect(screen.getByLabelText("Manager")).toHaveValue("user-1");
+    expect(screen.getByText("Ada Admin")).toBeInTheDocument();
   });
 
   it("shows an error state when the department fails to load", async () => {
@@ -135,11 +135,13 @@ describe("DepartmentDetailsPage", () => {
       ],
       pagination: makePagination({ totalItems: 2, totalPages: 1 }),
     });
+    const user = userEvent.setup();
     renderPage();
 
     const managerSelect = await screen.findByLabelText("Manager");
-    expect(within(managerSelect).getByRole("option", { name: "Ada Admin" })).toBeInTheDocument();
-    expect(within(managerSelect).queryByRole("option", { name: "Ray Regular" })).not.toBeInTheDocument();
+    await user.click(managerSelect);
+    expect(screen.getByRole("option", { name: "Ada Admin" })).toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: "Ray Regular" })).not.toBeInTheDocument();
   });
 
   it("validates the form before saving", async () => {

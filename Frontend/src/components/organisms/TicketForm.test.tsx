@@ -5,6 +5,7 @@ import { TicketForm } from "./TicketForm";
 import type { TicketFormValues } from "./TicketForm";
 import type { Department } from "../../types/department";
 import type { User } from "../../types/user";
+import { selectReactOption } from "../../test/reactSelectHelpers";
 
 function makeDepartment(overrides: Partial<Department> = {}): Department {
   return {
@@ -125,7 +126,7 @@ describe("TicketForm", () => {
 
     await user.type(screen.getByLabelText(/title/i), "Printer is broken");
     await user.type(screen.getByLabelText(/description/i), "The office printer jams constantly.");
-    await user.selectOptions(screen.getByLabelText(/department/i), "dept-1");
+    await selectReactOption(user, /department/i, "Support");
     await user.click(screen.getByRole("button", { name: "Create ticket" }));
 
     expect(onSubmit).toHaveBeenCalledWith({
@@ -154,10 +155,10 @@ describe("TicketForm", () => {
       />,
     );
 
-    await user.selectOptions(screen.getByLabelText(/department/i), "dept-1");
+    await selectReactOption(user, /department/i, "Support");
 
     expect(onDepartmentChange).toHaveBeenCalledWith("dept-1");
-    expect(screen.getByLabelText(/assignee/i)).toHaveValue("");
+    expect(screen.getByText("Leave unassigned")).toBeInTheDocument();
   });
 
   it("disables the assignee field with a hint until a department is chosen", () => {

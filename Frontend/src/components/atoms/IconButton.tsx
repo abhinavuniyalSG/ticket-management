@@ -16,14 +16,14 @@ export function IconButton({
   const variantClasses =
     variant === "danger"
       ? "text-red-600 hover:bg-red-50 focus-visible:outline-red-600"
-      : "text-slate-600 hover:bg-slate-100 focus-visible:outline-slate-900";
+      : "text-slate-600 hover:bg-slate-100 focus-visible:outline-indigo-600";
 
   return (
     <button
       type="button"
       aria-label={label}
       title={label}
-      className={`inline-flex h-9 w-9 items-center justify-center rounded-lg transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-40 ${variantClasses} ${className}`}
+      className={`inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-40 ${variantClasses} ${className}`}
       {...rest}
     >
       {icon}

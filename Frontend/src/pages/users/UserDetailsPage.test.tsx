@@ -12,6 +12,7 @@ import { ApiError } from "../../types/api";
 import type { User } from "../../types/user";
 import type { Department } from "../../types/department";
 import { makePagination } from "../../test/paginationFixture";
+import { selectReactOption } from "../../test/reactSelectHelpers";
 
 vi.mock("../../services/userService", () => ({
   userService: { getById: vi.fn(), update: vi.fn(), remove: vi.fn() },
@@ -201,7 +202,7 @@ describe("UserDetailsPage", () => {
     // A super_admin viewing someone else can never edit that person's name.
     expect(screen.getByLabelText("First name")).toBeDisabled();
     expect(screen.getByLabelText("Last name")).toBeDisabled();
-    await user.selectOptions(screen.getByLabelText("Role"), "admin");
+    await selectReactOption(user, "Role", "Admin");
     await user.click(screen.getByRole("button", { name: "Save changes" }));
 
     await waitFor(() =>

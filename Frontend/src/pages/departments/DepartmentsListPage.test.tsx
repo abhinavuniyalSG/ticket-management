@@ -160,10 +160,11 @@ describe("DepartmentsListPage", () => {
     await user.click(screen.getByRole("button", { name: "New department" }));
 
     const managerSelect = await screen.findByLabelText("Manager");
-    await waitFor(() => expect(within(managerSelect).getAllByRole("option")).toHaveLength(3));
-    expect(within(managerSelect).getByRole("option", { name: "Ada Admin" })).toBeInTheDocument();
-    expect(within(managerSelect).getByRole("option", { name: "Sue Super" })).toBeInTheDocument();
-    expect(within(managerSelect).queryByRole("option", { name: "Ray Regular" })).not.toBeInTheDocument();
+    await user.click(managerSelect);
+    await waitFor(() => expect(screen.getAllByRole("option")).toHaveLength(2));
+    expect(screen.getByRole("option", { name: "Ada Admin" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Sue Super" })).toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: "Ray Regular" })).not.toBeInTheDocument();
   });
 
   it("validates the create form before submitting", async () => {

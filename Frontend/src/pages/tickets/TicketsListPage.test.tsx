@@ -13,6 +13,7 @@ import type { Department } from "../../types/department";
 import type { Ticket } from "../../types/ticket";
 import type { SafeUser, User } from "../../types/user";
 import { makePagination } from "../../test/paginationFixture";
+import { selectReactOption } from "../../test/reactSelectHelpers";
 
 vi.mock("../../services/ticketService", () => ({
   ticketService: { list: vi.fn() },
@@ -256,17 +257,15 @@ describe("TicketsListPage", () => {
     await findTicketTitles("Printer is on fire");
     await user.click(screen.getByRole("button", { name: "Filters" }));
 
-    const assignedToField = screen.getByLabelText("AssignedTo") as HTMLSelectElement;
-    const creatorField = screen.getByLabelText("Creator") as HTMLSelectElement;
+    expect(screen.getByText("All assigned to")).toBeInTheDocument();
+    expect(screen.getByText("All creators")).toBeInTheDocument();
 
-    expect(within(assignedToField).getAllByRole("option").map((o) => o.textContent)).toEqual([
-      "All assigned to",
-      "Jane Doe",
-    ]);
-    expect(within(creatorField).getAllByRole("option").map((o) => o.textContent)).toEqual([
-      "All creators",
-      "Jane Doe",
-    ]);
+    await user.click(screen.getByRole("combobox", { name: "AssignedTo" }));
+    expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual(["Jane Doe"]);
+    await user.keyboard("{Escape}");
+
+    await user.click(screen.getByRole("combobox", { name: "Creator" }));
+    expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual(["Jane Doe"]);
   });
 
   it("shows the full department user list in the assignee/creator filters for an admin", async () => {
@@ -281,9 +280,9 @@ describe("TicketsListPage", () => {
     await findTicketTitles("Printer is on fire");
     await user.click(screen.getByRole("button", { name: "Filters" }));
 
-    const assignedToField = screen.getByLabelText("AssignedTo") as HTMLSelectElement;
-    expect(within(assignedToField).getByRole("option", { name: "Sam Lee" })).toBeInTheDocument();
-    expect(screen.getByLabelText("Creator")).toBeInTheDocument();
+    await user.click(screen.getByRole("combobox", { name: "AssignedTo" }));
+    expect(screen.getByRole("option", { name: "Sam Lee" })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Creator" })).toBeInTheDocument();
   });
 
   it("refetches tickets with the selected status when a filter changes", async () => {
@@ -292,7 +291,7 @@ describe("TicketsListPage", () => {
     await findTicketTitles("Printer is on fire");
 
     await user.click(screen.getByRole("button", { name: "Filters" }));
-    await user.selectOptions(screen.getByLabelText("Status"), "closed");
+    await selectReactOption(user, "Status", "Closed");
 
     await waitFor(() =>
       expect(ticketService.list).toHaveBeenLastCalledWith(
@@ -327,7 +326,7 @@ describe("TicketsListPage", () => {
     const resetButton = screen.getByRole("button", { name: "Reset filters" });
     expect(resetButton).toBeDisabled();
 
-    await user.selectOptions(screen.getByLabelText("Priority"), "high");
+    await selectReactOption(user, "Priority", "High");
     expect(resetButton).toBeEnabled();
 
     await user.click(screen.getByRole("button", { name: "Hide filters" }));
@@ -338,7 +337,7 @@ describe("TicketsListPage", () => {
     await user.click(screen.getByRole("button", { name: "Filters (1)" }));
     await user.click(screen.getByRole("button", { name: "Reset filters" }));
     await waitFor(() =>
-      expect(screen.getByLabelText("Priority")).toHaveValue(""),
+      expect(screen.getByText("All priorities")).toBeInTheDocument(),
     );
     expect(
       screen.getByRole("button", { name: "Reset filters" }),
@@ -356,7 +355,7 @@ describe("TicketsListPage", () => {
       tickets: [],
       pagination: makePagination(),
     });
-    await user.selectOptions(screen.getByLabelText("Priority"), "high");
+    await selectReactOption(user, "Priority", "High");
 
     const emptyState = await screen.findByText("No tickets found");
     const container = emptyState.closest("div") as HTMLElement;
@@ -417,7 +416,7 @@ describe("TicketsListPage", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "Filters" }));
-    await user.selectOptions(screen.getByLabelText("Status"), "closed");
+    await selectReactOption(user, "Status", "Closed");
 
     await waitFor(() =>
       expect(ticketService.list).toHaveBeenLastCalledWith(

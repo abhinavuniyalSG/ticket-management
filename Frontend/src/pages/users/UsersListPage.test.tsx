@@ -12,6 +12,7 @@ import { ApiError } from "../../types/api";
 import type { User } from "../../types/user";
 import type { Department } from "../../types/department";
 import { makePagination } from "../../test/paginationFixture";
+import { selectReactOption } from "../../test/reactSelectHelpers";
 
 vi.mock("../../services/userService", () => ({
   userService: { list: vi.fn(), remove: vi.fn() },
@@ -182,7 +183,7 @@ describe("UsersListPage", () => {
     renderPage();
 
     await waitFor(() => expect(mockedUserService.list).toHaveBeenCalledTimes(1));
-    await user.selectOptions(screen.getByRole("combobox", { name: "Filter by role" }), "admin");
+    await selectReactOption(user, "Filter by role", "Admin");
 
     await waitFor(() =>
       expect(mockedUserService.list).toHaveBeenLastCalledWith({
@@ -221,8 +222,8 @@ describe("UsersListPage", () => {
     const user = userEvent.setup();
     renderPage();
 
-    const departmentSelect = await screen.findByRole("combobox", { name: "Filter by department" });
-    await user.selectOptions(departmentSelect, "Support");
+    await screen.findByRole("combobox", { name: "Filter by department" });
+    await selectReactOption(user, "Filter by department", "Support");
 
     await waitFor(() =>
       expect(mockedUserService.list).toHaveBeenLastCalledWith({
@@ -249,14 +250,14 @@ describe("UsersListPage", () => {
     expect(clearButton).toBeDisabled();
 
     await user.type(screen.getByLabelText("Search users"), "Jane");
-    await user.selectOptions(screen.getByRole("combobox", { name: "Filter by role" }), "admin");
+    await selectReactOption(user, "Filter by role", "Admin");
 
     await waitFor(() => expect(clearButton).toBeEnabled());
 
     await user.click(clearButton);
 
     expect(screen.getByLabelText("Search users")).toHaveValue("");
-    expect(screen.getByRole("combobox", { name: "Filter by role" })).toHaveValue("");
+    expect(screen.getByText("All roles")).toBeInTheDocument();
     await waitFor(() =>
       expect(mockedUserService.list).toHaveBeenLastCalledWith({
         firstName: undefined,

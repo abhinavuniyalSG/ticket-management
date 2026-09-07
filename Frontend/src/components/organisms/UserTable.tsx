@@ -17,23 +17,23 @@ export function UserTable({ users, renderActions }: UserTableProps) {
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-slate-50">
             <tr>
-              <th scope="col" className="px-4 py-3 text-left font-medium text-slate-600">
+              <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700">
                 Name
               </th>
-              <th scope="col" className="px-4 py-3 text-left font-medium text-slate-600">
+              <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700">
                 Email
               </th>
-              <th scope="col" className="px-4 py-3 text-left font-medium text-slate-600">
+              <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700">
                 Role
               </th>
-              <th scope="col" className="px-4 py-3 text-left font-medium text-slate-600">
+              <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700">
                 Department
               </th>
-              <th scope="col" className="px-4 py-3 text-left font-medium text-slate-600">
+              <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-700">
                 Verified
               </th>
               {renderActions && (
-                <th scope="col" className="px-4 py-3 text-right font-medium text-slate-600">
+                <th scope="col" className="px-4 py-3 text-right font-semibold text-slate-700">
                   Actions
                 </th>
               )}

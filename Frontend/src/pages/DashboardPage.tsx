@@ -38,9 +38,9 @@ function PeriodToggle({
           type="button"
           onClick={() => onChange(option)}
           aria-pressed={value === option}
-          className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+          className={`cursor-pointer rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
             value === option
-              ? "bg-slate-900 text-white"
+              ? "bg-indigo-600 text-white"
               : "text-slate-600 hover:bg-slate-100"
           }`}
         >

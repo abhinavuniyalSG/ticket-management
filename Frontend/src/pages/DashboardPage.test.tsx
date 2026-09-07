@@ -12,6 +12,7 @@ import type { DashboardBreakdown, DashboardOverview } from "../types/dashboard";
 import type { Department } from "../types/department";
 import type { SafeUser } from "../types/user";
 import { makePagination } from "../test/paginationFixture";
+import { selectReactOption } from "../test/reactSelectHelpers";
 
 vi.mock("../services/dashboardService");
 vi.mock("../services/departmentService");
@@ -187,11 +188,13 @@ describe("DashboardPage", () => {
       pagination: makePagination({ totalItems: 2, totalPages: 1 }),
     });
 
+    const user = userEvent.setup();
     renderDashboard({ user: makeUser({ role: "admin", id: "user-1" }) });
 
     const picker = await screen.findByLabelText("Filter dashboard by department");
-    expect(within(picker).getByText("Support")).toBeInTheDocument();
-    expect(within(picker).queryByText("Sales")).not.toBeInTheDocument();
+    await user.click(picker);
+    expect(screen.getByRole("option", { name: "Support" })).toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: "Sales" })).not.toBeInTheDocument();
   });
 
   it("shows every department in a super_admin's picker", async () => {
@@ -205,11 +208,13 @@ describe("DashboardPage", () => {
       pagination: makePagination({ totalItems: 2, totalPages: 1 }),
     });
 
+    const user = userEvent.setup();
     renderDashboard({ user: makeUser({ role: "super_admin" }) });
 
     const picker = await screen.findByLabelText("Filter dashboard by department");
-    expect(within(picker).getByText("Support")).toBeInTheDocument();
-    expect(within(picker).getByText("Sales")).toBeInTheDocument();
+    await user.click(picker);
+    expect(screen.getByRole("option", { name: "Support" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Sales" })).toBeInTheDocument();
   });
 
   it("passes the picked department to both calls", async () => {
@@ -226,7 +231,7 @@ describe("DashboardPage", () => {
     vi.mocked(dashboardService.get).mockClear();
     vi.mocked(dashboardService.getOverview).mockClear();
 
-    await user.selectOptions(screen.getByLabelText("Filter dashboard by department"), "dept-1");
+    await selectReactOption(user, "Filter dashboard by department", "Support");
 
     await waitFor(() => {
       expect(dashboardService.get).toHaveBeenCalledWith("dept-1", "day");
