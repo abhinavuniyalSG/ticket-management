@@ -372,6 +372,10 @@ export function TicketsListPage() {
       {!isLoading && !error && tickets && tickets.length > 0 && (
         <>
           <TicketTable tickets={tickets} />
+          {/* Grows to fill any leftover height so pagination sits at the
+              bottom of the page even when the list is short (e.g. a single
+              result); collapses to nothing once the list already fills it. */}
+          <div className="flex-1" />
           {pagination && (
             <Pagination
               pagination={pagination}
