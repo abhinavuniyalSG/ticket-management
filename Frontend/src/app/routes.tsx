@@ -36,7 +36,8 @@ function RootRedirect() {
       </div>
     );
   }
-  if (status === "unauthenticated" || !user) return <Navigate to="/login" replace />;
+  if (status === "unauthenticated" || !user)
+    return <Navigate to="/login" replace />; //replace here is asafegard to revent the user foirm goin back to the route from which it was redirected
   if (!user.isVerified) return <Navigate to="/verify-required" replace />;
   return <Navigate to={getDefaultRouteForRole(user.role)} replace />;
 }
@@ -53,7 +54,10 @@ export function AppRoutes() {
       <Route path="/resend-verification" element={<ResendVerificationPage />} />
       <Route path="/change-password" element={<ChangePasswordPage />} />
       <Route path="/changepassword/email" element={<ForgotPasswordPage />} />
-      <Route path="/changepassword/verify/:token" element={<ResetPasswordPage />} />
+      <Route
+        path="/changepassword/verify/:token"
+        element={<ResetPasswordPage />}
+      />
 
       {/* Authenticated, but not necessarily verified */}
       <Route path="/verify-required" element={<VerificationRequiredPage />} />
@@ -65,7 +69,10 @@ export function AppRoutes() {
         <Route path="/tickets/:id" element={<TicketDetailsPage />} />
         <Route path="/tickets/:id/edit" element={<EditTicketPage />} />
         <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/profile/change-password" element={<ProfileChangePasswordPage />} />
+        <Route
+          path="/profile/change-password"
+          element={<ProfileChangePasswordPage />}
+        />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
       </Route>
 

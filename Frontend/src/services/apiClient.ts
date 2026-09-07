@@ -16,7 +16,10 @@ export function setSessionExpiredHandler(handler: (() => void) | null): void {
   sessionExpiredHandler = handler;
 }
 
-function buildUrl(path: string, query?: Record<string, string | undefined>): string {
+function buildUrl(
+  path: string,
+  query?: Record<string, string | undefined>,
+): string {
   const url = new URL(`${API_BASE_URL}${path}`);
   if (query) {
     for (const [key, value] of Object.entries(query)) {
@@ -28,11 +31,15 @@ function buildUrl(path: string, query?: Record<string, string | undefined>): str
   return url.toString();
 }
 
-async function rawFetch(path: string, options: RequestOptions): Promise<Response> {
+async function rawFetch(
+  path: string,
+  options: RequestOptions,
+): Promise<Response> {
   return fetch(buildUrl(path, options.query), {
     method: options.method ?? "GET",
     credentials: "include",
-    headers: options.body !== undefined ? { "Content-Type": "application/json" } : {},
+    headers:
+      options.body !== undefined ? { "Content-Type": "application/json" } : {},
     body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
   });
 }
@@ -54,7 +61,8 @@ async function parseJson(res: Response): Promise<unknown> {
 
 function toApiError(status: number, body: unknown): ApiError {
   const errorBody = (body ?? {}) as ErrorBody;
-  const message = errorBody.message ?? "Something went wrong. Please try again.";
+  const message =
+    errorBody.message ?? "Something went wrong. Please try again.";
   return new ApiError(status, message, errorBody.errors);
 }
 
@@ -63,17 +71,17 @@ function toApiError(status: number, body: unknown): ApiError {
 // every use, so two independent refresh calls racing on the same cookie
 // (e.g. React StrictMode's double effect-invocation on mount, or two tabs)
 // would otherwise cause the loser to be rejected and the session dropped.
-let refreshInFlight: Promise<boolean> | null = null;
+let refreshInFlight: Promise<boolean> | null = null; //create a vraibale to stop the second call if first it running
 export function refreshSession(): Promise<boolean> {
   if (!refreshInFlight) {
-    refreshInFlight = rawFetch("/auth/refresh", { method: "POST" })
+    refreshInFlight = rawFetch("/auth/refresh", { method: "POST" }) //promise is always true value so the refreshInFlight return
       .then((res) => res.ok)
       .catch(() => false)
       .finally(() => {
-        refreshInFlight = null;
+        refreshInFlight = null; //finally execute the clean up  after the refreshSession return the promise.
       });
   }
-  return refreshInFlight;
+  return refreshInFlight; //it is also a fallback in case already running
 }
 
 const NO_REFRESH_RETRY_PATHS = new Set([

@@ -235,23 +235,38 @@ describe("TicketsListPage", () => {
     expect(screen.queryByLabelText("Status")).not.toBeInTheDocument();
   });
 
-  it("only shows assignee/creator filters to admins and super admins", async () => {
+  it("limits a regular user's assignee/creator filters to just themselves", async () => {
     const user = userEvent.setup();
-    renderPage(makeUser({ role: "user" }));
+    renderPage(makeUser({ role: "user", id: "user-1", firstName: "Jane", lastName: "Doe" }));
     await findTicketTitles("Printer is on fire");
     await user.click(screen.getByRole("button", { name: "Filters" }));
 
-    expect(screen.queryByLabelText("AssignedTo")).not.toBeInTheDocument();
-    expect(screen.queryByLabelText("Creator")).not.toBeInTheDocument();
+    const assignedToField = screen.getByLabelText("AssignedTo") as HTMLSelectElement;
+    const creatorField = screen.getByLabelText("Creator") as HTMLSelectElement;
+
+    expect(within(assignedToField).getAllByRole("option").map((o) => o.textContent)).toEqual([
+      "All assignees",
+      "Jane Doe",
+    ]);
+    expect(within(creatorField).getAllByRole("option").map((o) => o.textContent)).toEqual([
+      "All creators",
+      "Jane Doe",
+    ]);
   });
 
-  it("shows assignee/creator filters for an admin", async () => {
+  it("shows the full department user list in the assignee/creator filters for an admin", async () => {
+    vi.mocked(userService.list).mockResolvedValue({
+      message: "ok",
+      users: [makeUser({ id: "member-1", firstName: "Sam", lastName: "Lee" })],
+    });
+
     const user = userEvent.setup();
     renderPage(makeUser({ role: "admin" }));
     await findTicketTitles("Printer is on fire");
     await user.click(screen.getByRole("button", { name: "Filters" }));
 
-    expect(screen.getByLabelText("AssignedTo")).toBeInTheDocument();
+    const assignedToField = screen.getByLabelText("AssignedTo") as HTMLSelectElement;
+    expect(within(assignedToField).getByRole("option", { name: "Sam Lee" })).toBeInTheDocument();
     expect(screen.getByLabelText("Creator")).toBeInTheDocument();
   });
 

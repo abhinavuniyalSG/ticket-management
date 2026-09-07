@@ -3,7 +3,7 @@ import rateLimit from "express-rate-limit";
 export class RateLimiterMiddleware {
   private static globalLimiterConfig = {
     windowMs: 1 * 60 * 1000,
-    limit: 100,
+    limit: 120,
     standardHeaders: "draft-7" as const,
     legacyHeaders: false,
     message: "Too many requests from this IP, please try again after 1 minutes",

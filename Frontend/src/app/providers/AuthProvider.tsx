@@ -3,7 +3,10 @@ import type { ReactNode } from "react";
 import toast from "react-hot-toast";
 import { authService } from "../../services/authService";
 import type { LoginPayload, RegisterPayload } from "../../services/authService";
-import { refreshSession, setSessionExpiredHandler } from "../../services/apiClient";
+import {
+  refreshSession,
+  setSessionExpiredHandler,
+} from "../../services/apiClient";
 import type { SafeUser } from "../../types/user";
 import { ApiError } from "../../types/api";
 import { AuthContext } from "./AuthContext";
@@ -33,10 +36,11 @@ function writeCachedUser(user: SafeUser | null): void {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUserState] = useState<SafeUser | null>(null);
-  const [status, setStatus] = useState<AuthStatus>("loading");
+  const [user, setUserState] = useState<SafeUser | null>(null); // stores user info
+  const [status, setStatus] = useState<AuthStatus>("loading"); // flag for userlogin or not
 
   const setUser = useCallback((next: SafeUser | null) => {
+    //defiend as callback as being used in memo
     setUserState(next);
     writeCachedUser(next);
     setStatus(next ? "authenticated" : "unauthenticated");
@@ -46,13 +50,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // /users/me endpoint, so the only way to confirm a session is still valid
   // is POST /auth/refresh; the actual profile (name/role/etc) can only come
   // from a cached copy written after the last successful login/register.
+
+  //we are  getting to know the suer is aready login
   useEffect(() => {
-    let cancelled = false;
+    let cancelled = false; //flag to stop the calling if the further exection in case of unmounting
 
     const restoreSession = async () => {
       const cached = readCachedUser();
-      const refreshed = await refreshSession();
-      if (cancelled) return;
+      const refreshed = await refreshSession(); //check if the refreshtoken still valid
+      if (cancelled) return; //if true then stop the further exection if async function
       if (refreshed && cached) {
         setUserState(cached);
         setStatus("authenticated");
@@ -64,6 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     void restoreSession();
     return () => {
+      // set cancel true for unmouting useeffect
       cancelled = true;
     };
   }, []);

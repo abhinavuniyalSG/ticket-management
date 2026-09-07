@@ -42,7 +42,7 @@ export class AuthenticationService {
     email: string,
     verificationToken: string,
   ) => {
-    const verificationLink = `${APP_VARIABLES.APP_URL}/api/auth/verify-email/${verificationToken}`;
+    const verificationLink = `${APP_VARIABLES.FRONTEND_URL}/verify-email/${verificationToken}`;
     await EmailService.send({
       to: email,
       subject: "Verify your email address",
@@ -348,7 +348,8 @@ export class AuthenticationService {
     logger.info("User reset password successfully", { userId: user.id });
 
     return {
-      message: "Password reset successful. Please sign in with your new password.",
+      message:
+        "Password reset successful. Please sign in with your new password.",
     };
   };
 

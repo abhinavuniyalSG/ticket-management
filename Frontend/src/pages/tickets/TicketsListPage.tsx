@@ -166,6 +166,14 @@ export function TicketsListPage() {
   ).length;
   const hasActiveFilters = activeFilterCount > 0;
 
+  // A regular user's tickets are already scoped server-side to ones they created
+  // or are assigned to, so there's no one else to filter by - just themselves.
+  const userFilterOptions = canSeeUserFilters
+    ? users.map((u) => ({ value: u.id, label: fullName(u) }))
+    : user
+      ? [{ value: user.id, label: fullName(user) }]
+      : [];
+
   return (
     <PageContainer>
       <PageHeader
@@ -236,32 +244,22 @@ export function TicketsListPage() {
                 onChange={(e) => setFilter("departmentId")(e.target.value)}
               />
             </FilterField>
-            {canSeeUserFilters && (
-              <FilterField label="AssignedTo">
-                <Select
-                  placeholder="All assignees"
-                  value={filters.assignedToId}
-                  options={users.map((u) => ({
-                    value: u.id,
-                    label: fullName(u),
-                  }))}
-                  onChange={(e) => setFilter("assignedToId")(e.target.value)}
-                />
-              </FilterField>
-            )}
-            {canSeeUserFilters && (
-              <FilterField label="Creator">
-                <Select
-                  placeholder="All creators"
-                  value={filters.createdById}
-                  options={users.map((u) => ({
-                    value: u.id,
-                    label: fullName(u),
-                  }))}
-                  onChange={(e) => setFilter("createdById")(e.target.value)}
-                />
-              </FilterField>
-            )}
+            <FilterField label="AssignedTo">
+              <Select
+                placeholder="All assignees"
+                value={filters.assignedToId}
+                options={userFilterOptions}
+                onChange={(e) => setFilter("assignedToId")(e.target.value)}
+              />
+            </FilterField>
+            <FilterField label="Creator">
+              <Select
+                placeholder="All creators"
+                value={filters.createdById}
+                options={userFilterOptions}
+                onChange={(e) => setFilter("createdById")(e.target.value)}
+              />
+            </FilterField>
             <FilterField label="Created from">
               <Input
                 type="date"
