@@ -7,10 +7,7 @@ import { TicketPriority, TicketStatus } from "../types/ticket.js";
 import { Ticket } from "../database/models/ticket.model.js";
 import { logger } from "../core/logger.js";
 import { NotificationService } from "./notification.service.js";
-import {
-  buildPaginationMeta,
-  DEFAULT_PAGE,
-} from "../utils/pagination.util.js";
+import { buildPaginationMeta, DEFAULT_PAGE } from "../utils/pagination.util.js";
 
 export interface CreateTicketInput {
   title: string;
@@ -173,11 +170,15 @@ export class TicketService {
     adminId: string,
     adminDepartmentId?: string | null,
   ): Promise<string[]> {
-    const managedDepartments = await DepartmentRepository.findByManager(adminId);
+    const managedDepartments =
+      await DepartmentRepository.findByManager(adminId);
     return Array.from(
       new Set(
-        [adminDepartmentId, ...managedDepartments.map((d) => d.departmentId)].filter(
-          (departmentId): departmentId is string => Boolean(departmentId),
+        [
+          adminDepartmentId,
+          ...managedDepartments.map((d) => d.departmentId),
+        ].filter((departmentId): departmentId is string =>
+          Boolean(departmentId),
         ),
       ),
     );
@@ -224,9 +225,6 @@ export class TicketService {
     return {
       message: "Tickets fetched successfully",
       tickets: tickets.map((t) => this.sanitizeTicket(t)),
-      // When no limit was requested, everything came back in one batch -
-      // report that batch's size as the "limit" so the meta reads as a
-      // single full page rather than falsely implying more pages exist.
       pagination: buildPaginationMeta(total, page, limit ?? total),
     };
   }
