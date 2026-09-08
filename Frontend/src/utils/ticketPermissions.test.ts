@@ -1,9 +1,11 @@
 import { describe, it, expect } from "vitest";
 import {
   canAssignOnCreate,
+  canAssignTicket,
   canDeleteTicket,
   canEditTicketContent,
   canManageAssignment,
+  canUnassignTicket,
   getAllowedStatusTransitions,
 } from "./ticketPermissions";
 import type { Ticket, TicketStatus } from "../types/ticket";
@@ -129,6 +131,64 @@ describe("canManageAssignment", () => {
     const user = makeUser({ role: "user", departmentId: "dept-1" });
     const ticket = makeTicket({ departmentId: "dept-1" });
     expect(canManageAssignment(ticket, user)).toBe(false);
+  });
+});
+
+describe("canAssignTicket", () => {
+  it("allows a same-department admin while the ticket is open", () => {
+    const user = makeUser({ role: "admin", departmentId: "dept-1" });
+    const ticket = makeTicket({ departmentId: "dept-1", status: "open" });
+    expect(canAssignTicket(ticket, user)).toBe(true);
+  });
+
+  it("blocks a same-department admin once the ticket is no longer open", () => {
+    const user = makeUser({ role: "admin", departmentId: "dept-1" });
+    const ticket = makeTicket({
+      departmentId: "dept-1",
+      status: "assigned",
+      assignedToId: "assignee-1",
+    });
+    expect(canAssignTicket(ticket, user)).toBe(false);
+  });
+
+  it("always allows a super admin regardless of status", () => {
+    const user = makeUser({ role: "super_admin" });
+    const ticket = makeTicket({ status: "in_progress", assignedToId: "assignee-1" });
+    expect(canAssignTicket(ticket, user)).toBe(true);
+  });
+});
+
+describe("canUnassignTicket", () => {
+  it("allows a same-department admin while the ticket is assigned", () => {
+    const user = makeUser({ role: "admin", departmentId: "dept-1" });
+    const ticket = makeTicket({
+      departmentId: "dept-1",
+      status: "assigned",
+      assignedToId: "assignee-1",
+    });
+    expect(canUnassignTicket(ticket, user)).toBe(true);
+  });
+
+  it("blocks a same-department admin once the ticket has moved past assigned", () => {
+    const user = makeUser({ role: "admin", departmentId: "dept-1" });
+    const ticket = makeTicket({
+      departmentId: "dept-1",
+      status: "in_progress",
+      assignedToId: "assignee-1",
+    });
+    expect(canUnassignTicket(ticket, user)).toBe(false);
+  });
+
+  it("blocks a same-department admin from unassigning an already-open ticket", () => {
+    const user = makeUser({ role: "admin", departmentId: "dept-1" });
+    const ticket = makeTicket({ departmentId: "dept-1", status: "open" });
+    expect(canUnassignTicket(ticket, user)).toBe(false);
+  });
+
+  it("always allows a super admin regardless of status", () => {
+    const user = makeUser({ role: "super_admin" });
+    const ticket = makeTicket({ status: "completed", assignedToId: "assignee-1" });
+    expect(canUnassignTicket(ticket, user)).toBe(true);
   });
 });
 

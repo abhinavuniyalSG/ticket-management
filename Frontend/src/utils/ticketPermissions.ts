@@ -79,12 +79,33 @@ export function canEditTicketContent(ticket: Ticket, user: User): boolean {
 
 /**
  * Department admins (own department, or a department they've been set as
- * the manager of via Department.managedBy) and super admins may
- * assign/unassign.
+ * the manager of via Department.managedBy) may only assign a ticket while
+ * it is 'open'; super admins may assign regardless of status. Mirrors the
+ * backend guard in TicketService.updateTicket.
  */
-export function canManageAssignment(ticket: Ticket, user: User): boolean {
+export function canAssignTicket(ticket: Ticket, user: User): boolean {
   const { isSameDeptAdmin, isSuperAdmin } = getRoleFlags(ticket, user);
-  return isSameDeptAdmin || managesTicketDepartment(ticket, user) || isSuperAdmin;
+  if (isSuperAdmin) return true;
+  const isDeptAdmin = isSameDeptAdmin || managesTicketDepartment(ticket, user);
+  return isDeptAdmin && ticket.status === "open";
+}
+
+/**
+ * Department admins may only unassign a ticket while it is 'assigned' -
+ * once it has moved further along the workflow they can no longer
+ * force-unassign it. Super admins may unassign regardless of status.
+ * Mirrors the backend guard in TicketService.updateTicket.
+ */
+export function canUnassignTicket(ticket: Ticket, user: User): boolean {
+  const { isSameDeptAdmin, isSuperAdmin } = getRoleFlags(ticket, user);
+  if (isSuperAdmin) return true;
+  const isDeptAdmin = isSameDeptAdmin || managesTicketDepartment(ticket, user);
+  return isDeptAdmin && ticket.status === "assigned";
+}
+
+/** Whether the assignment section (assign or unassign) should be shown at all. */
+export function canManageAssignment(ticket: Ticket, user: User): boolean {
+  return canAssignTicket(ticket, user) || canUnassignTicket(ticket, user);
 }
 
 export function canDeleteTicket(ticket: Ticket, user: User): boolean {

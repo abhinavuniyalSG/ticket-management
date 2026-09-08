@@ -1,12 +1,19 @@
-import type { DashboardMetrics } from "../../types/dashboard";
+import type { DashboardMetrics, DashboardPeriod } from "../../types/dashboard";
 
 interface DashboardStatsProps {
   metrics: DashboardMetrics;
 }
 
+const TOTAL_TICKETS_LABEL: Record<DashboardPeriod, string> = {
+  day: "Total tickets created today",
+  week: "Total tickets created this week",
+  month: "Total tickets created this month",
+  year: "Total tickets created this year",
+};
+
 export function DashboardStats({ metrics }: DashboardStatsProps) {
   const tiles: Array<{ label: string; value: string }> = [
-    { label: "Total tickets", value: String(metrics.totalTickets) },
+    { label: TOTAL_TICKETS_LABEL[metrics.period], value: String(metrics.totalTicketsCreated) },
     { label: "Open", value: String(metrics.openTickets) },
     { label: "Assigned", value: String(metrics.assignedTickets) },
     { label: "In progress", value: String(metrics.inProgressTickets) },

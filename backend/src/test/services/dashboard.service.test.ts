@@ -371,7 +371,7 @@ describe("getDashboardOverview: access and department scoping", () => {
       message: "Dashboard overview fetched successfully",
       departmentId: null,
       period: DashboardOverviewPeriod.day,
-      totalTickets: 10,
+      totalTicketsCreated: 10,
       openTickets: 2,
       assignedTickets: 2,
       inProgressTickets: 2,

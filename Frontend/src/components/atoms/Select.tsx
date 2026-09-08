@@ -40,10 +40,8 @@ export function Select({
       minHeight: "2.25rem",
       borderRadius: "0.5rem",
       borderColor: invalid ? "#f87171" : state.isFocused ? "#6366f1" : "#cbd5e1",
-      boxShadow: state.isFocused
-        ? "0 0 0 3px rgba(99,102,241,0.25)"
-        : "0 1px 2px rgba(15,23,42,0.04)",
-      transition: "box-shadow 150ms ease, border-color 150ms ease",
+      boxShadow: "none",
+      transition: "border-color 150ms ease",
       "&:hover": { borderColor: invalid ? "#f87171" : state.isFocused ? "#6366f1" : "#94a3b8" },
       fontSize: "0.875rem",
       backgroundColor: disabled ? "#f1f5f9" : "white",

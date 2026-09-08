@@ -42,8 +42,8 @@ export function DepartmentTable({ departments, renderActions }: DepartmentTableP
                     {department.departmentName}
                   </Link>
                 </td>
-                <td className="px-4 py-3 text-slate-400">{department.departmentEmail}</td>
-                <td className="px-4 py-3 text-slate-400">
+                <td className="px-4 py-3 text-slate-700">{department.departmentEmail}</td>
+                <td className="px-4 py-3 text-slate-700">
                   {department.manager ? fullName(department.manager) : "Unmanaged"}
                 </td>
                 {renderActions && (

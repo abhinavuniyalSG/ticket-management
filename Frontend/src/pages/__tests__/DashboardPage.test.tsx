@@ -44,7 +44,7 @@ function makeOverview(overrides: Partial<DashboardOverview> = {}): DashboardOver
     message: "ok",
     departmentId: null,
     period: "day",
-    totalTickets: 33,
+    totalTicketsCreated: 33,
     openTickets: 3,
     assignedTickets: 4,
     inProgressTickets: 5,
@@ -132,7 +132,7 @@ describe("DashboardPage", () => {
     mockBothCalls();
     renderDashboard({ user: makeUser({ role: "admin" }) });
 
-    expect(await screen.findByText("Total tickets")).toBeInTheDocument();
+    expect(await screen.findByText("Total tickets created today")).toBeInTheDocument();
     expect(screen.getByText("Your department's ticket overview.")).toBeInTheDocument();
     expect(dashboardService.getOverview).toHaveBeenCalledWith(undefined, "day");
     expect(dashboardService.get).toHaveBeenCalledWith(undefined, "day");
@@ -149,7 +149,7 @@ describe("DashboardPage", () => {
     mockBothCalls();
     renderDashboard({ user: makeUser({ role: "admin" }) });
 
-    expect(await screen.findByText("Total tickets")).toBeInTheDocument();
+    expect(await screen.findByText("Total tickets created today")).toBeInTheDocument();
     expect(screen.getByText("33")).toBeInTheDocument();
   });
 
@@ -157,7 +157,7 @@ describe("DashboardPage", () => {
     mockBothCalls();
     renderDashboard({ user: makeUser({ role: "admin" }) });
 
-    await screen.findByText("Total tickets");
+    await screen.findByText("Total tickets created today");
 
     const section = screen.getByText("Status distribution").closest("div") as HTMLElement;
     expect(within(section).getByText("Open")).toBeInTheDocument();
@@ -170,7 +170,7 @@ describe("DashboardPage", () => {
     mockBothCalls();
     renderDashboard({ user: makeUser({ role: "admin" }) });
 
-    await screen.findByText("Total tickets");
+    await screen.findByText("Total tickets created today");
 
     const section = screen.getByText("Priority distribution").closest("div") as HTMLElement;
     expect(within(section).getByText("High")).toBeInTheDocument();
@@ -227,7 +227,7 @@ describe("DashboardPage", () => {
     });
 
     renderDashboard({ user: makeUser({ role: "admin", id: "user-1" }) });
-    await screen.findByText("Total tickets");
+    await screen.findByText("Total tickets created today");
     vi.mocked(dashboardService.get).mockClear();
     vi.mocked(dashboardService.getOverview).mockClear();
 
@@ -244,7 +244,7 @@ describe("DashboardPage", () => {
     mockBothCalls();
     renderDashboard({ user: makeUser({ role: "admin" }) });
 
-    await screen.findByText("Total tickets");
+    await screen.findByText("Total tickets created today");
     vi.mocked(dashboardService.get).mockClear();
     vi.mocked(dashboardService.getOverview).mockClear();
 
@@ -260,7 +260,7 @@ describe("DashboardPage", () => {
     mockBothCalls();
     renderDashboard({ user: makeUser({ role: "user" }) });
 
-    await screen.findByText("Total tickets");
+    await screen.findByText("Total tickets created today");
 
     expect(screen.queryByLabelText("Filter dashboard by department")).not.toBeInTheDocument();
     expect(departmentService.list).not.toHaveBeenCalled();

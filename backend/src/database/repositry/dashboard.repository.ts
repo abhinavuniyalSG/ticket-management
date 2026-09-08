@@ -160,32 +160,81 @@ export class DashboardRepository {
     }
   }
 
-  /** Ticket counts per status, optionally scoped to a department and/or a createdAt window. */
+  /**
+   * A `COUNT(*) FILTER (WHERE ...)` time-window condition against `column`,
+   * built without referencing any unbound parameter (Postgres rejects a
+   * parameter that isn't given a value, even inside an unused branch).
+   */
+  private static rangeCondition(
+    column: string,
+    from?: Date,
+    to?: Date,
+    params: Record<string, unknown> = {},
+  ): { sql: string; params: Record<string, unknown> } {
+    const conditions: string[] = [];
+    if (from) {
+      conditions.push(`${column} >= :rangeFrom`);
+      params.rangeFrom = from;
+    }
+    if (to) {
+      conditions.push(`${column} < :rangeTo`);
+      params.rangeTo = to;
+    }
+    return { sql: conditions.length > 0 ? conditions.join(" AND ") : "TRUE", params };
+  }
+
+  /**
+   * Ticket counts per status, optionally scoped to a department and/or a
+   * createdAt window ("tickets created in this period").
+   *
+   * The `closed` count is the one exception: it's windowed by `closedAt`
+   * instead of `createdAt`, so it answers "tickets closed in this period" -
+   * matching how `getTicketTrend`'s `closed` bucket is computed. Windowing it
+   * by `createdAt` like the other statuses would make a ticket created
+   * earlier and closed today invisible to the "today" overview even though
+   * the trend chart counts it as closed today, which is exactly the mismatch
+   * this was reported for.
+   */
   public static async countTicketsByStatus(
     filter: TicketCountFilter = {},
   ): Promise<TicketStatusCounts> {
+    const created = this.rangeCondition(
+      "ticket.createdAt",
+      filter.createdFrom,
+      filter.createdTo,
+    );
+    const closed = this.rangeCondition(
+      "ticket.closedAt",
+      filter.createdFrom,
+      filter.createdTo,
+      { ...created.params },
+    );
+
     const query = this.repository
       .createQueryBuilder("ticket")
-      .select("COUNT(*)::int", "total")
-      .addSelect("COUNT(*) FILTER (WHERE ticket.status = :open)::int", "open")
+      .select(`COUNT(*) FILTER (WHERE ${created.sql})::int`, "total")
       .addSelect(
-        "COUNT(*) FILTER (WHERE ticket.status = :assigned)::int",
+        `COUNT(*) FILTER (WHERE ticket.status = :open AND ${created.sql})::int`,
+        "open",
+      )
+      .addSelect(
+        `COUNT(*) FILTER (WHERE ticket.status = :assigned AND ${created.sql})::int`,
         "assigned",
       )
       .addSelect(
-        "COUNT(*) FILTER (WHERE ticket.status = :inProgress)::int",
+        `COUNT(*) FILTER (WHERE ticket.status = :inProgress AND ${created.sql})::int`,
         "in_progress",
       )
       .addSelect(
-        "COUNT(*) FILTER (WHERE ticket.status = :reviewed)::int",
+        `COUNT(*) FILTER (WHERE ticket.status = :reviewed AND ${created.sql})::int`,
         "reviewed",
       )
       .addSelect(
-        "COUNT(*) FILTER (WHERE ticket.status = :completed)::int",
+        `COUNT(*) FILTER (WHERE ticket.status = :completed AND ${created.sql})::int`,
         "completed",
       )
       .addSelect(
-        "COUNT(*) FILTER (WHERE ticket.status = :closed)::int",
+        `COUNT(*) FILTER (WHERE ticket.status = :closed AND ${closed.sql})::int`,
         "closed",
       )
       .setParameters({
@@ -195,10 +244,10 @@ export class DashboardRepository {
         reviewed: TicketStatus.reviewed,
         completed: TicketStatus.completed,
         closed: TicketStatus.closed,
+        ...closed.params,
       });
 
     this.filterByDepartment(query, filter.departmentId);
-    this.filterByCreatedAtRange(query, filter.createdFrom, filter.createdTo);
 
     const row = await query.getRawOne();
 

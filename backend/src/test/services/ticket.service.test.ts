@@ -1081,6 +1081,101 @@ describe("updateTicket assignment", () => {
       ),
     ).rejects.toMatchObject({ statusCode: 400 });
   });
+
+  it("blocks a same-department admin from unassigning a ticket that's already past 'assigned'", async () => {
+    const ticket = makeTicket({
+      status: TicketStatus.inProgress,
+      departmentId: DEPT_A,
+      createdById: "creator-1",
+      assignedToId: "assignee-1",
+    });
+    vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
+    vi.mocked(UserRepository.findById).mockResolvedValue(
+      makeUser({ id: "admin-1", role: roleEnum.admin, departmentId: DEPT_A }),
+    );
+
+    await expect(
+      TicketService.updateTicket(
+        "ticket-1",
+        { assignedToId: null },
+        requester({ id: "admin-1", role: roleEnum.admin }),
+      ),
+    ).rejects.toMatchObject({ statusCode: 403 });
+  });
+
+  it("blocks an admin who manages the ticket's department from unassigning it once it's past 'assigned'", async () => {
+    const ticket = makeTicket({
+      status: TicketStatus.reviewed,
+      departmentId: DEPT_B,
+      createdById: "creator-1",
+      assignedToId: "assignee-1",
+      department: { managedBy: "admin-1" } as any,
+    });
+    vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
+    vi.mocked(UserRepository.findById).mockResolvedValue(
+      makeUser({ id: "admin-1", role: roleEnum.admin, departmentId: DEPT_A }),
+    );
+
+    await expect(
+      TicketService.updateTicket(
+        "ticket-1",
+        { assignedToId: null },
+        requester({ id: "admin-1", role: roleEnum.admin }),
+      ),
+    ).rejects.toMatchObject({ statusCode: 403 });
+  });
+
+  it("blocks a same-department admin from assigning a ticket that isn't 'open'", async () => {
+    const ticket = makeTicket({
+      status: TicketStatus.completed,
+      departmentId: DEPT_A,
+      createdById: "creator-1",
+      assignedToId: "assignee-1",
+    });
+    vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
+    vi.mocked(UserRepository.findById).mockImplementation(
+      async (id: string) => {
+        if (id === "admin-1")
+          return makeUser({
+            id: "admin-1",
+            role: roleEnum.admin,
+            departmentId: DEPT_A,
+          });
+        return makeUser({ id: "assignee-2", departmentId: DEPT_A });
+      },
+    );
+
+    await expect(
+      TicketService.updateTicket(
+        "ticket-1",
+        { assignedToId: "assignee-2" },
+        requester({ id: "admin-1", role: roleEnum.admin }),
+      ),
+    ).rejects.toMatchObject({ statusCode: 403 });
+  });
+
+  it("lets a super_admin unassign a ticket regardless of its current status", async () => {
+    const ticket = makeTicket({
+      status: TicketStatus.inProgress,
+      departmentId: DEPT_A,
+      createdById: "creator-1",
+      assignedToId: "assignee-1",
+    });
+    vi.mocked(TicketRepository.findById).mockResolvedValue(ticket);
+    vi.mocked(UserRepository.findById).mockResolvedValue(
+      makeUser({ id: "super-1", role: roleEnum.superAdmin }),
+    );
+    const updated = { ...ticket, status: TicketStatus.open, assignedToId: null };
+    vi.mocked(TicketRepository.updateTicket).mockResolvedValue(updated);
+
+    const result = await TicketService.updateTicket(
+      "ticket-1",
+      { assignedToId: null },
+      requester({ id: "super-1", role: roleEnum.superAdmin }),
+    );
+
+    expect(result.ticket.status).toBe(TicketStatus.open);
+  });
 });
 
 describe("updateTicket content edits", () => {

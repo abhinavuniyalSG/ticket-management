@@ -20,9 +20,11 @@ import type { User } from "../../types/user";
 import { STATUS_LABELS } from "../../constants/options";
 import { fullName } from "../../utils/format";
 import {
+  canAssignTicket,
   canDeleteTicket,
   canEditTicketContent,
   canManageAssignment,
+  canUnassignTicket,
   getAllowedStatusTransitions,
 } from "../../utils/ticketPermissions";
 
@@ -116,6 +118,8 @@ export function TicketDetailsPage() {
   const allowedTransitions = getAllowedStatusTransitions(ticket, user);
   const canEditContent = canEditTicketContent(ticket, user);
   const canDelete = canDeleteTicket(ticket, user);
+  const canAssignAction = canAssignTicket(ticket, user);
+  const canUnassignAction = canUnassignTicket(ticket, user);
 
   const handleStatusChange = async (status: TicketStatus) => {
     setIsMutating(true);
@@ -252,26 +256,30 @@ export function TicketDetailsPage() {
                   Assignment
                 </p>
                 <div className="flex flex-col gap-2 sm:flex-row">
-                  <Select
-                    aria-label="Select assignedTo"
-                    placeholder="Select a team member"
-                    value={selectedAssignee}
-                    options={assignedTo.map((u) => ({
-                      value: u.id,
-                      label: fullName(u),
-                    }))}
-                    onChange={(e) => setSelectedAssignee(e.target.value)}
-                    disabled={isMutating}
-                    className="sm:max-w-xs"
-                  />
-                  <Button
-                    variant="secondary"
-                    disabled={!selectedAssignee || isMutating}
-                    onClick={() => void handleAssign()}
-                  >
-                    {ticket.assignedToId ? "Reassign" : "Assign"}
-                  </Button>
-                  {ticket.assignedToId && (
+                  {canAssignAction && (
+                    <>
+                      <Select
+                        aria-label="Select assignedTo"
+                        placeholder="Select a team member"
+                        value={selectedAssignee}
+                        options={assignedTo.map((u) => ({
+                          value: u.id,
+                          label: fullName(u),
+                        }))}
+                        onChange={(e) => setSelectedAssignee(e.target.value)}
+                        disabled={isMutating}
+                        className="sm:max-w-xs"
+                      />
+                      <Button
+                        variant="secondary"
+                        disabled={!selectedAssignee || isMutating}
+                        onClick={() => void handleAssign()}
+                      >
+                        {ticket.assignedToId ? "Reassign" : "Assign"}
+                      </Button>
+                    </>
+                  )}
+                  {ticket.assignedToId && canUnassignAction && (
                     <Button
                       variant="ghost"
                       disabled={isMutating}

@@ -50,13 +50,13 @@ export function UserTable({ users, renderActions }: UserTableProps) {
                     {fullName(user)}
                   </Link>
                 </td>
-                <td className="px-4 py-3 text-slate-400">{user.email}</td>
+                <td className="px-4 py-3 text-slate-700">{user.email}</td>
                 <td className="px-4 py-3">
                   <Badge color={user.role === "super_admin" ? "purple" : user.role === "admin" ? "blue" : "slate"}>
                     {ROLE_LABELS[user.role]}
                   </Badge>
                 </td>
-                <td className="px-4 py-3 text-slate-400">
+                <td className="px-4 py-3 text-slate-700">
                   {user.department?.departmentName ?? "—"}
                 </td>
                 <td className="px-4 py-3">

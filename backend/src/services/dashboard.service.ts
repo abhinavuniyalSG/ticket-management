@@ -245,7 +245,7 @@ export class DashboardService {
       message: "Dashboard overview fetched successfully",
       departmentId: departmentId ?? null,
       period: query.period ?? DashboardOverviewPeriod.day,
-      totalTickets: counts.total,
+      totalTicketsCreated: counts.total,
       openTickets: counts.open,
       assignedTickets: counts.assigned,
       inProgressTickets: counts.inProgress,

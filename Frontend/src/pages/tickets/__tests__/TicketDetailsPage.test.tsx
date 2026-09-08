@@ -372,7 +372,11 @@ describe("TicketDetailsPage", () => {
     });
     vi.mocked(ticketService.update).mockResolvedValueOnce({
       message: "Ticket assigned",
-      ticket: makeTicket({ departmentId: "dept-1", assignedToId: "member-1" }),
+      ticket: makeTicket({
+        departmentId: "dept-1",
+        status: "assigned",
+        assignedToId: "member-1",
+      }),
     });
 
     const user = userEvent.setup();

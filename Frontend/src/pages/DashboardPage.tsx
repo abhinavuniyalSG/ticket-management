@@ -38,7 +38,7 @@ function PeriodToggle({
           type="button"
           onClick={() => onChange(option)}
           aria-pressed={value === option}
-          className={`cursor-pointer rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+          className={`cursor-pointer rounded-md px-2 py-1 text-xs font-medium transition-colors ${
             value === option
               ? "bg-indigo-600 text-white"
               : "text-slate-600 hover:bg-slate-100"
@@ -111,7 +111,7 @@ export function DashboardPage() {
           message: dashboard.message,
           departmentId: overview.departmentId,
           period: overview.period,
-          totalTickets: overview.totalTickets,
+          totalTicketsCreated: overview.totalTicketsCreated,
           openTickets: overview.openTickets,
           assignedTickets: overview.assignedTickets,
           inProgressTickets: overview.inProgressTickets,

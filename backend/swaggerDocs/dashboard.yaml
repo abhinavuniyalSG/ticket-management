@@ -189,7 +189,7 @@ paths:
                 message: Dashboard overview fetched successfully
                 departmentId: "01906c26-1234-7abc-adef-000000000020"
                 period: day
-                totalTickets: 400
+                totalTicketsCreated: 400
                 openTickets: 2
                 assignedTickets: 10
                 inProgressTickets: 7
@@ -265,9 +265,13 @@ components:
         period:
           type: string
           enum: [day, week, month, year, all]
-        totalTickets:
+        totalTicketsCreated:
           type: integer
           minimum: 0
+          description: >
+            Total tickets created within the selected `period` - e.g. tickets created today for the
+            default `period=day`, created this week for `period=week`, and so on. `all` counts every
+            ticket regardless of when it was created.
         openTickets:
           type: integer
           minimum: 0

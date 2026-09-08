@@ -441,10 +441,33 @@ export class TicketService {
         );
       }
 
+      // A department admin (own department, or one they manage) may only
+      // unassign a ticket while it is currently 'assigned', and may only
+      // assign a ticket while it is currently 'open' - they cannot
+      // force-unassign or reassign a ticket once it has moved further along
+      // the workflow (in_progress/reviewed/completed). Super admins are
+      // unrestricted.
+      const isDeptAdmin =
+        (isSameDeptAdmin || managesTicketDepartment) && !isSuperAdmin;
+
       if (input.assignedToId === null) {
+        if (isDeptAdmin && ticket.status !== TicketStatus.assigned) {
+          throw new HttpError(
+            403,
+            "Forbidden: a department admin can only unassign a ticket while it is in the 'assigned' status",
+          );
+        }
+
         targetAssigneeId = null;
         targetStatus = TicketStatus.open;
       } else {
+        if (isDeptAdmin && ticket.status !== TicketStatus.open) {
+          throw new HttpError(
+            403,
+            "Forbidden: a department admin can only assign a ticket while it is in the 'open' status",
+          );
+        }
+
         const assignee = await UserRepository.findById(
           input.assignedToId ?? "",
         );

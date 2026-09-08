@@ -34,7 +34,7 @@ export interface DashboardOverview {
   message: string;
   departmentId: string | null;
   period: DashboardPeriod;
-  totalTickets: number;
+  totalTicketsCreated: number;
   openTickets: number;
   assignedTickets: number;
   inProgressTickets: number;

@@ -77,16 +77,16 @@ export function TicketTable({ tickets }: TicketTableProps) {
                 <td className="px-4 py-3">
                   <PriorityBadge priority={ticket.priority} />
                 </td>
-                <td className="px-4 py-3 text-slate-400">
+                <td className="px-4 py-3 text-slate-700">
                   {ticket.department?.departmentName ?? "—"}
                 </td>
-                <td className="px-4 py-3 text-slate-400">
+                <td className="px-4 py-3 text-slate-700">
                   {fullName(ticket.createdBy)}
                 </td>
-                <td className="px-4 py-3 text-slate-400">
+                <td className="px-4 py-3 text-slate-700">
                   {fullName(ticket.assignedTo)}
                 </td>
-                <td className="px-4 py-3 whitespace-nowrap text-slate-400">
+                <td className="px-4 py-3 whitespace-nowrap text-slate-700">
                   {formatDate(ticket.createdAt)}
                 </td>
               </tr>

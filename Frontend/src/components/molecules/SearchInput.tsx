@@ -22,7 +22,7 @@ export function SearchInput({ label = "Search", className = "", ...rest }: Searc
       <input
         id="search-input"
         type="search"
-        className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 shadow-sm transition-shadow placeholder:text-slate-400 hover:border-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+        className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 shadow-none placeholder:text-slate-400 hover:border-slate-400 focus:border-indigo-500 focus:outline-none"
         {...rest}
       />
     </div>
