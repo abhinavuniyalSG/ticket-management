@@ -11,7 +11,7 @@ import { Button } from "../components/atoms/Button";
 import { authService } from "../services/authService";
 import { useAuth } from "../hooks/useAuth";
 import { ApiError } from "../types/api";
-import { getPasswordErrors, isValidEmail } from "../utils/validation";
+import { getPasswordErrors, isPasswordValid, isValidEmail } from "../utils/validation";
 
 interface FormValues {
   email: string;
@@ -57,6 +57,21 @@ export function ProfileChangePasswordPage() {
 
     return nextErrors;
   };
+
+  // Live (not submit-gated) password checks - see RegisterPage for why.
+  const passwordTouched = values.newPassword.length > 0;
+  const confirmTouched = values.confirmPassword.length > 0;
+  const passwordsMatch = values.newPassword === values.confirmPassword;
+  const sameAsOldPassword =
+    passwordTouched && values.oldPassword.length > 0 && values.newPassword === values.oldPassword;
+  const canSubmit =
+    (!passwordTouched || (isPasswordValid(values.newPassword) && !sameAsOldPassword)) &&
+    (!confirmTouched || passwordsMatch);
+  const newPasswordError = sameAsOldPassword
+    ? "New password must be different from the old password"
+    : undefined;
+  const confirmPasswordError =
+    errors.confirmPassword ?? (confirmTouched && !passwordsMatch ? "Passwords do not match" : undefined);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -122,8 +137,8 @@ export function ProfileChangePasswordPage() {
               id="pcp-new-password"
               autoComplete="new-password"
               value={values.newPassword}
-              error={errors.newPassword}
-              hint="At least 8 characters, with uppercase, lowercase, a number and a special character."
+              error={newPasswordError}
+              showRequirements
               required
               onChange={setField("newPassword")}
               disabled={isSubmitting}
@@ -134,7 +149,7 @@ export function ProfileChangePasswordPage() {
               id="pcp-confirm-password"
               autoComplete="new-password"
               value={values.confirmPassword}
-              error={errors.confirmPassword}
+              error={confirmPasswordError}
               required
               onChange={setField("confirmPassword")}
               disabled={isSubmitting}
@@ -154,7 +169,7 @@ export function ProfileChangePasswordPage() {
               />
               Show passwords
             </label>
-            <Button type="submit" isLoading={isSubmitting} className="w-full">
+            <Button type="submit" isLoading={isSubmitting} disabled={!canSubmit} className="w-full">
               Change password
             </Button>
           </form>

@@ -9,7 +9,7 @@ import { Input } from "../../components/atoms/Input";
 import { Button } from "../../components/atoms/Button";
 import { useAuth } from "../../hooks/useAuth";
 import { ApiError } from "../../types/api";
-import { getPasswordErrors, isValidEmail } from "../../utils/validation";
+import { getPasswordErrors, isPasswordValid, isValidEmail } from "../../utils/validation";
 import { getDefaultRouteForRole } from "../../constants/navigation";
 
 interface FormValues {
@@ -68,6 +68,17 @@ export function RegisterPage() {
 
     return nextErrors;
   };
+
+  // Live (not submit-gated) password checks, used to disable the submit
+  // button and surface "passwords do not match" as soon as it's true,
+  // instead of waiting for the user to click "Create account".
+  const passwordTouched = values.password.length > 0;
+  const confirmTouched = values.confirmPassword.length > 0;
+  const passwordsMatch = values.password === values.confirmPassword;
+  const canSubmit =
+    (!passwordTouched || isPasswordValid(values.password)) && (!confirmTouched || passwordsMatch);
+  const confirmPasswordError =
+    errors.confirmPassword ?? (confirmTouched && !passwordsMatch ? "Passwords do not match" : undefined);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -143,8 +154,7 @@ export function RegisterPage() {
           id="register-password"
           autoComplete="new-password"
           value={values.password}
-          error={errors.password}
-          hint="At least 8 characters, with uppercase, lowercase, a number and a special character."
+          showRequirements
           required
           onChange={setField("password")}
           disabled={isSubmitting}
@@ -155,7 +165,7 @@ export function RegisterPage() {
           id="register-confirm-password"
           autoComplete="new-password"
           value={values.confirmPassword}
-          error={errors.confirmPassword}
+          error={confirmPasswordError}
           required
           onChange={setField("confirmPassword")}
           disabled={isSubmitting}
@@ -175,7 +185,7 @@ export function RegisterPage() {
           />
           Show passwords
         </label>
-        <Button type="submit" isLoading={isSubmitting} className="w-full">
+        <Button type="submit" isLoading={isSubmitting} disabled={!canSubmit} className="w-full">
           Create account
         </Button>
       </form>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { FormField } from "./FormField";
 import { Input } from "../atoms/Input";
+import { PasswordRequirementsChecklist } from "./PasswordRequirementsChecklist";
 
 interface PasswordFieldProps {
   label: string;
@@ -15,6 +16,9 @@ interface PasswordFieldProps {
   /** Controlled visibility. When provided, this field uses it instead of its own
    * checkbox, so a parent can drive several PasswordFields from one shared toggle. */
   isVisible?: boolean;
+  /** Renders a live checklist of the password rules below the input instead of
+   * the static hint, updating as the user types rather than only on submit. */
+  showRequirements?: boolean;
 }
 
 export function PasswordField({
@@ -28,6 +32,7 @@ export function PasswordField({
   disabled,
   autoComplete,
   isVisible: isVisibleProp,
+  showRequirements,
 }: PasswordFieldProps) {
   const [internalVisible, setInternalVisible] = useState(false);
   const isControlled = isVisibleProp !== undefined;
@@ -35,7 +40,13 @@ export function PasswordField({
   const checkboxId = `${id}-show`;
 
   return (
-    <FormField label={label} htmlFor={id} error={error} hint={hint} required={required}>
+    <FormField
+      label={label}
+      htmlFor={id}
+      error={error}
+      hint={showRequirements ? undefined : hint}
+      required={required}
+    >
       <div className="flex flex-col gap-1.5">
         <Input
           id={id}
@@ -46,6 +57,9 @@ export function PasswordField({
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled}
         />
+        {showRequirements && (
+          <PasswordRequirementsChecklist password={value} id={`${id}-requirements`} />
+        )}
         {!isControlled && (
           <label
             htmlFor={checkboxId}

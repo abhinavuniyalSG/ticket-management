@@ -6,7 +6,7 @@ import { PasswordField } from "../../components/molecules/PasswordField";
 import { Button } from "../../components/atoms/Button";
 import { authService } from "../../services/authService";
 import { ApiError } from "../../types/api";
-import { getPasswordErrors } from "../../utils/validation";
+import { getPasswordErrors, isPasswordValid } from "../../utils/validation";
 
 type PageState = "form" | "success" | "error";
 
@@ -42,6 +42,14 @@ export function ResetPasswordPage() {
     return nextErrors;
   };
 
+  // Live (not submit-gated) password checks - see RegisterPage for why.
+  const passwordTouched = newPassword.length > 0;
+  const confirmTouched = confirmPassword.length > 0;
+  const passwordsMatch = newPassword === confirmPassword;
+  const canSubmit = (!passwordTouched || isPasswordValid(newPassword)) && (!confirmTouched || passwordsMatch);
+  const confirmPasswordError =
+    errors.confirmPassword ?? (confirmTouched && !passwordsMatch ? "Passwords do not match" : undefined);
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!token || !email) return;
@@ -73,8 +81,7 @@ export function ResetPasswordPage() {
             id="reset-new-password"
             autoComplete="new-password"
             value={newPassword}
-            error={errors.newPassword}
-            hint="At least 8 characters, with uppercase, lowercase, a number and a special character."
+            showRequirements
             required
             onChange={setNewPassword}
             disabled={isSubmitting}
@@ -85,7 +92,7 @@ export function ResetPasswordPage() {
             id="reset-confirm-password"
             autoComplete="new-password"
             value={confirmPassword}
-            error={errors.confirmPassword}
+            error={confirmPasswordError}
             required
             onChange={setConfirmPassword}
             disabled={isSubmitting}
@@ -105,7 +112,7 @@ export function ResetPasswordPage() {
             />
             Show passwords
           </label>
-          <Button type="submit" isLoading={isSubmitting} className="w-full">
+          <Button type="submit" isLoading={isSubmitting} disabled={!canSubmit} className="w-full">
             Reset password
           </Button>
         </form>
