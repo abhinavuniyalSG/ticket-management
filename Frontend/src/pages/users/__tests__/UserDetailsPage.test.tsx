@@ -136,28 +136,6 @@ describe("UserDetailsPage", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("User not found");
   });
 
-  it("lists the user's contacts", async () => {
-    mockedUserService.getById.mockResolvedValue({
-      message: "ok",
-      user: makeUser({
-        contacts: [
-          { id: "c1", userId: "user-2", contactType: "phone", contactDetail: "555-0100", createdAt: "", updatedAt: "" },
-        ],
-      }),
-    });
-    renderPage();
-
-    expect(await screen.findByText("555-0100")).toBeInTheDocument();
-    expect(screen.getByText("Phone")).toBeInTheDocument();
-  });
-
-  it("shows a fallback message when the user has no contacts", async () => {
-    mockedUserService.getById.mockResolvedValue({ message: "ok", user: makeUser({ contacts: [] }) });
-    renderPage();
-
-    expect(await screen.findByText("No contacts on file.")).toBeInTheDocument();
-  });
-
   it("disables fields the actor is not permitted to edit", async () => {
     // A regular user viewing their own profile can edit their name but not
     // their department or role.

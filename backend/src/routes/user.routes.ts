@@ -19,26 +19,6 @@ class UserRoutes {
       UserController.getAllUsersController,
     );
 
-    // Contact routes for authenticated user
-    this.router.post(
-      "/contacts",
-      this.validator("body", this.requestSchema.addContactSchema),
-      UserController.addContactController,
-    );
-
-    this.router.patch(
-      "/contacts/:contactId",
-      this.validator("params", this.requestSchema.contactIdParamSchema),
-      this.validator("body", this.requestSchema.updateContactSchema),
-      UserController.updateContactController,
-    );
-
-    this.router.delete(
-      "/contacts/:contactId",
-      this.validator("params", this.requestSchema.contactIdParamSchema),
-      UserController.deleteContactController,
-    );
-
     this.router.get(
       "/:id",
       this.validator("params", this.requestSchema.userIdParamSchema),

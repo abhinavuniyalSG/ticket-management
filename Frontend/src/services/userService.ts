@@ -1,6 +1,5 @@
 import { apiRequest } from "./apiClient";
 import type { User, UserRole, UpdateUserPayload } from "../types/user";
-import type { AddContactPayload, Contact, UpdateContactPayload } from "../types/contact";
 import type { PaginationMeta } from "../types/api";
 
 interface UserListResponse {
@@ -20,11 +19,6 @@ export interface UserQueryParams {
 interface UserResponse {
   message: string;
   user: User;
-}
-
-interface ContactResponse {
-  message: string;
-  contact: Contact;
 }
 
 interface MessageResponse {
@@ -50,16 +44,4 @@ export const userService = {
 
   remove: (id: string) =>
     apiRequest<MessageResponse>(`/users/${id}`, { method: "DELETE" }),
-
-  addContact: (payload: AddContactPayload) =>
-    apiRequest<ContactResponse>("/users/contacts", { method: "POST", body: payload }),
-
-  updateContact: (contactId: string, payload: UpdateContactPayload) =>
-    apiRequest<ContactResponse>(`/users/contacts/${contactId}`, {
-      method: "PATCH",
-      body: payload,
-    }),
-
-  removeContact: (contactId: string) =>
-    apiRequest<MessageResponse>(`/users/contacts/${contactId}`, { method: "DELETE" }),
 };

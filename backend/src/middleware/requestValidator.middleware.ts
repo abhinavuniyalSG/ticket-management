@@ -29,7 +29,7 @@ export class requestValidator {
           errors: result.error.issues.map((issue) => issue.message),
         });
         return res.status(400).json({
-          message: "Validation failed",
+          message: `Validation failed ${result.error.issues.map((issue) => issue.message).join(", ")}`,
           errors: result.error.issues.map((issues) => issues.message),
         });
       }

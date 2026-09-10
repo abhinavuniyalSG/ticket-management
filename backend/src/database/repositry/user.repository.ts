@@ -1,7 +1,5 @@
 import { AppDataSource } from "../dbConnection.js";
 import { User } from "../models/user.model.js";
-import { Contact } from "../models/contact.model.js";
-import type { ContactType } from "../../types/contact.js";
 import { roleEnum } from "../../types/user.js";
 import type { PaginatedResult } from "../../utils/pagination.util.js";
 
@@ -40,8 +38,7 @@ export class UserRepository {
   ): Promise<PaginatedResult<User>> {
     const query = this.repository
       .createQueryBuilder("user")
-      .leftJoinAndSelect("user.department", "department")
-      .leftJoinAndSelect("user.contacts", "contacts");
+      .leftJoinAndSelect("user.department", "department");
 
     if (filter?.departmentId !== undefined) {
       if (filter.departmentId === null) {
@@ -90,7 +87,6 @@ export class UserRepository {
     return this.repository
       .createQueryBuilder("user")
       .leftJoinAndSelect("user.department", "department")
-      .leftJoinAndSelect("user.contacts", "contacts")
       .where("user.id = :id", { id })
       .getOne();
   }
@@ -189,39 +185,12 @@ export class UserRepository {
     });
   }
 
-  public static async updateUserWithContacts(
+  public static async updateUser(
     id: string,
     userUpdates: Partial<User>,
-    contacts?: Array<{ contactType: ContactType; contactDetail: string }>,
   ): Promise<User | null> {
-    return await AppDataSource.transaction(
-      async (transactionalEntityManager) => {
-        if (Object.keys(userUpdates).length > 0) {
-          await transactionalEntityManager.update(User, id, userUpdates);
-        }
-
-        if (contacts !== undefined) {
-          await transactionalEntityManager.delete(Contact, { userId: id });
-          if (contacts.length > 0) {
-            const contactEntities = contacts.map((c) =>
-              transactionalEntityManager.create(Contact, {
-                userId: id,
-                contactType: c.contactType,
-                contactDetail: c.contactDetail,
-              }),
-            );
-            await transactionalEntityManager.save(Contact, contactEntities);
-          }
-        }
-
-        return transactionalEntityManager
-          .createQueryBuilder(User, "user")
-          .leftJoinAndSelect("user.department", "department")
-          .leftJoinAndSelect("user.contacts", "contacts")
-          .where("user.id = :id", { id })
-          .getOne();
-      },
-    );
+    await this.repository.update(id, userUpdates);
+    return this.findById(id);
   }
 
   public static async deleteUser(id: string): Promise<boolean> {

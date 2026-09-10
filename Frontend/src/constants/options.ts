@@ -1,6 +1,5 @@
 import type { TicketPriority, TicketStatus } from "../types/ticket";
 import type { UserRole } from "../types/user";
-import type { ContactType } from "../types/contact";
 import type { DashboardPeriod } from "../types/dashboard";
 
 export const TICKET_STATUSES: TicketStatus[] = [
@@ -20,8 +19,6 @@ export const TICKET_PRIORITIES: TicketPriority[] = [
 ];
 
 export const USER_ROLES: UserRole[] = ["user", "admin", "super_admin"];
-
-export const CONTACT_TYPES: ContactType[] = ["phone", "whatsapp", "linkedin"];
 
 /**
  * The list pages' page size. The backend no longer applies a default limit
@@ -50,12 +47,6 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   user: "User",
   admin: "Admin",
   super_admin: "Super Admin",
-};
-
-export const CONTACT_TYPE_LABELS: Record<ContactType, string> = {
-  phone: "Phone",
-  whatsapp: "WhatsApp",
-  linkedin: "LinkedIn",
 };
 
 export const DASHBOARD_PERIODS: DashboardPeriod[] = [

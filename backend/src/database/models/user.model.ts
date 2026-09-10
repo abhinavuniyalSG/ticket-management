@@ -12,7 +12,6 @@ import {
 } from "typeorm";
 import { roleEnum } from "../../types/user.js";
 import { Department } from "./department.model.js";
-import { Contact } from "./contact.model.js";
 import { Ticket } from "./ticket.model.js";
 
 @Entity("users")
@@ -83,9 +82,6 @@ export class User {
   })
   @JoinColumn({ name: "department_id" })
   department!: Relation<Department> | null;
-
-  @OneToMany(() => Contact, (contact) => contact.user)
-  contacts!: Relation<Contact[]>;
 
   @OneToMany(() => Ticket, (ticket) => ticket.createdBy)
   createdTickets!: Relation<Ticket[]>;

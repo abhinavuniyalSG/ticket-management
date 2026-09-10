@@ -1,4 +1,3 @@
-import type { Contact } from "./contact";
 import type { Department } from "./department";
 
 export type UserRole = "user" | "admin" | "super_admin";
@@ -12,13 +11,12 @@ export interface User {
   isVerified: boolean;
   departmentId: string | null;
   department?: Department | null;
-  contacts?: Contact[];
   createdAt: string;
   updatedAt: string;
 }
 
 /** Minimal, non-sensitive snapshot kept in sessionStorage to survive page reloads. */
-export type SafeUser = Omit<User, "contacts">;
+export type SafeUser = User;
 
 export interface UpdateUserPayload {
   firstName?: string;

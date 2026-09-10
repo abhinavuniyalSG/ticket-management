@@ -360,11 +360,11 @@ components:
     UserPublic:
       type: object
       description: >
-        Safe user object (no `password` or `refreshToken`). The `department` and `contacts` fields are
-        only populated on endpoints whose repository query joins those relations
-        (`GET /users`, `GET /users/{id}`, `PATCH /users/{id}`, and a department's `manager`). They are
-        **absent entirely** (not an empty array/null) on `POST /auth/register` and `POST /auth/login`
-        responses, and a department's `manager` never includes `contacts`.
+        Safe user object (no `password` or `refreshToken`). The `department` field is
+        only populated on endpoints whose repository query joins that relation
+        (`GET /users`, `GET /users/{id}`, `PATCH /users/{id}`, and a department's `manager`). It is
+        **absent entirely** (not null) on `POST /auth/register` and `POST /auth/login`
+        responses.
       properties:
         id:
           type: string
@@ -400,36 +400,6 @@ components:
           description: Nested department entity, only present when the endpoint joins it (see above).
           allOf:
             - $ref: "#/components/schemas/Department"
-        contacts:
-          type: array
-          description: Only present when the endpoint joins it (see above).
-          items:
-            $ref: "#/components/schemas/Contact"
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-
-    Contact:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-          example: "01906c26-1234-7abc-adef-000000000010"
-        userId:
-          type: string
-          format: uuid
-          example: "01906c26-1234-7abc-adef-000000000001"
-        contactType:
-          type: string
-          enum: [phone, whatsapp, linkedin]
-          example: phone
-        contactDetail:
-          type: string
-          example: "+91-9876543210"
         createdAt:
           type: string
           format: date-time

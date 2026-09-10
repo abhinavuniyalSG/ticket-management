@@ -2,13 +2,10 @@ import type { CookieOptions, Response } from "express";
 import jwt from "jsonwebtoken";
 import { LOGGER_VARIABLES } from "../config/secrets.js";
 
-const isProduction = LOGGER_VARIABLES.NODE_ENV === "PRODUCTION";
-
 const baseCookieOptions: CookieOptions = {
   httpOnly: true,
-  secure: isProduction,
-  sameSite: "strict",
-  path: "/",
+  secure: false, // Set to true if using HTTPS
+  sameSite: "lax",
 };
 
 const getTokenMaxAge = (token: string): number | undefined => {

@@ -18,7 +18,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { ApiError } from "../../types/api";
 import type { User, UserRole } from "../../types/user";
 import type { Department } from "../../types/department";
-import { CONTACT_TYPE_LABELS, ROLE_LABELS, USER_ROLES } from "../../constants/options";
+import { ROLE_LABELS, USER_ROLES } from "../../constants/options";
 import { canDeleteUser, canEditUserDepartment, canEditUserName, canEditUserRole } from "../../utils/userPermissions";
 
 export function UserDetailsPage() {
@@ -191,24 +191,6 @@ export function UserDetailsPage() {
               </div>
             )}
           </form>
-        </section>
-
-        <section className="shadow-soft rounded-xl border border-slate-200/80 bg-white p-5 sm:p-6">
-          <h2 className="mb-4 text-sm font-semibold text-slate-900">Contacts</h2>
-          {target.contacts && target.contacts.length > 0 ? (
-            <ul className="flex flex-col gap-2">
-              {target.contacts.map((contact) => (
-                <li key={contact.id} className="rounded-lg border border-slate-200 px-3 py-2">
-                  <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                    {CONTACT_TYPE_LABELS[contact.contactType]}
-                  </p>
-                  <p className="text-sm text-slate-800">{contact.contactDetail}</p>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-slate-500">No contacts on file.</p>
-          )}
         </section>
       </div>
 

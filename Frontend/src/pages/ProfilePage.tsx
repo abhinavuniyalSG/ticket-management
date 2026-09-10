@@ -6,9 +6,7 @@ import { PageContainer } from "../components/layout/PageContainer";
 import { PageHeader } from "../components/layout/PageHeader";
 import { FormField } from "../components/molecules/FormField";
 import { Input } from "../components/atoms/Input";
-import { Select } from "../components/atoms/Select";
 import { Button } from "../components/atoms/Button";
-import { IconButton } from "../components/atoms/IconButton";
 import { Spinner } from "../components/atoms/Spinner";
 import { ErrorState } from "../components/molecules/ErrorState";
 import { ConfirmDialog } from "../components/molecules/ConfirmDialog";
@@ -16,8 +14,7 @@ import { userService } from "../services/userService";
 import { useAuth } from "../hooks/useAuth";
 import { ApiError } from "../types/api";
 import type { User } from "../types/user";
-import type { Contact, ContactType } from "../types/contact";
-import { CONTACT_TYPES, CONTACT_TYPE_LABELS, ROLE_LABELS } from "../constants/options";
+import { ROLE_LABELS } from "../constants/options";
 
 export function ProfilePage() {
   const { user: authUser, setUser, logout } = useAuth();
@@ -31,12 +28,6 @@ export function ProfilePage() {
   const [lastName, setLastName] = useState("");
   const [nameErrors, setNameErrors] = useState<{ firstName?: string; lastName?: string }>({});
   const [isSavingName, setIsSavingName] = useState(false);
-
-  const [contactType, setContactType] = useState<ContactType>("phone");
-  const [contactDetail, setContactDetail] = useState("");
-  const [contactError, setContactError] = useState<string | null>(null);
-  const [isAddingContact, setIsAddingContact] = useState(false);
-  const [removingContactId, setRemovingContactId] = useState<string | null>(null);
 
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -101,47 +92,6 @@ export function ProfilePage() {
     }
   };
 
-  const handleAddContact = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setContactError(null);
-    if (!contactDetail.trim()) {
-      setContactError("Contact detail is required");
-      return;
-    }
-
-    setIsAddingContact(true);
-    try {
-      const res = await userService.addContact({
-        contactType,
-        contactDetail: contactDetail.trim(),
-      });
-      setProfile((prev) => (prev ? { ...prev, contacts: [...(prev.contacts ?? []), res.contact] } : prev));
-      setContactDetail("");
-      toast.success(res.message);
-    } catch (err) {
-      const message = err instanceof ApiError ? err.message : "Unable to add contact.";
-      setContactError(message);
-      toast.error(message);
-    } finally {
-      setIsAddingContact(false);
-    }
-  };
-
-  const handleRemoveContact = async (contact: Contact) => {
-    setRemovingContactId(contact.id);
-    try {
-      const res = await userService.removeContact(contact.id);
-      setProfile((prev) =>
-        prev ? { ...prev, contacts: (prev.contacts ?? []).filter((c) => c.id !== contact.id) } : prev,
-      );
-      toast.success(res.message);
-    } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Unable to remove contact.");
-    } finally {
-      setRemovingContactId(null);
-    }
-  };
-
   const handleDeleteAccount = async () => {
     setIsDeleting(true);
     try {
@@ -158,7 +108,7 @@ export function ProfilePage() {
 
   return (
     <PageContainer>
-      <PageHeader title="Profile" description="Manage your account details and contact information." />
+      <PageHeader title="Profile" description="Manage your account details." />
 
       <div className="flex flex-col gap-6">
         <section className="shadow-soft rounded-xl border border-slate-200/80 bg-white p-5 sm:p-6">
@@ -216,78 +166,6 @@ export function ProfilePage() {
           <Button className="mt-4" variant="secondary" onClick={() => navigate("/profile/change-password")}>
             Change password
           </Button>
-        </section>
-
-        <section className="shadow-soft rounded-xl border border-slate-200/80 bg-white p-5 sm:p-6">
-          <h2 className="mb-4 text-sm font-semibold text-slate-900">Contacts</h2>
-
-          {profile.contacts && profile.contacts.length > 0 ? (
-            <ul className="mb-4 flex flex-col gap-2">
-              {profile.contacts.map((contact) => (
-                <li
-                  key={contact.id}
-                  className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 px-3 py-2"
-                >
-                  <div className="min-w-0">
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                      {CONTACT_TYPE_LABELS[contact.contactType]}
-                    </p>
-                    <p className="truncate text-sm text-slate-800">{contact.contactDetail}</p>
-                  </div>
-                  <IconButton
-                    label="Remove contact"
-                    variant="danger"
-                    disabled={removingContactId === contact.id}
-                    onClick={() => void handleRemoveContact(contact)}
-                    icon={
-                      <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="h-4 w-4">
-                        <path
-                          d="M4 6h12M8 6V4.5a1 1 0 011-1h2a1 1 0 011 1V6M5.5 6l.6 9.5a1 1 0 001 .9h5.8a1 1 0 001-.9l.6-9.5"
-                          stroke="currentColor"
-                          strokeWidth="1.4"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    }
-                  />
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mb-4 text-sm text-slate-500">No contacts added yet.</p>
-          )}
-
-          <form
-            onSubmit={(e) => void handleAddContact(e)}
-            className="flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-end"
-          >
-            <FormField label="Type" htmlFor="contact-type" required>
-              <Select
-                id="contact-type"
-                value={contactType}
-                options={CONTACT_TYPES.map((t) => ({ value: t, label: CONTACT_TYPE_LABELS[t] }))}
-                onChange={(e) => setContactType(e.target.value as ContactType)}
-                disabled={isAddingContact}
-              />
-            </FormField>
-            <div className="flex-1">
-              <FormField label="Detail" htmlFor="contact-detail" error={contactError ?? undefined} required>
-                <Input
-                  id="contact-detail"
-                  value={contactDetail}
-                  maxLength={500}
-                  invalid={Boolean(contactError)}
-                  onChange={(e) => setContactDetail(e.target.value)}
-                  disabled={isAddingContact}
-                  placeholder="e.g. +1 555 000 1234"
-                />
-              </FormField>
-            </div>
-            <Button type="submit" isLoading={isAddingContact}>
-              Add contact
-            </Button>
-          </form>
         </section>
 
         <section className="rounded-xl border border-red-200 bg-red-50 p-5 sm:p-6">

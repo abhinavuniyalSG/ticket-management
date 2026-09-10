@@ -255,7 +255,7 @@ export function TicketDetailsPage() {
                 <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">
                   Assignment
                 </p>
-                <div className="flex flex-col gap-2 sm:flex-row">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                   {canAssignAction && (
                     <>
                       <Select
@@ -268,7 +268,7 @@ export function TicketDetailsPage() {
                         }))}
                         onChange={(e) => setSelectedAssignee(e.target.value)}
                         disabled={isMutating}
-                        className="sm:max-w-xs"
+                        className="w-full sm:max-w-xs sm:flex-1"
                       />
                       <Button
                         variant="secondary"
@@ -281,7 +281,7 @@ export function TicketDetailsPage() {
                   )}
                   {ticket.assignedToId && canUnassignAction && (
                     <Button
-                      variant="ghost"
+                      variant="secondary"
                       disabled={isMutating}
                       onClick={() => void handleUnassign()}
                     >

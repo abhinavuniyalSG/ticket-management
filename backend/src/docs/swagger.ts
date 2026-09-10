@@ -50,7 +50,7 @@ authenticated user to have a verified email, and returns **403** with
     ],
     tags: [
       { name: "Authentication", description: "Register, login, token refresh, logout" },
-      { name: "Users", description: "User profile and contact management" },
+      { name: "Users", description: "User profile management" },
       { name: "Departments", description: "Department CRUD (super_admin only for writes)" },
       { name: "Tickets", description: "Ticket lifecycle management with role-based access" },
       { name: "Dashboard", description: "Read-only ticket analytics and statistics (role-scoped)" },

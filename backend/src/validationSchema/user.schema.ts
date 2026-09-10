@@ -1,5 +1,4 @@
 import z from "zod";
-import { ContactType } from "../types/contact.js";
 import { roleEnum } from "../types/user.js";
 import { paginationQuerySchema } from "../utils/pagination.util.js";
 
@@ -39,28 +38,6 @@ export class UserSchema {
       role: z
         .enum([roleEnum.user, roleEnum.admin, roleEnum.superAdmin])
         .optional(),
-
-      contacts: z
-        .array(
-          z.object({
-            contactType: z.enum([
-              ContactType.phone,
-              ContactType.whatsapp,
-              ContactType.linkedin,
-            ]),
-            contactDetail: z
-              .string({
-                error: (issue) =>
-                  issue.input === undefined
-                    ? "Contact detail is required"
-                    : "Contact detail must be a string",
-              })
-              .trim()
-              .min(1, "Contact detail cannot be empty")
-              .max(500, "Contact detail must not exceed 500 characters"),
-          }),
-        )
-        .optional(),
     })
     .strict()
     .refine(
@@ -68,11 +45,10 @@ export class UserSchema {
         data.firstName !== undefined ||
         data.lastName !== undefined ||
         data.departmentId !== undefined ||
-        data.role !== undefined ||
-        data.contacts !== undefined,
+        data.role !== undefined,
       {
         message:
-          "At least one field (firstName, lastName, departmentId, or contacts) must be provided",
+          "At least one field (firstName, lastName, departmentId, or role) must be provided",
       },
     );
 
@@ -99,56 +75,4 @@ export class UserSchema {
       ...paginationQuerySchema,
     })
     .strict();
-
-  public contactIdParamSchema = z
-    .object({
-      contactId: z
-        .string({ error: "Contact id must be a string" })
-        .pipe(z.uuidv7("Invalid contact ID format")),
-    })
-    .strict();
-
-  public addContactSchema = z
-    .object({
-      contactType: z.enum([
-        ContactType.phone,
-        ContactType.whatsapp,
-        ContactType.linkedin,
-      ]),
-
-      contactDetail: z
-        .string({
-          error: (issue) =>
-            issue.input === undefined
-              ? "Contact detail is required"
-              : "Contact detail must be a string",
-        })
-        .trim()
-        .min(1, "Contact detail cannot be empty")
-        .max(500, "Contact detail must not exceed 500 characters"),
-    })
-    .strict();
-
-  public updateContactSchema = z
-    .object({
-      contactType: z
-        .enum([ContactType.phone, ContactType.whatsapp, ContactType.linkedin])
-        .optional(),
-
-      contactDetail: z
-        .string({ error: "Contact detail must be a string" })
-        .trim()
-        .min(1, "Contact detail cannot be empty")
-        .max(500, "Contact detail must not exceed 500 characters")
-        .optional(),
-    })
-    .strict()
-    .refine(
-      (data) =>
-        data.contactType !== undefined || data.contactDetail !== undefined,
-      {
-        message:
-          "At least one field (contactType or contactDetail) must be provided",
-      },
-    );
 }

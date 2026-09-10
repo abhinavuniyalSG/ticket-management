@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { UserService } from "../../services/user.service.js";
 import { UserRepository } from "../../database/repositry/user.repository.js";
-import { ContactRepository } from "../../database/repositry/contact.repository.js";
 import { DepartmentRepository } from "../../database/repositry/department.repository.js";
 import { roleEnum } from "../../types/user.js";
 import type { RequesterInfo } from "../../services/user.service.js";
@@ -11,18 +10,8 @@ vi.mock("../../database/repositry/user.repository.js", () => ({
     findAll: vi.fn(),
     findById: vi.fn(),
     findByRoleAndDepartment: vi.fn(),
-    updateUserWithContacts: vi.fn(),
+    updateUser: vi.fn(),
     deleteUser: vi.fn(),
-  },
-}));
-
-vi.mock("../../database/repositry/contact.repository.js", () => ({
-  ContactRepository: {
-    findByTypeAndDetail: vi.fn(),
-    createContact: vi.fn(),
-    findById: vi.fn(),
-    updateContact: vi.fn(),
-    deleteContact: vi.fn(),
   },
 }));
 
@@ -312,7 +301,7 @@ describe("updateUser", () => {
     // Uses a non-name field so this exercises the cross-department gate specifically,
     // not the separate "can only change your own name" rule.
     await expect(
-      UserService.updateUser("target-1", { contacts: [] }, requester({ id: "admin-1", role: roleEnum.admin })),
+      UserService.updateUser("target-1", { departmentId: DEPT_B }, requester({ id: "admin-1", role: roleEnum.admin })),
     ).rejects.toMatchObject({ statusCode: 403 });
   });
 
@@ -334,7 +323,7 @@ describe("updateUser", () => {
     vi.mocked(UserRepository.findById)
       .mockResolvedValueOnce(makeUser({ id: "target-1" }))
       .mockResolvedValueOnce(makeUser({ id: "super-1", role: roleEnum.superAdmin }));
-    vi.mocked(UserRepository.updateUserWithContacts).mockResolvedValue(
+    vi.mocked(UserRepository.updateUser).mockResolvedValue(
       makeUser({ id: "target-1", role: roleEnum.admin, departmentId: DEPT_B }),
     );
 
@@ -345,10 +334,9 @@ describe("updateUser", () => {
     );
 
     expect(result.user.role).toBe(roleEnum.admin);
-    expect(UserRepository.updateUserWithContacts).toHaveBeenCalledWith(
+    expect(UserRepository.updateUser).toHaveBeenCalledWith(
       "target-1",
       expect.objectContaining({ role: roleEnum.admin, departmentId: DEPT_B }),
-      undefined,
     );
   });
 
@@ -364,7 +352,7 @@ describe("updateUser", () => {
         requester({ id: "super-1", role: roleEnum.superAdmin }),
       ),
     ).rejects.toMatchObject({ statusCode: 403 });
-    expect(UserRepository.updateUserWithContacts).not.toHaveBeenCalled();
+    expect(UserRepository.updateUser).not.toHaveBeenCalled();
   });
 
   it("blocks an admin from changing someone else's last name too", async () => {
@@ -385,7 +373,7 @@ describe("updateUser", () => {
     vi.mocked(UserRepository.findById)
       .mockResolvedValueOnce(makeUser({ id: "user-1" }))
       .mockResolvedValueOnce(makeUser({ id: "user-1" }));
-    vi.mocked(UserRepository.updateUserWithContacts).mockResolvedValue(
+    vi.mocked(UserRepository.updateUser).mockResolvedValue(
       makeUser({ id: "user-1", firstName: "New" }),
     );
 
@@ -402,7 +390,7 @@ describe("updateUser", () => {
     vi.mocked(UserRepository.findById)
       .mockResolvedValueOnce(makeUser({ id: "super-1", role: roleEnum.superAdmin }))
       .mockResolvedValueOnce(makeUser({ id: "super-1", role: roleEnum.superAdmin }));
-    vi.mocked(UserRepository.updateUserWithContacts).mockResolvedValue(
+    vi.mocked(UserRepository.updateUser).mockResolvedValue(
       makeUser({ id: "super-1", role: roleEnum.superAdmin, firstName: "New" }),
     );
 
@@ -430,7 +418,7 @@ describe("updateUser", () => {
         requester({ id: "super-1", role: roleEnum.superAdmin }),
       ),
     ).rejects.toMatchObject({ statusCode: 409 });
-    expect(UserRepository.updateUserWithContacts).not.toHaveBeenCalled();
+    expect(UserRepository.updateUser).not.toHaveBeenCalled();
   });
 
   it("blocks moving an existing admin into a department that already has a different admin", async () => {
@@ -457,7 +445,7 @@ describe("updateUser", () => {
       .mockResolvedValueOnce(existingAdmin);
     // The only admin found in the department is the target themselves, so this must not conflict.
     vi.mocked(UserRepository.findByRoleAndDepartment).mockResolvedValue([existingAdmin]);
-    vi.mocked(UserRepository.updateUserWithContacts).mockResolvedValue(existingAdmin);
+    vi.mocked(UserRepository.updateUser).mockResolvedValue(existingAdmin);
 
     const result = await UserService.updateUser(
       "admin-1",
@@ -473,7 +461,7 @@ describe("updateUser", () => {
       .mockResolvedValueOnce(makeUser({ id: "target-1", departmentId: DEPT_A }))
       .mockResolvedValueOnce(makeUser({ id: "super-1", role: roleEnum.superAdmin }));
     vi.mocked(UserRepository.findByRoleAndDepartment).mockResolvedValue([]);
-    vi.mocked(UserRepository.updateUserWithContacts).mockResolvedValue(
+    vi.mocked(UserRepository.updateUser).mockResolvedValue(
       makeUser({ id: "target-1", role: roleEnum.admin, departmentId: DEPT_A }),
     );
 
@@ -490,7 +478,7 @@ describe("updateUser", () => {
     vi.mocked(UserRepository.findById)
       .mockResolvedValueOnce(makeUser({ id: "user-1" }))
       .mockResolvedValueOnce(makeUser({ id: "user-1" }));
-    vi.mocked(UserRepository.updateUserWithContacts).mockResolvedValue(null);
+    vi.mocked(UserRepository.updateUser).mockResolvedValue(null);
 
     await expect(
       UserService.updateUser("user-1", { firstName: "New" }, requester({ id: "user-1" })),
@@ -604,99 +592,5 @@ describe("deleteUser", () => {
     await expect(
       UserService.deleteUser("other-1", requester({ id: "user-1" })),
     ).rejects.toMatchObject({ statusCode: 403 });
-  });
-});
-
-describe("contacts", () => {
-  it("blocks adding a contact with a duplicate type+detail", async () => {
-    vi.mocked(ContactRepository.findByTypeAndDetail).mockResolvedValue({ id: "existing" } as any);
-
-    await expect(
-      UserService.addContact("user-1", { contactType: "phone" as any, contactDetail: "12345" }),
-    ).rejects.toMatchObject({ statusCode: 409 });
-  });
-
-  it("adds a contact when no duplicate exists", async () => {
-    vi.mocked(ContactRepository.findByTypeAndDetail).mockResolvedValue(null);
-    vi.mocked(ContactRepository.createContact).mockResolvedValue({ id: "new-contact" } as any);
-
-    const result = await UserService.addContact("user-1", {
-      contactType: "phone" as any,
-      contactDetail: "12345",
-    });
-
-    expect(result.contact).toEqual({ id: "new-contact" });
-  });
-
-  it("throws 404 when updating a contact that doesn't exist", async () => {
-    vi.mocked(ContactRepository.findById).mockResolvedValue(null);
-
-    await expect(
-      UserService.updateContact("user-1", "contact-1", { contactDetail: "new" }),
-    ).rejects.toMatchObject({ statusCode: 404 });
-  });
-
-  it("blocks updating a contact owned by a different user", async () => {
-    vi.mocked(ContactRepository.findById).mockResolvedValue({ id: "contact-1", userId: "someone-else" } as any);
-
-    await expect(
-      UserService.updateContact("user-1", "contact-1", { contactDetail: "new" }),
-    ).rejects.toMatchObject({ statusCode: 403 });
-  });
-
-  it("blocks updating a contact into a value that collides with another existing contact", async () => {
-    vi.mocked(ContactRepository.findById).mockResolvedValue({
-      id: "contact-1",
-      userId: "user-1",
-      contactType: "phone",
-      contactDetail: "12345",
-    } as any);
-    vi.mocked(ContactRepository.findByTypeAndDetail).mockResolvedValue({ id: "other-contact" } as any);
-
-    await expect(
-      UserService.updateContact("user-1", "contact-1", { contactDetail: "99999" }),
-    ).rejects.toMatchObject({ statusCode: 409 });
-  });
-
-  it("updates a contact when there's no collision", async () => {
-    vi.mocked(ContactRepository.findById).mockResolvedValue({
-      id: "contact-1",
-      userId: "user-1",
-      contactType: "phone",
-      contactDetail: "12345",
-    } as any);
-    vi.mocked(ContactRepository.updateContact).mockResolvedValue({
-      id: "contact-1",
-      contactDetail: "99999",
-    } as any);
-
-    const result = await UserService.updateContact("user-1", "contact-1", { contactDetail: "99999" });
-
-    expect(result.contact.contactDetail).toBe("99999");
-  });
-
-  it("throws 404 when deleting a contact that doesn't exist", async () => {
-    vi.mocked(ContactRepository.findById).mockResolvedValue(null);
-
-    await expect(UserService.deleteContact("user-1", "contact-1")).rejects.toMatchObject({
-      statusCode: 404,
-    });
-  });
-
-  it("blocks deleting a contact owned by a different user", async () => {
-    vi.mocked(ContactRepository.findById).mockResolvedValue({ id: "contact-1", userId: "someone-else" } as any);
-
-    await expect(UserService.deleteContact("user-1", "contact-1")).rejects.toMatchObject({
-      statusCode: 403,
-    });
-  });
-
-  it("deletes a contact owned by the requesting user", async () => {
-    vi.mocked(ContactRepository.findById).mockResolvedValue({ id: "contact-1", userId: "user-1" } as any);
-    vi.mocked(ContactRepository.deleteContact).mockResolvedValue(true);
-
-    const result = await UserService.deleteContact("user-1", "contact-1");
-
-    expect(result.message).toBe("Contact deleted successfully");
   });
 });

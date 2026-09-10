@@ -1,35 +1,19 @@
 import { logger } from "../core/logger.js";
 import { UserRepository } from "../database/repositry/user.repository.js";
-import { ContactRepository } from "../database/repositry/contact.repository.js";
 import { DepartmentRepository } from "../database/repositry/department.repository.js";
 import { HttpError } from "../utils/httpError.utils.js";
 import { roleEnum } from "../types/user.js";
-import type { ContactType } from "../types/contact.js";
 import type { User } from "../database/models/user.model.js";
 import {
   buildPaginationMeta,
   DEFAULT_PAGE,
 } from "../utils/pagination.util.js";
 
-export interface AddContactInput {
-  contactType: ContactType;
-  contactDetail: string;
-}
-
-export interface UpdateContactInput {
-  contactType?: ContactType;
-  contactDetail?: string;
-}
-
 export interface UpdateUserInput {
   firstName?: string;
   lastName?: string;
   departmentId?: string | null;
   role?: roleEnum;
-  contacts?: Array<{
-    contactType: ContactType;
-    contactDetail: string;
-  }>;
 }
 
 export interface RequesterInfo {
@@ -289,11 +273,7 @@ export class UserService {
       userUpdates.role = updateData.role;
     }
 
-    const updatedUser = await UserRepository.updateUserWithContacts(
-      id,
-      userUpdates,
-      updateData.contacts,
-    );
+    const updatedUser = await UserRepository.updateUser(id, userUpdates);
 
     if (!updatedUser) {
       throw new HttpError(500, "Failed to update user");
@@ -364,97 +344,5 @@ export class UserService {
     }
 
     throw new HttpError(403, "Forbidden: insufficient permissions");
-  }
-
-  public static async addContact(
-    userId: string,
-    contactData: AddContactInput,
-  ) {
-    const existingContact = await ContactRepository.findByTypeAndDetail(
-      contactData.contactType,
-      contactData.contactDetail,
-    );
-    if (existingContact) {
-      throw new HttpError(409, "Contact with this detail already exists");
-    }
-
-    const newContact = await ContactRepository.createContact(
-      userId,
-      contactData.contactType,
-      contactData.contactDetail,
-    );
-
-    return {
-      message: "Contact added successfully",
-      contact: newContact,
-    };
-  }
-
-  public static async updateContact(
-    userId: string,
-    contactId: string,
-    updates: UpdateContactInput,
-  ) {
-    const contact = await ContactRepository.findById(contactId);
-    if (!contact) {
-      throw new HttpError(404, "Contact not found");
-    }
-
-    if (contact.userId !== userId) {
-      throw new HttpError(
-        403,
-        "Forbidden: you can only update your own contact",
-      );
-    }
-
-    const targetType = updates.contactType ?? contact.contactType;
-    const targetDetail = updates.contactDetail ?? contact.contactDetail;
-
-    if (
-      (updates.contactType && updates.contactType !== contact.contactType) ||
-      (updates.contactDetail && updates.contactDetail !== contact.contactDetail)
-    ) {
-      const existingContact = await ContactRepository.findByTypeAndDetail(
-        targetType,
-        targetDetail,
-      );
-      if (existingContact && existingContact.id !== contactId) {
-        throw new HttpError(409, "Contact with this detail already exists");
-      }
-    }
-
-    const updatedContact = await ContactRepository.updateContact(
-      contactId,
-      updates,
-    );
-
-    if (!updatedContact) {
-      throw new HttpError(500, "Failed to update contact");
-    }
-
-    return {
-      message: "Contact updated successfully",
-      contact: updatedContact,
-    };
-  }
-
-  public static async deleteContact(userId: string, contactId: string) {
-    const contact = await ContactRepository.findById(contactId);
-    if (!contact) {
-      throw new HttpError(404, "Contact not found");
-    }
-
-    if (contact.userId !== userId) {
-      throw new HttpError(
-        403,
-        "Forbidden: you can only delete your own contact",
-      );
-    }
-
-    await ContactRepository.deleteContact(contactId);
-
-    return {
-      message: "Contact deleted successfully",
-    };
   }
 }

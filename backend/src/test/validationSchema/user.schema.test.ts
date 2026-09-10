@@ -24,20 +24,6 @@ describe("updateUserSchema", () => {
   it("allows clearing the department by passing null", () => {
     expect(schema.updateUserSchema.safeParse({ departmentId: null }).success).toBe(true);
   });
-
-  it("accepts a list of contacts", () => {
-    const result = schema.updateUserSchema.safeParse({
-      contacts: [{ contactType: "phone", contactDetail: "+1 555 0100" }],
-    });
-    expect(result.success).toBe(true);
-  });
-
-  it("rejects a contact with an invalid contactType", () => {
-    const result = schema.updateUserSchema.safeParse({
-      contacts: [{ contactType: "carrier-pigeon", contactDetail: "coop #4" }],
-    });
-    expect(result.success).toBe(false);
-  });
 });
 
 describe("userQuerySchema", () => {
@@ -67,32 +53,5 @@ describe("userIdParamSchema", () => {
 
   it("rejects a non-UUID id", () => {
     expect(schema.userIdParamSchema.safeParse({ id: "not-a-uuid" }).success).toBe(false);
-  });
-});
-
-describe("addContactSchema", () => {
-  it("accepts a valid contact", () => {
-    const result = schema.addContactSchema.safeParse({
-      contactType: "whatsapp",
-      contactDetail: "+1 555 0100",
-    });
-    expect(result.success).toBe(true);
-  });
-
-  it("rejects an empty contact detail", () => {
-    const result = schema.addContactSchema.safeParse({ contactType: "phone", contactDetail: "" });
-    expect(result.success).toBe(false);
-  });
-});
-
-describe("updateContactSchema", () => {
-  it("accepts a partial update with just one field", () => {
-    expect(schema.updateContactSchema.safeParse({ contactDetail: "+1 555 0199" }).success).toBe(
-      true,
-    );
-  });
-
-  it("rejects an empty update (nothing to change)", () => {
-    expect(schema.updateContactSchema.safeParse({}).success).toBe(false);
   });
 });

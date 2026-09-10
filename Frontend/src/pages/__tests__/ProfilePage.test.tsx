@@ -9,7 +9,6 @@ import type { AuthContextValue } from "../../app/providers/AuthContext";
 import { userService } from "../../services/userService";
 import { ApiError } from "../../types/api";
 import type { User } from "../../types/user";
-import type { Contact } from "../../types/contact";
 
 vi.mock("../../services/userService");
 vi.mock("react-hot-toast", () => ({
@@ -19,18 +18,6 @@ vi.mock("react-hot-toast", () => ({
 beforeEach(() => {
   vi.clearAllMocks();
 });
-
-function makeContact(overrides: Partial<Contact> = {}): Contact {
-  return {
-    id: "contact-1",
-    userId: "user-1",
-    contactType: "phone",
-    contactDetail: "+1 555 000 1234",
-    createdAt: "2026-01-01T00:00:00.000Z",
-    updatedAt: "2026-01-01T00:00:00.000Z",
-    ...overrides,
-  };
-}
 
 function makeUser(overrides: Partial<User> = {}): User {
   return {
@@ -42,7 +29,6 @@ function makeUser(overrides: Partial<User> = {}): User {
     isVerified: true,
     departmentId: null,
     department: null,
-    contacts: [],
     createdAt: "2026-01-01T00:00:00.000Z",
     updatedAt: "2026-01-01T00:00:00.000Z",
     ...overrides,
@@ -132,14 +118,6 @@ describe("ProfilePage", () => {
     expect(await screen.findByLabelText("Department")).toHaveValue("Unassigned");
   });
 
-  it("shows 'No contacts added yet.' when there are no contacts", async () => {
-    vi.mocked(userService.getById).mockResolvedValue({ message: "ok", user: makeUser() });
-
-    renderProfilePage();
-
-    expect(await screen.findByText("No contacts added yet.")).toBeInTheDocument();
-  });
-
   it("requires a first name before saving", async () => {
     const user = userEvent.setup();
     vi.mocked(userService.getById).mockResolvedValue({ message: "ok", user: makeUser() });
@@ -190,92 +168,6 @@ describe("ProfilePage", () => {
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalledWith("Unable to update your profile.");
     });
-  });
-
-  it("requires a contact detail before adding a contact", async () => {
-    const user = userEvent.setup();
-    vi.mocked(userService.getById).mockResolvedValue({ message: "ok", user: makeUser() });
-
-    renderProfilePage();
-
-    await screen.findByLabelText(/^First name/);
-    await user.click(screen.getByRole("button", { name: "Add contact" }));
-
-    expect(await screen.findByRole("alert")).toHaveTextContent("Contact detail is required");
-    expect(userService.addContact).not.toHaveBeenCalled();
-  });
-
-  it("adds a contact and clears the form", async () => {
-    const user = userEvent.setup();
-    vi.mocked(userService.getById).mockResolvedValue({ message: "ok", user: makeUser() });
-    vi.mocked(userService.addContact).mockResolvedValue({
-      message: "Contact added",
-      contact: makeContact({ contactDetail: "+44 7700 900000" }),
-    });
-
-    renderProfilePage();
-
-    await screen.findByLabelText(/^First name/);
-    const detail = screen.getByLabelText(/^Detail/);
-    await user.type(detail, "+44 7700 900000");
-    await user.click(screen.getByRole("button", { name: "Add contact" }));
-
-    expect(await screen.findByText("+44 7700 900000")).toBeInTheDocument();
-    expect(detail).toHaveValue("");
-    expect(toast.success).toHaveBeenCalledWith("Contact added");
-  });
-
-  it("shows a contact error when adding a contact fails", async () => {
-    const user = userEvent.setup();
-    vi.mocked(userService.getById).mockResolvedValue({ message: "ok", user: makeUser() });
-    vi.mocked(userService.addContact).mockRejectedValue(new ApiError(400, "Contact already exists."));
-
-    renderProfilePage();
-
-    await screen.findByLabelText(/^First name/);
-    await user.type(screen.getByLabelText(/^Detail/), "+44 7700 900000");
-    await user.click(screen.getByRole("button", { name: "Add contact" }));
-
-    expect(await screen.findByRole("alert")).toHaveTextContent("Contact already exists.");
-    expect(toast.error).toHaveBeenCalledWith("Contact already exists.");
-  });
-
-  it("removes a contact", async () => {
-    const user = userEvent.setup();
-    vi.mocked(userService.getById).mockResolvedValue({
-      message: "ok",
-      user: makeUser({ contacts: [makeContact()] }),
-    });
-    vi.mocked(userService.removeContact).mockResolvedValue({ message: "Contact removed" });
-
-    renderProfilePage();
-
-    expect(await screen.findByText("+1 555 000 1234")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Remove contact" }));
-
-    await waitFor(() => {
-      expect(screen.queryByText("+1 555 000 1234")).not.toBeInTheDocument();
-    });
-    expect(toast.success).toHaveBeenCalledWith("Contact removed");
-  });
-
-  it("shows a toast when removing a contact fails", async () => {
-    const user = userEvent.setup();
-    vi.mocked(userService.getById).mockResolvedValue({
-      message: "ok",
-      user: makeUser({ contacts: [makeContact()] }),
-    });
-    vi.mocked(userService.removeContact).mockRejectedValue(new ApiError(500, "Unable to remove contact."));
-
-    renderProfilePage();
-
-    await screen.findByText("+1 555 000 1234");
-    await user.click(screen.getByRole("button", { name: "Remove contact" }));
-
-    await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith("Unable to remove contact.");
-    });
-    expect(screen.getByText("+1 555 000 1234")).toBeInTheDocument();
   });
 
   it("deletes the account after confirming, then logs out and redirects to login", async () => {

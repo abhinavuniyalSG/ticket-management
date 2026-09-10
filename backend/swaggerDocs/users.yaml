@@ -9,11 +9,8 @@ tags:
       |---|---|---|---|
       | Get all users | ✗ | own dept | ✓ all |
       | Get user by ID | own only | own dept + self | ✓ any |
-      | Update user | own (firstName/lastName/contacts only; no password field exists anywhere in this API) | own + dept users | ✓ any |
+      | Update user | own (firstName/lastName only; no password field exists anywhere in this API) | own + dept users | ✓ any |
       | Delete user | own only | own dept (incl. depts they manage via `Department.managedBy`) + self | ✓ any |
-      | Add contact | own only | own only | own only |
-      | Update contact | own only | own only | own only |
-      | Delete contact | own only | own only | own only |
 
 paths:
   /users:
@@ -134,7 +131,6 @@ paths:
         | `firstName` / `lastName` | ✓ (own) | ✓ (own + same dept) | ✓ (any) |
         | `departmentId` | ✗ | ✓ (for others in dept, not self) | ✓ (any) |
         | `role` | ✗ | ✗ | ✓ (any) |
-        | `contacts` | ✓ (own) | ✓ (own + same dept) | ✓ (any) |
 
         > Admins **cannot** change their own `departmentId`.
       security:
@@ -150,9 +146,6 @@ paths:
             example:
               firstName: "jane"
               departmentId: "01906c26-1234-7abc-adef-000000000020"
-              contacts:
-                - contactType: phone
-                  contactDetail: "+91-9999999999"
       responses:
         "200":
           description: User updated
@@ -212,125 +205,6 @@ paths:
         "429":
           $ref: "#/components/responses/TooManyRequests"
 
-  /users/contacts:
-    post:
-      tags:
-        - Users
-      summary: Add a contact for the authenticated user
-      description: >
-        Adds a new contact (phone, WhatsApp, or LinkedIn) to the currently
-        authenticated user's profile. Each `contactType` + `contactDetail`
-        combination must be globally unique.
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/AddContactRequest"
-            example:
-              contactType: phone
-              contactDetail: "+91-9876543210"
-      responses:
-        "201":
-          description: Contact added
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: Contact added successfully
-                  contact:
-                    $ref: "#/components/schemas/Contact"
-        "400":
-          $ref: "#/components/responses/ValidationError"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "409":
-          $ref: "#/components/responses/Conflict"
-        "429":
-          $ref: "#/components/responses/TooManyRequests"
-
-  /users/contacts/{contactId}:
-    patch:
-      tags:
-        - Users
-      summary: Update a contact
-      description: >
-        Updates an existing contact belonging to the authenticated user.
-        At least one of `contactType` or `contactDetail` must be provided.
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: "#/components/parameters/ContactId"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UpdateContactRequest"
-            example:
-              contactDetail: "+91-9000000000"
-      responses:
-        "200":
-          description: Contact updated
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: Contact updated successfully
-                  contact:
-                    $ref: "#/components/schemas/Contact"
-        "400":
-          $ref: "#/components/responses/ValidationError"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "409":
-          $ref: "#/components/responses/Conflict"
-        "429":
-          $ref: "#/components/responses/TooManyRequests"
-
-    delete:
-      tags:
-        - Users
-      summary: Delete a contact
-      description: Deletes a specific contact belonging to the authenticated user.
-      security:
-        - bearerAuth: []
-      parameters:
-        - $ref: "#/components/parameters/ContactId"
-      responses:
-        "200":
-          description: Contact deleted
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: Contact deleted successfully
-        "400":
-          $ref: "#/components/responses/InvalidId"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "429":
-          $ref: "#/components/responses/TooManyRequests"
-
 components:
   schemas:
     UpdateUserRequest:
@@ -357,52 +231,6 @@ components:
           type: string
           enum: [user, admin, super_admin]
           description: Only super_admin may change a user role.
-        contacts:
-          type: array
-          items:
-            type: object
-            required:
-              - contactType
-              - contactDetail
-            properties:
-              contactType:
-                type: string
-                enum: [phone, whatsapp, linkedin]
-              contactDetail:
-                type: string
-                maxLength: 500
-
-    AddContactRequest:
-      type: object
-      additionalProperties: false
-      required:
-        - contactType
-        - contactDetail
-      properties:
-        contactType:
-          type: string
-          enum: [phone, whatsapp, linkedin]
-          example: phone
-        contactDetail:
-          type: string
-          minLength: 1
-          maxLength: 500
-          example: "+91-9876543210"
-
-    UpdateContactRequest:
-      type: object
-      additionalProperties: false
-      minProperties: 1
-      description: At least one field (contactType or contactDetail) must be provided.
-      properties:
-        contactType:
-          type: string
-          enum: [phone, whatsapp, linkedin]
-        contactDetail:
-          type: string
-          minLength: 1
-          maxLength: 500
-          example: "+91-9000000000"
 
   parameters:
     UserId:
@@ -414,13 +242,3 @@ components:
         type: string
         format: uuid
       example: "01906c26-1234-7abc-adef-000000000001"
-
-    ContactId:
-      name: contactId
-      in: path
-      required: true
-      description: UUIDv7 identifier of the contact
-      schema:
-        type: string
-        format: uuid
-      example: "01906c26-1234-7abc-adef-000000000010"

@@ -37,7 +37,7 @@ No secrets, credentials, or client business data are reproduced in this document
 - **Playwright** for end-to-end tests (`e2e/*.spec.ts`), which intercept all `/api/**` calls with `page.route()` rather than hitting a real backend.
 - **oxlint** for linting (`npm run lint`).
 
-**Authentication model.** There is no client-visible token: the app relies entirely on httpOnly cookies set by the backend, sent automatically via `fetch(..., { credentials: "include" })`. The only client-side persisted artifact is a non-sensitive snapshot of the current user (`SafeUser`, which omits the `contacts` array) cached in `sessionStorage` so the UI can render immediately on reload while a background call confirms the session is still valid.
+**Authentication model.** There is no client-visible token: the app relies entirely on httpOnly cookies set by the backend, sent automatically via `fetch(..., { credentials: "include" })`. The only client-side persisted artifact is a non-sensitive snapshot of the current user (`SafeUser`) cached in `sessionStorage` so the UI can render immediately on reload while a background call confirms the session is still valid.
 
 **High-level architecture:**
 
@@ -59,7 +59,7 @@ flowchart LR
     ApiClient --> Backend[("Backend REST API")]
 
     Pages --> Utils["utils\nticketPermissions, userPermissions,\nformat, validation"]
-    Pages --> Types["types\nTicket, User, Department, Contact,\nDashboardMetrics, ApiError"]
+    Pages --> Types["types\nTicket, User, Department,\nDashboardMetrics, ApiError"]
     Services --> Types
 ```
 
@@ -195,7 +195,7 @@ flowchart TD
 - **Imports:** `createContext` from `react`; type-only imports `LoginPayload` and `RegisterPayload` from `../../services/authService`; type-only import `SafeUser` from `../../types/user`.
 - **Exported type `AuthStatus`:** `"loading" | "authenticated" | "unauthenticated"`, the three possible states of session resolution.
 - **Exported interface `AuthContextValue`:**
-  - `user: SafeUser | null` - the current user snapshot (a `User` minus the `contacts` field, per `types/user.ts`'s comment describing it as a "minimal, non-sensitive snapshot kept in sessionStorage to survive page reloads").
+  - `user: SafeUser | null` - the current user snapshot, per `types/user.ts`'s comment describing it as a "minimal, non-sensitive snapshot kept in sessionStorage to survive page reloads".
   - `status: AuthStatus`.
   - `login(payload: LoginPayload): Promise<SafeUser>`.
   - `register(payload: RegisterPayload): Promise<SafeUser>`.
@@ -460,30 +460,19 @@ Consumed widely: `DashboardPage.tsx` (department filter dropdown), `CreateTicket
 
 ### 2.6 `src/services/userService.ts`
 
-**Purpose:** User directory access (list/get/update/delete) plus nested contact-record management (a user's phone/WhatsApp/LinkedIn entries).
+**Purpose:** User directory access (list/get/update/delete).
 
-**Local response types:** `UserListResponse { message, users: User[] }`, `UserResponse { message, user: User }`, `ContactResponse { message, contact: Contact }`, `MessageResponse { message }`. Exported: `UserQueryParams { department?: string; firstName?: string; role?: UserRole }`.
+**Local response types:** `UserListResponse { message, users: User[] }`, `UserResponse { message, user: User }`, `MessageResponse { message }`. Exported: `UserQueryParams { department?: string; firstName?: string; role?: UserRole }`.
 
 **Exported object `userService`:**
 - `list(params: UserQueryParams = {})` -> `GET /users` with query `{ department, firstName, role }`, returns `UserListResponse`. Used by `UsersListPage.tsx` (directory search/filter by name, department, role) and by ticket pages (`TicketsListPage.tsx`, `CreateTicketPage.tsx`, `TicketDetailsPage.tsx`) to populate assignee pickers.
 - `getById(id: string)` -> `GET /users/{id}`, returns `UserResponse`. Used by `UserDetailsPage.tsx` and `ProfilePage.tsx` (viewing one's own or another user's profile).
 - `update(id: string, payload: UpdateUserPayload)` -> `PATCH /users/{id}`, returns `UserResponse`. Payload covers `firstName, lastName, departmentId, role`, so this single endpoint backs both self-service profile edits and admin actions (department reassignment, role change) gated by the permission helpers in `userPermissions.ts`.
 - `remove(id: string)` -> `DELETE /users/{id}`, returns `MessageResponse`. Used by `UsersListPage.tsx`/`UserDetailsPage.tsx`, gated by `canDeleteUser`.
-- `addContact(payload: AddContactPayload)` -> `POST /users/contacts`, body `{ contactType, contactDetail }`, returns `ContactResponse`. Note the endpoint has no user ID in the path, implying the backend infers the target user from the authenticated session (self-only) rather than an admin adding contacts for others.
-- `updateContact(contactId: string, payload: UpdateContactPayload)` -> `PATCH /users/contacts/{contactId}`, returns `ContactResponse`.
-- `removeContact(contactId: string)` -> `DELETE /users/contacts/{contactId}`, returns `MessageResponse`.
-
-All three contact methods are used by `ProfilePage.tsx` for the "manage my contact details" widget.
 
 ### 2.7 Domain types (`src/types`)
 
 **`api.ts`**: `export class ApiError extends Error { status: number; errors?: string[] }`. Constructor takes `(status, message, errors?)`, sets `this.name = "ApiError"`. This is the single normalised error shape thrown by `apiRequest` for every non-2xx response; UI code can `catch (err) { if (err instanceof ApiError) ... }` to read `.status` (e.g. to special-case 403/404/409) and `.errors` (field-level validation messages from the backend's zod schema, likely rendered as a list under a form).
-
-**`contact.ts`**:
-- `ContactType = "phone" | "whatsapp" | "linkedin"`: the three supported contact channels.
-- `Contact { id, userId, contactType, contactDetail, createdAt, updatedAt }`: a persisted contact record; `contactDetail` is the free-text value (phone number, WhatsApp number, LinkedIn URL/handle).
-- `AddContactPayload { contactType, contactDetail }`: creation payload, no ids (server assigns and infers owner).
-- `UpdateContactPayload { contactType?, contactDetail? }`: partial update.
 
 **`dashboard.ts`**:
 - `DashboardPeriod = "day" | "week" | "month" | "year"`: the time-window filter for dashboard queries.
@@ -508,8 +497,8 @@ All three contact methods are used by `ProfilePage.tsx` for the "manage my conta
 
 **`user.ts`**:
 - `UserRole = "user" | "admin" | "super_admin"`: the three-tier role model that drives every permission check in the app.
-- `User { id, firstName, lastName, role, email, isVerified: boolean, departmentId: string | null, department?: Department | null, contacts?: Contact[], createdAt, updatedAt }`: the canonical user record. `departmentId` is nullable (a user, especially `super_admin`, need not belong to a department).
-- `SafeUser = Omit<User, "contacts">`: documented in-code as "a minimal, non-sensitive snapshot kept in sessionStorage to survive page reloads."
+- `User { id, firstName, lastName, role, email, isVerified: boolean, departmentId: string | null, department?: Department | null, createdAt, updatedAt }`: the canonical user record. `departmentId` is nullable (a user, especially `super_admin`, need not belong to a department).
+- `SafeUser = User`: documented in-code as "a minimal, non-sensitive snapshot kept in sessionStorage to survive page reloads."
 - `UpdateUserPayload { firstName?, lastName?, departmentId?: string | null, role?: UserRole }`: note this does not include `email`, so email changes are not supported through this endpoint.
 
 ### 2.8 Utilities (`src/utils`)
@@ -548,8 +537,7 @@ Purpose: centralises the canonical ordered value-lists and human-readable labels
 - `TICKET_STATUSES: TicketStatus[]` = `["open","assigned","in_progress","reviewed","completed","closed"]`.
 - `TICKET_PRIORITIES: TicketPriority[]` = `["low","medium","high","urgent"]`.
 - `USER_ROLES: UserRole[]` = `["user","admin","super_admin"]`.
-- `CONTACT_TYPES: ContactType[]` = `["phone","whatsapp","linkedin"]`.
-- `STATUS_LABELS`, `PRIORITY_LABELS`, `ROLE_LABELS`, `CONTACT_TYPE_LABELS`: `Record` maps from each enum value to its display label (e.g. `in_progress -> "In Progress"`, `super_admin -> "Super Admin"`).
+- `STATUS_LABELS`, `PRIORITY_LABELS`, `ROLE_LABELS`: `Record` maps from each enum value to its display label (e.g. `in_progress -> "In Progress"`, `super_admin -> "Super Admin"`).
 - `DASHBOARD_PERIODS: DashboardPeriod[]` = `["day","week","month","year"]`, with matching `DASHBOARD_PERIOD_LABELS`.
 - `DASHBOARD_PERIOD_WINDOW_LABELS`: `day -> "7 days"`, `week -> "4 weeks"`, `month -> "12 months"`, `year -> "yearly"`, describing the window `ticketsOverTime` covers for each period.
 - `SORT_BY_LABELS: Record<string, string>` (deliberately typed by generic `string`, not `TicketSortBy`): `createdAt -> "Created date"`, `updatedAt -> "Updated date"`, `priority -> "Priority"`, `status -> "Status"`.
@@ -584,7 +572,7 @@ flowchart TD
 
     BE[("Backend REST API\n/tickets /users /departments /dashboard /auth")]
 
-    TYPES["types/*.ts\nTicket, User, Department, Contact,\nDashboardOverview, DashboardBreakdown, ApiError"]
+    TYPES["types/*.ts\nTicket, User, Department,\nDashboardOverview, DashboardBreakdown, ApiError"]
 
     TDP -->|"getById/update/remove"| TS
     TDP -->|"list (assignees)"| US
@@ -1443,16 +1431,15 @@ This section documents the eleven route-level pages that make up the authenticat
 
 **Route:** `path="/profile"`, inside the general `ProtectedLayout` (no extra role restriction).
 
-**Purpose:** lets the signed-in user view/edit their own name, view read-only account fields (email, role, department), manage their contact list, and delete their own account.
+**Purpose:** lets the signed-in user view/edit their own name, view read-only account fields (email, role, department), and delete their own account.
 
-**Local state** (grouped): profile load (`profile`, `isLoading`, `error`); name form (`firstName`, `lastName`, `nameErrors`, `isSavingName`); contact form (`contactType`, `contactDetail`, `contactError`, `isAddingContact`, `removingContactId`); account deletion (`isDeleteOpen`, `isDeleting`).
+**Local state** (grouped): profile load (`profile`, `isLoading`, `error`); name form (`firstName`, `lastName`, `nameErrors`, `isSavingName`); account deletion (`isDeleteOpen`, `isDeleting`).
 
 **Data fetching:** `loadProfile()` calls `userService.getById(authUser.id)`; on success seeds `profile`/`firstName`/`lastName`. While `isLoading` the entire page renders only a `Spinner`; on error or missing profile, `ErrorState` with `onRetry={loadProfile}`.
 
 **Sections and actions:**
 - **Personal information form:** editable first/last name, read-only email/role/department. Submitting calls `userService.update(profile.id, { firstName, lastName })`; on success updates local `profile` and the global auth context via `setUser(res.user)`.
 - **Security section:** a "Change password" button navigating to `/profile/change-password`.
-- **Contacts section:** lists `profile.contacts` with a delete button per row (`userService.removeContact`, applied immediately without a confirmation dialog) and an add form (`userService.addContact`).
 - **Danger zone:** "Delete account" opens `ConfirmDialog`; confirming calls `userService.remove(profile.id)`, then `logout()` and navigates to `/login`.
 
 There is no role-based conditional rendering here beyond "you can only edit yourself."
@@ -1553,7 +1540,7 @@ There is no role-based conditional rendering here beyond "you can only edit your
 
 **Route:** `path="/users/:id"`, same role restriction as the list page. Missing `id` redirects to `/users`.
 
-**Purpose:** view and (permission-gated) edit a single user's name/department/role, view their contacts, and delete the account.
+**Purpose:** view and (permission-gated) edit a single user's name/department/role, and delete the account.
 
 **Local state:** `target`, `departments`, `isLoading`, `error`, form fields (`firstName`, `lastName`, `role`, `departmentId`), `isSaving`, `isDeleteOpen`, `isDeleting`.
 
@@ -1600,7 +1587,7 @@ There are no ticket or user listings embedded on this page; understanding which 
 
 - **Loading/error/empty convention.** Nearly every page follows the same three-state pattern: a centered `Spinner` while loading; an `ErrorState` (sometimes with `onRetry`) on error; and, for list pages, an `EmptyState` when the fetched array is present but empty, with copy differing by whether filters are active.
 - **Toasts.** All mutating actions use `react-hot-toast`, showing the backend's own `res.message` on success and either `ApiError.message` or a generic fallback on failure.
-- **Confirmation before destructive actions.** Every delete action across these pages (account, ticket, user, department) is gated behind the shared `ConfirmDialog` molecule. The one exception is `ProfilePage`'s contact removal, which has no confirmation step.
+- **Confirmation before destructive actions.** Every delete action across these pages (account, ticket, user, department) is gated behind the shared `ConfirmDialog` molecule.
 - **Debouncing.** The three pages with free-text search feeding server queries (`TicketsListPage`, `UsersListPage`, `DepartmentsListPage`) all use `useDebouncedValue` at its default 400ms delay.
 - **Permission utilities as the single source of truth.** All conditional-action rendering for tickets and users is centralized in `ticketPermissions.ts` and `userPermissions.ts` rather than duplicated per page, and both are explicitly commented as mirroring backend authorization logic.
 
@@ -1742,7 +1729,7 @@ Frontend/
       UnauthorizedPage.tsx        Section 7.10
     services/                     Section 2.1-2.6 (apiClient, authService, dashboardService, departmentService,
                                                     ticketService, userService)
-    types/                        Section 2.7 (api, contact, dashboard, department, ticket, user)
+    types/                        Section 2.7 (api, dashboard, department, ticket, user)
     utils/                        Section 2.8 (format, ticketPermissions, userPermissions, validation)
     main.tsx                      Section 1.1
     index.css                     Global stylesheet (Tailwind entry point)
@@ -1754,7 +1741,7 @@ Frontend/
 
 - **Ticket lifecycle:** the six statuses a ticket moves through, in order: `open -> assigned -> in_progress -> reviewed -> completed -> closed` (with a `completed -> reviewed` or `completed -> open` reopen path available to the creator, and `in_progress -> completed -> in_progress` available to the assignee). Defined by `TicketStatus` in `src/types/ticket.ts`, enforced client-side by `getAllowedStatusTransitions` in `src/utils/ticketPermissions.ts`.
 - **Role model:** three tiers, `user < admin < super_admin` (`UserRole` in `src/types/user.ts`). A plain `user` creates/tracks tickets; an `admin` manages tickets and users within their own department(s); a `super_admin` has system-wide access and is the only role permitted to manage departments or change another user's role.
-- **`SafeUser`:** a `User` object with the `contacts` field omitted, the only user-related data persisted client-side (in `sessionStorage`), used purely to let the UI render immediately on page reload before the session-refresh check resolves.
+- **`SafeUser`:** the current-user snapshot, the only user-related data persisted client-side (in `sessionStorage`), used purely to let the UI render immediately on page reload before the session-refresh check resolves.
 - **`ApiError`:** the single normalised error type (`src/types/api.ts`) thrown by every failed API call, carrying an HTTP `status`, a human-readable `message`, and an optional `errors` array of field-level validation messages.
 - **Cookie-based session:** the app never stores or reads an authentication token in JavaScript; every request is sent with `credentials: "include"` so the browser handles httpOnly session/refresh cookies set by the backend.
 - **Silent refresh-and-retry:** the behavior in `apiClient.ts` where a 401 response (outside a small excluded set of auth endpoints) triggers one attempt to refresh the session and replay the original request before giving up and treating the session as expired.
