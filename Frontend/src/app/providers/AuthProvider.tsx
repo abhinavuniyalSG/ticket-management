@@ -63,6 +63,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUserState(cached);
         setStatus("authenticated");
       } else {
+        // A cached user but a failed refresh means this browser had a valid
+        // session a moment ago and it's since been invalidated - most often
+        // because only one refresh token is stored per account, so signing
+        // in again anywhere else silently kills this one. Without this,
+        // that plays out as an unexplained bounce to the login page that
+        // looks identical to a random bug; a visitor who was never signed
+        // in here in the first place still gets the normal silent redirect.
+        if (cached) {
+          toast.error("Your session has expired. Please sign in again.");
+        }
         writeCachedUser(null);
         setStatus("unauthenticated");
       }

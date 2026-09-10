@@ -36,6 +36,22 @@ describe("createTicketSchema", () => {
     expect(result.success).toBe(false);
   });
 
+  it("rejects a description over 5000 characters", () => {
+    const result = schema.createTicketSchema.safeParse({
+      ...validPayload,
+      description: "A".repeat(5001),
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts a description right at the 5000 character limit", () => {
+    const result = schema.createTicketSchema.safeParse({
+      ...validPayload,
+      description: "A".repeat(5000),
+    });
+    expect(result.success).toBe(true);
+  });
+
   it("rejects a department id that isn't a valid UUID", () => {
     const result = schema.createTicketSchema.safeParse({
       ...validPayload,
@@ -61,6 +77,11 @@ describe("updateTicketSchema", () => {
 
   it("rejects an invalid status value", () => {
     const result = schema.updateTicketSchema.safeParse({ status: "archived" });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a description over 5000 characters", () => {
+    const result = schema.updateTicketSchema.safeParse({ description: "A".repeat(5001) });
     expect(result.success).toBe(false);
   });
 

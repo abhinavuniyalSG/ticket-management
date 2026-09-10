@@ -36,7 +36,8 @@ export class TicketSchema {
               : "Description must be a string",
         })
         .trim()
-        .min(5, "Description must be at least 5 characters"),
+        .min(5, "Description must be at least 5 characters")
+        .max(5000, "Description must not exceed 5000 characters"),
       departmentId: z
         .string({
           error: (issue) =>
@@ -80,6 +81,7 @@ export class TicketSchema {
         })
         .trim()
         .min(5, "Description must be at least 5 characters")
+        .max(5000, "Description must not exceed 5000 characters")
         .optional(),
       priority: z
         .enum([

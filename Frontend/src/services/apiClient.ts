@@ -74,8 +74,13 @@ function toApiError(status: number, body: ParsedBody): ApiError {
   // a generic fallback. Anything longer or HTML-shaped is more likely an
   // infra error page, which isn't safe or useful to surface as-is.
   const isPlainTextMessage = rawText.length > 0 && rawText.length <= 300 && !rawText.startsWith("<");
+  // requestValidator's `message` is just a fixed "Validation failed" label -
+  // the actual per-field reasons live in `errors`, so prefer showing those
+  // (e.g. "Invalid ticket ID format") over the generic label when present.
   const message =
-    errorBody.message ?? (isPlainTextMessage ? rawText : "Something went wrong. Please try again.");
+    (errorBody.errors?.length ? errorBody.errors.join(", ") : undefined) ??
+    errorBody.message ??
+    (isPlainTextMessage ? rawText : "Something went wrong. Please try again.");
   return new ApiError(status, message, errorBody.errors);
 }
 

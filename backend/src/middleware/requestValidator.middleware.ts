@@ -22,15 +22,20 @@ export class requestValidator {
       const result = schema.safeParse(input);
 
       if (!result.success) {
+        const issueMessages = result.error.issues.map((issue) => issue.message);
+
         logger.warn("Request validation failed", {
           method: req.method,
           path: req.path,
           type,
-          errors: result.error.issues.map((issue) => issue.message),
+          errors: issueMessages,
         });
+        // `message` stays a fixed, generic label; the specific per-field
+        // reasons live only in `errors`, so callers don't get them smashed
+        // together into one run-on, unpunctuated sentence.
         return res.status(400).json({
-          message: `Validation failed ${result.error.issues.map((issue) => issue.message).join(", ")}`,
-          errors: result.error.issues.map((issues) => issues.message),
+          message: "Validation failed",
+          errors: issueMessages,
         });
       }
 

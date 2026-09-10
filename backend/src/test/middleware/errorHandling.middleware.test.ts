@@ -72,6 +72,32 @@ describe("ErrorMiddleware.middleware", () => {
     expect(res.json).toHaveBeenCalledWith({ message: "Invalid JSON body" });
   });
 
+  it("responds with 413 for a body-parser payload-too-large error instead of a generic 500", () => {
+    const res = makeRes();
+    const error = Object.assign(new Error("request entity too large"), {
+      type: "entity.too.large",
+      status: 413,
+    });
+
+    ErrorMiddleware.middleware(error as any, req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(413);
+    expect(res.json).toHaveBeenCalledWith({ message: "Request body is too large" });
+  });
+
+  it("logs a payload-too-large error at warn level, not error level", () => {
+    const res = makeRes();
+    const error = Object.assign(new Error("request entity too large"), {
+      type: "entity.too.large",
+      status: 413,
+    });
+
+    ErrorMiddleware.middleware(error as any, req, res, next);
+
+    expect(logger.warn).toHaveBeenCalled();
+    expect(logger.error).not.toHaveBeenCalled();
+  });
+
   it("logs 5xx errors at error level and 4xx errors at warn level", () => {
     const res = makeRes();
 

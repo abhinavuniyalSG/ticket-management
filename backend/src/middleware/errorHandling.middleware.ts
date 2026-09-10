@@ -28,6 +28,22 @@ export class ErrorMiddleware {
       });
     }
 
+    // body-parser throws this (via express.json()'s default size limit) for a
+    // request body that's too large - without this branch it falls through
+    // to the generic 500 below, misreporting a client mistake as a server
+    // fault and logging it as an error-level stack trace.
+    if (!(error instanceof HttpError) && error.type === "entity.too.large") {
+      logger.warn("Request body too large", {
+        statusCode: 413,
+        method: req.method,
+        path: req.path,
+      });
+
+      return res.status(413).json({
+        message: "Request body is too large",
+      });
+    }
+
     const statusCode = error instanceof HttpError ? error.statusCode : 500;
     const message =
       statusCode >= 500
