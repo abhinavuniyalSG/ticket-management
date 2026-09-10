@@ -1,0 +1,13 @@
+- generic [ref=f1e2]:
+  - status [ref=f1e60]: If an account with that email exists, a verification email has been sent
+  - generic [ref=f1e31]:
+    - generic [ref=f1e32]:
+      - generic [ref=f1e33]: T
+      - generic [ref=f1e34]: TicketDesk
+    - generic [ref=f1e35]:
+      - heading "Verify your email" [level=1] [ref=f1e36]
+      - generic [ref=f1e38]:
+        - paragraph [ref=f1e39]: We sent a verification link to abhinav.uniyal+qatest1@studiographene.com. You need to verify your email before you can access tickets, users, or departments.
+        - button "Resend verification email" [ref=f1e40] [cursor=pointer]
+        - paragraph [ref=f1e41]: Already clicked the link in your email? You may need to login again.
+        - button "login again" [ref=f1e42] [cursor=pointer]

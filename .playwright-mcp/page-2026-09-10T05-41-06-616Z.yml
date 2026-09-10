@@ -1,0 +1,32 @@
+- generic [ref=f6e4]:
+  - generic [ref=f6e5]:
+    - generic [ref=f6e6]: T
+    - generic [ref=f6e7]: TicketDesk
+  - generic [ref=f6e8]:
+    - heading "Welcome back" [level=1] [ref=f6e9]
+    - paragraph [ref=f6e10]: Sign in to manage your tickets.
+    - generic [ref=f6e11]:
+      - generic [ref=f6e12]:
+        - generic [ref=f6e13]:
+          - generic [ref=f6e14]:
+            - text: Email
+            - generic [aria-hidden] [ref=f6e15]: "*"
+          - textbox "Email" [ref=f6e16]
+        - generic [ref=f6e17]:
+          - generic [ref=f6e18]:
+            - text: Password
+            - generic [aria-hidden] [ref=f6e19]: "*"
+          - generic [ref=f6e20]:
+            - textbox "Password" [ref=f6e21]
+            - generic [ref=f6e22]:
+              - checkbox "Show password" [ref=f6e23]
+              - text: Show password
+        - button "Sign in" [ref=f6e24] [cursor=pointer]
+      - generic [ref=f6e25]:
+        - paragraph [ref=f6e26]:
+          - text: Don't have an account?
+          - link "Create one" [ref=f6e27] [cursor=pointer]:
+            - /url: /register
+        - paragraph [ref=f6e28]:
+          - link "Forgot your password?" [ref=f6e29] [cursor=pointer]:
+            - /url: /changepassword/email

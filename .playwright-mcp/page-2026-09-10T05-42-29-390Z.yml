@@ -1,0 +1,312 @@
+- generic [active] [ref=f6e1]:
+  - generic [ref=f6e36]:
+    - complementary [ref=f6e37]:
+      - generic [ref=f6e38]:
+        - generic [ref=f6e39]: T
+        - generic [ref=f6e40]: TicketDesk
+      - navigation "Primary" [ref=f6e41]:
+        - link "Dashboard" [ref=f6e42] [cursor=pointer]:
+          - /url: /dashboard
+        - link "Tickets" [ref=f6e45] [cursor=pointer]:
+          - /url: /tickets
+        - link "Users" [ref=f6e49] [cursor=pointer]:
+          - /url: /users
+        - link "Profile" [ref=f6e55] [cursor=pointer]:
+          - /url: /profile
+      - generic [ref=f6e59]:
+        - generic [ref=f6e60]:
+          - generic [ref=f6e61]: AR
+          - generic [ref=f6e62]:
+            - paragraph [ref=f6e63]: Ankit Rawat
+            - paragraph [ref=f6e64]: Admin
+        - button "Log out" [ref=f6e65] [cursor=pointer]
+    - main [ref=f6e67]:
+      - generic [ref=f6e435]:
+        - generic [ref=f6e436]:
+          - generic [ref=f6e437]:
+            - heading "Tickets" [level=1] [ref=f6e438]
+            - paragraph [ref=f6e439]: View and manage support tickets.
+          - generic [ref=f6e440]:
+            - button "Hide filters" [ref=f6e681] [cursor=pointer]
+            - link "New ticket" [ref=f6e442] [cursor=pointer]:
+              - /url: /tickets/new
+        - generic [ref=f6e682]:
+          - generic [ref=f6e683]:
+            - generic [ref=f6e684]:
+              - generic [ref=f6e685]: Title
+              - textbox "Title" [ref=f6e686]:
+                - /placeholder: Search by title
+            - generic [ref=f6e687]:
+              - generic [ref=f6e688]: Status
+              - generic [ref=f6e689]:
+                - log [ref=f6e691]
+                - generic [ref=f6e693] [cursor=pointer]:
+                  - generic [ref=f6e694]: All statuses
+                  - combobox "Status" [ref=f6e696]
+            - generic [ref=f6e701]:
+              - generic [ref=f6e702]: Priority
+              - generic [ref=f6e703]:
+                - log [ref=f6e705]
+                - generic [ref=f6e707] [cursor=pointer]:
+                  - generic [ref=f6e708]: All priorities
+                  - combobox "Priority" [ref=f6e710]
+            - generic [ref=f6e715]:
+              - generic [ref=f6e716]: Department
+              - generic [ref=f6e717]:
+                - log [ref=f6e719]
+                - generic [ref=f6e721] [cursor=pointer]:
+                  - generic [ref=f6e722]: All departments
+                  - combobox "Department" [ref=f6e724]
+            - generic [ref=f6e729]:
+              - generic [ref=f6e730]: AssignedTo
+              - generic [ref=f6e731]:
+                - log [ref=f6e733]
+                - generic [ref=f6e735] [cursor=pointer]:
+                  - generic [ref=f6e736]: All assigned to
+                  - combobox "AssignedTo" [ref=f6e738]
+            - generic [ref=f6e743]:
+              - generic [ref=f6e744]: Creator
+              - generic [ref=f6e745]:
+                - log [ref=f6e747]
+                - generic [ref=f6e749] [cursor=pointer]:
+                  - generic [ref=f6e750]: All creators
+                  - combobox "Creator" [ref=f6e752]
+            - generic [ref=f6e757]:
+              - generic [ref=f6e758]: Created from
+              - textbox "Created from" [ref=f6e759]
+            - generic [ref=f6e760]:
+              - generic [ref=f6e761]: Created to
+              - textbox "Created to" [ref=f6e762]
+            - generic [ref=f6e763]:
+              - generic [ref=f6e764]: Sort by
+              - generic [ref=f6e765]:
+                - log [ref=f6e767]
+                - generic [ref=f6e769] [cursor=pointer]:
+                  - generic [ref=f6e770]: Created date
+                  - combobox "Sort by" [ref=f6e772]
+            - generic [ref=f6e777]:
+              - generic [ref=f6e778]: Sort order
+              - generic [ref=f6e779]:
+                - log [ref=f6e781]
+                - generic [ref=f6e783] [cursor=pointer]:
+                  - generic [ref=f6e784]: Descending
+                  - combobox "Sort order" [ref=f6e786]
+          - button "Reset filters" [disabled] [ref=f6e792]
+        - table [ref=f6e803]:
+          - rowgroup [ref=f6e804]:
+            - row [ref=f6e805]:
+              - columnheader "Title" [ref=f6e806]
+              - columnheader "Status" [ref=f6e807]
+              - columnheader "Priority" [ref=f6e808]
+              - columnheader "Department" [ref=f6e809]
+              - columnheader "Creator" [ref=f6e810]
+              - columnheader "AssignedTo" [ref=f6e811]
+              - columnheader "Created" [ref=f6e812]
+          - rowgroup [ref=f6e813]:
+            - row [ref=f6e814]:
+              - cell [ref=f6e815]:
+                - link "Earphone needed" [ref=f6e816] [cursor=pointer]:
+                  - /url: /tickets/01a07fd1-eca5-7dd3-912b-56e5d1d5efc6
+              - cell "Open" [ref=f6e817]
+              - cell "Medium" [ref=f6e819]
+              - cell "IT & Infrastructure" [ref=f6e821]
+              - cell "Abhinav Uniyal" [ref=f6e822]
+              - cell "Unassigned" [ref=f6e823]
+              - cell "8 Sept 2026, 12:30" [ref=f6e824]
+            - row [ref=f6e825]:
+              - cell [ref=f6e826]:
+                - link "Device working slow" [ref=f6e827] [cursor=pointer]:
+                  - /url: /tickets/01a07fd0-b112-7b2d-a7c9-650d6cbc41d7
+              - cell "Open" [ref=f6e828]
+              - cell "High" [ref=f6e830]
+              - cell "IT & Infrastructure" [ref=f6e832]
+              - cell "Abhinav Uniyal" [ref=f6e833]
+              - cell "Unassigned" [ref=f6e834]
+              - cell "8 Sept 2026, 12:29" [ref=f6e835]
+            - row [ref=f6e836]:
+              - cell [ref=f6e837]:
+                - link "Configure MFA rollout for all staff accounts" [ref=f6e838] [cursor=pointer]:
+                  - /url: /tickets/01a07fad-967e-7074-8bc2-7ab98942bab7
+              - cell "In Progress" [ref=f6e839]
+              - cell "Medium" [ref=f6e841]
+              - cell "IT & Infrastructure" [ref=f6e843]
+              - cell "Pooja Reddy" [ref=f6e844]
+              - cell "Siddharth Bose" [ref=f6e845]
+              - cell "8 Sept 2026, 06:51" [ref=f6e846]
+            - row [ref=f6e847]:
+              - cell [ref=f6e848]:
+                - link "Add integration tests for the payments module" [ref=f6e849] [cursor=pointer]:
+                  - /url: /tickets/01a07fad-967d-799f-924b-ad1b723a7167
+              - cell "Open" [ref=f6e850]
+              - cell "Urgent" [ref=f6e852]
+              - cell "Engineering" [ref=f6e854]
+              - cell "Deepanshu" [ref=f6e855]
+              - cell "Unassigned" [ref=f6e856]
+              - cell "8 Sept 2026, 05:56" [ref=f6e857]
+            - row [ref=f6e858]:
+              - cell [ref=f6e859]:
+                - link "Clean up deprecated API endpoints" [ref=f6e860] [cursor=pointer]:
+                  - /url: /tickets/01a07fad-967b-7fb2-a3d6-c972a2ea5fe7
+              - cell "Closed" [ref=f6e861]
+              - cell "Urgent" [ref=f6e863]
+              - cell "Engineering" [ref=f6e865]
+              - cell "Deepanshu" [ref=f6e866]
+              - cell "Ankit Rawat" [ref=f6e867]
+              - cell "6 Sept 2026, 21:10" [ref=f6e868]
+            - row [ref=f6e869]:
+              - cell [ref=f6e870]:
+                - link "Set up backup verification job for file server" [ref=f6e871] [cursor=pointer]:
+                  - /url: /tickets/01a07fad-967b-7518-ac59-c2e9f4f362f9
+              - cell "Assigned" [ref=f6e872]
+              - cell "Urgent" [ref=f6e874]
+              - cell "IT & Infrastructure" [ref=f6e876]
+              - cell "Aditya Kulkarni" [ref=f6e877]
+              - cell "Pooja Reddy" [ref=f6e878]
+              - cell "6 Sept 2026, 06:18" [ref=f6e879]
+            - row [ref=f6e880]:
+              - cell [ref=f6e881]:
+                - link "Configure MFA rollout for all staff accounts" [ref=f6e882] [cursor=pointer]:
+                  - /url: /tickets/01a07fad-967a-7f5b-a1b6-63336a0324aa
+              - cell "Closed" [ref=f6e883]
+              - cell "Urgent" [ref=f6e885]
+              - cell "IT & Infrastructure" [ref=f6e887]
+              - cell "Aditya Kulkarni" [ref=f6e888]
+              - cell "Fatima Sheikh" [ref=f6e889]
+              - cell "6 Sept 2026, 03:17" [ref=f6e890]
+            - row [ref=f6e891]:
+              - cell [ref=f6e892]:
+                - link "Improve error logging for the notification service" [ref=f6e893] [cursor=pointer]:
+                  - /url: /tickets/01a07fad-9678-774b-99c5-7ed98be47539
+              - cell "Closed" [ref=f6e894]
+              - cell "High" [ref=f6e896]
+              - cell "Engineering" [ref=f6e898]
+              - cell "Sneha Kapoor" [ref=f6e899]
+              - cell "Amit" [ref=f6e900]
+              - cell "5 Sept 2026, 21:45" [ref=f6e901]
+            - row [ref=f6e902]:
+              - cell [ref=f6e903]:
+                - link "Set up feature flag support for the new checkout flow" [ref=f6e904] [cursor=pointer]:
+                  - /url: /tickets/01a07fad-9679-701e-9cf9-8300d5d2769c
+              - cell "Completed" [ref=f6e905]
+              - cell "Low" [ref=f6e907]
+              - cell "Engineering" [ref=f6e909]
+              - cell "Ankit Rawat" [ref=f6e910]
+              - cell "Amit" [ref=f6e911]
+              - cell "5 Sept 2026, 17:04" [ref=f6e912]
+            - row [ref=f6e913]:
+              - cell [ref=f6e914]:
+                - link "Configure MFA rollout for all staff accounts" [ref=f6e915] [cursor=pointer]:
+                  - /url: /tickets/01a07fad-9678-7c16-ba18-67cc84f50023
+              - cell "Closed" [ref=f6e916]
+              - cell "High" [ref=f6e918]
+              - cell "IT & Infrastructure" [ref=f6e920]
+              - cell "Fatima Sheikh" [ref=f6e921]
+              - cell "Aditya Kulkarni" [ref=f6e922]
+              - cell "5 Sept 2026, 07:23" [ref=f6e923]
+            - row [ref=f6e924]:
+              - cell [ref=f6e925]:
+                - link "Upgrade build pipeline to the latest Node LTS" [ref=f6e926] [cursor=pointer]:
+                  - /url: /tickets/01a07fad-9677-73b4-8848-394f31d71634
+              - cell "Assigned" [ref=f6e927]
+              - cell "Low" [ref=f6e929]
+              - cell "Engineering" [ref=f6e931]
+              - cell "Sneha Kapoor" [ref=f6e932]
+              - cell "Deepanshu" [ref=f6e933]
+              - cell "5 Sept 2026, 07:10" [ref=f6e934]
+            - row [ref=f6e935]:
+              - cell [ref=f6e936]:
+                - link "Set up feature flag support for the new checkout flow" [ref=f6e937] [cursor=pointer]:
+                  - /url: /tickets/01a07fad-9679-77b8-a04b-c5bfa2070b15
+              - cell "Open" [ref=f6e938]
+              - cell "High" [ref=f6e940]
+              - cell "Engineering" [ref=f6e942]
+              - cell "Sneha Kapoor" [ref=f6e943]
+              - cell "Unassigned" [ref=f6e944]
+              - cell "5 Sept 2026, 00:03" [ref=f6e945]
+            - row [ref=f6e946]:
+              - cell [ref=f6e947]:
+                - link "Investigate suspicious login attempts on the VPN" [ref=f6e948] [cursor=pointer]:
+                  - /url: /tickets/01a07fad-9673-7649-947f-60e2c71a5b3b
+              - cell "Completed" [ref=f6e949]
+              - cell "High" [ref=f6e951]
+              - cell "IT & Infrastructure" [ref=f6e953]
+              - cell "Fatima Sheikh" [ref=f6e954]
+              - cell "Fatima Sheikh" [ref=f6e955]
+              - cell "4 Sept 2026, 22:08" [ref=f6e956]
+            - row [ref=f6e957]:
+              - cell [ref=f6e958]:
+                - link "Set up new printer in the third floor office" [ref=f6e959] [cursor=pointer]:
+                  - /url: /tickets/01a07fad-9675-7e70-9ef1-5b9d2385594d
+              - cell "Closed" [ref=f6e960]
+              - cell "Urgent" [ref=f6e962]
+              - cell "IT & Infrastructure" [ref=f6e964]
+              - cell "Fatima Sheikh" [ref=f6e965]
+              - cell "Aditya Kulkarni" [ref=f6e966]
+              - cell "4 Sept 2026, 12:22" [ref=f6e967]
+            - row [ref=f6e968]:
+              - cell [ref=f6e969]:
+                - link "Provision new development environment for the team" [ref=f6e970] [cursor=pointer]:
+                  - /url: /tickets/01a07fad-9674-731a-832e-0de3b9f1ec38
+              - cell "Open" [ref=f6e971]
+              - cell "Urgent" [ref=f6e973]
+              - cell "IT & Infrastructure" [ref=f6e975]
+              - cell "Fatima Sheikh" [ref=f6e976]
+              - cell "Unassigned" [ref=f6e977]
+              - cell "4 Sept 2026, 05:20" [ref=f6e978]
+            - row [ref=f6e979]:
+              - cell [ref=f6e980]:
+                - link "Memory leak in background worker process" [ref=f6e981] [cursor=pointer]:
+                  - /url: /tickets/01a07fad-9676-72ac-af2d-a9813d378cae
+              - cell "Reviewed" [ref=f6e982]
+              - cell "Medium" [ref=f6e984]
+              - cell "Engineering" [ref=f6e986]
+              - cell "Amit" [ref=f6e987]
+              - cell "Ankit Rawat" [ref=f6e988]
+              - cell "4 Sept 2026, 05:09" [ref=f6e989]
+            - row [ref=f6e990]:
+              - cell [ref=f6e991]:
+                - link "Clean up deprecated API endpoints" [ref=f6e992] [cursor=pointer]:
+                  - /url: /tickets/01a07fad-9673-7cbf-b559-de0dd134e7b0
+              - cell "Assigned" [ref=f6e993]
+              - cell "Urgent" [ref=f6e995]
+              - cell "Engineering" [ref=f6e997]
+              - cell "Amit" [ref=f6e998]
+              - cell "Sneha Kapoor" [ref=f6e999]
+              - cell "4 Sept 2026, 04:02" [ref=f6e1000]
+            - row [ref=f6e1001]:
+              - cell [ref=f6e1002]:
+                - link "API rate limiter returning false positives" [ref=f6e1003] [cursor=pointer]:
+                  - /url: /tickets/01a07fad-9676-7a7c-b7d6-054a8902a382
+              - cell "Completed" [ref=f6e1004]
+              - cell "Urgent" [ref=f6e1006]
+              - cell "Engineering" [ref=f6e1008]
+              - cell "Deepanshu" [ref=f6e1009]
+              - cell "Amit" [ref=f6e1010]
+              - cell "4 Sept 2026, 03:52" [ref=f6e1011]
+            - row [ref=f6e1012]:
+              - cell [ref=f6e1013]:
+                - link "Laptop replacement request for new hire" [ref=f6e1014] [cursor=pointer]:
+                  - /url: /tickets/01a07fad-9672-7974-ae1c-89a8cea43eed
+              - cell "Reviewed" [ref=f6e1015]
+              - cell "High" [ref=f6e1017]
+              - cell "IT & Infrastructure" [ref=f6e1019]
+              - cell "Fatima Sheikh" [ref=f6e1020]
+              - cell "Siddharth Bose" [ref=f6e1021]
+              - cell "4 Sept 2026, 02:43" [ref=f6e1022]
+            - row [ref=f6e1023]:
+              - cell [ref=f6e1024]:
+                - link "Memory leak in background worker process" [ref=f6e1025] [cursor=pointer]:
+                  - /url: /tickets/01a07fad-966e-7a59-8837-cfb415918c86
+              - cell "Closed" [ref=f6e1026]
+              - cell "Urgent" [ref=f6e1028]
+              - cell "Engineering" [ref=f6e1030]
+              - cell "Deepanshu" [ref=f6e1031]
+              - cell "Deepanshu" [ref=f6e1032]
+              - cell "3 Sept 2026, 21:18" [ref=f6e1033]
+        - navigation "Pagination" [ref=f6e1034]:
+          - paragraph [ref=f6e1035]: Showing 1–20 of 183
+          - generic [ref=f6e1036]:
+            - button "Previous" [disabled] [ref=f6e1037]
+            - generic [ref=f6e1038]: Page 1 of 10
+            - button "Next" [ref=f6e1039] [cursor=pointer]
+  - generic [aria-hidden] [ref=f6e259]: "0"

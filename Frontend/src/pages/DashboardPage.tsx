@@ -59,7 +59,7 @@ function statusDistributionFrom(overview: DashboardOverview): StatusDistribution
     { status: "in_progress", count: overview.inProgressTickets },
     { status: "reviewed", count: overview.reviewedTickets },
     { status: "completed", count: overview.completedTickets },
-    { status: "closed", count: overview.closedTickets },
+    { status: "closed", count: overview.closedDateToday },
   ];
 }
 
@@ -111,13 +111,13 @@ export function DashboardPage() {
           message: dashboard.message,
           departmentId: overview.departmentId,
           period: overview.period,
-          totalTicketsCreated: overview.totalTicketsCreated,
+          totalTicketsCreatedToday: overview.totalTicketsCreatedToday,
           openTickets: overview.openTickets,
           assignedTickets: overview.assignedTickets,
           inProgressTickets: overview.inProgressTickets,
           reviewedTickets: overview.reviewedTickets,
           completedTickets: overview.completedTickets,
-          closedTickets: overview.closedTickets,
+          closedDateToday: overview.closedDateToday,
           statusDistribution: statusDistributionFrom(overview),
           priorityDistribution: dashboard.priorityDistribution,
           ticketsOverTime: dashboard.ticketsOverTime,

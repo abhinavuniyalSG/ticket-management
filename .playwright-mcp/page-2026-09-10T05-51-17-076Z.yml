@@ -1,0 +1,157 @@
+- generic [active] [ref=f15e1]:
+  - generic [ref=f15e2]:
+    - status [ref=f15e35]: Logged in successfully
+    - generic [ref=f15e36]:
+      - complementary [ref=f15e37]:
+        - generic [ref=f15e38]:
+          - generic [ref=f15e39]: T
+          - generic [ref=f15e40]: TicketDesk
+        - navigation "Primary" [ref=f15e41]:
+          - link "Dashboard" [ref=f15e42] [cursor=pointer]:
+            - /url: /dashboard
+          - link "Tickets" [ref=f15e45] [cursor=pointer]:
+            - /url: /tickets
+          - link "Users" [ref=f15e49] [cursor=pointer]:
+            - /url: /users
+          - link "Profile" [ref=f15e55] [cursor=pointer]:
+            - /url: /profile
+        - generic [ref=f15e59]:
+          - generic [ref=f15e60]:
+            - generic [ref=f15e61]: AR
+            - generic [ref=f15e62]:
+              - paragraph [ref=f15e63]: Ankit Rawat
+              - paragraph [ref=f15e64]: Admin
+          - button "Log out" [ref=f15e65] [cursor=pointer]
+      - main [ref=f15e67]:
+        - generic [ref=f15e68]:
+          - generic [ref=f15e69]:
+            - generic [ref=f15e70]:
+              - heading "Dashboard" [level=1] [ref=f15e71]
+              - paragraph [ref=f15e72]: Your department's ticket overview.
+            - generic [ref=f15e73]:
+              - group "Select time range" [ref=f15e74]:
+                - button "Day" [pressed] [ref=f15e75] [cursor=pointer]
+                - button "Week" [ref=f15e76] [cursor=pointer]
+                - button "Month" [ref=f15e77] [cursor=pointer]
+                - button "Year" [ref=f15e78] [cursor=pointer]
+              - generic [ref=f15e79]:
+                - log [ref=f15e81]
+                - generic [ref=f15e83] [cursor=pointer]:
+                  - generic [ref=f15e84]: Default department
+                  - combobox "Filter dashboard by department" [ref=f15e86]
+          - generic [ref=f15e91]:
+            - generic [ref=f15e92]:
+              - generic [ref=f15e93]:
+                - paragraph [ref=f15e94]: Total tickets created today
+                - paragraph [ref=f15e95]: "1"
+              - generic [ref=f15e96]:
+                - paragraph [ref=f15e97]: Open
+                - paragraph [ref=f15e98]: "0"
+              - generic [ref=f15e99]:
+                - paragraph [ref=f15e100]: Assigned
+                - paragraph [ref=f15e101]: "1"
+              - generic [ref=f15e102]:
+                - paragraph [ref=f15e103]: In progress
+                - paragraph [ref=f15e104]: "0"
+              - generic [ref=f15e105]:
+                - paragraph [ref=f15e106]: Reviewed
+                - paragraph [ref=f15e107]: "0"
+              - generic [ref=f15e108]:
+                - paragraph [ref=f15e109]: Completed
+                - paragraph [ref=f15e110]: "0"
+              - generic [ref=f15e111]:
+                - paragraph [ref=f15e112]: Closed Date today
+                - paragraph [ref=f15e113]: "0"
+            - generic [ref=f15e114]:
+              - generic [ref=f15e115]:
+                - heading "Tickets over time (7 days)" [level=3] [ref=f15e116]
+                - generic [ref=f15e119]:
+                  - generic:
+                    - status:
+                      - paragraph: 6 Sept
+                      - list:
+                        - listitem: "Closed : 2"
+                        - listitem: "Created : 1"
+                  - list [ref=f15e121]:
+                    - listitem [ref=f15e122]:
+                      - img "Closed legend icon" [ref=f15e123]
+                      - text: Closed
+                    - listitem [ref=f15e125]:
+                      - img "Created legend icon" [ref=f15e126]
+                      - text: Created
+                  - application [ref=f15e128]:
+                    - generic [ref=f15e161]:
+                      - generic [ref=f15e162]:
+                        - generic [ref=f15e163]: 4 Sept
+                        - generic [ref=f15e165]: 5 Sept
+                        - generic [ref=f15e167]: 6 Sept
+                        - generic [ref=f15e169]: 7 Sept
+                        - generic [ref=f15e171]: 8 Sept
+                        - generic [ref=f15e173]: 9 Sept
+                        - generic [ref=f15e175]: 10 Sept
+                      - generic [ref=f15e177]:
+                        - generic [ref=f15e178]: "0"
+                        - generic [ref=f15e180]: "1"
+                        - generic [ref=f15e182]: "2"
+                        - generic [ref=f15e184]: "3"
+                        - generic [ref=f15e186]: "4"
+                - table [ref=f15e189]:
+                  - caption [ref=f15e190]: Tickets created and closed per day over the last 7 days
+                  - rowgroup [ref=f15e191]:
+                    - row [ref=f15e192]:
+                      - columnheader "Date" [ref=f15e193]
+                      - columnheader "Created" [ref=f15e194]
+                      - columnheader "Closed" [ref=f15e195]
+                  - rowgroup [ref=f15e196]:
+                    - row [ref=f15e197]:
+                      - cell "2026-09-04" [ref=f15e198]
+                      - cell "1" [ref=f15e199]
+                      - cell "0" [ref=f15e200]
+                    - row [ref=f15e201]:
+                      - cell "2026-09-05" [ref=f15e202]
+                      - cell "3" [ref=f15e203]
+                      - cell "1" [ref=f15e204]
+                    - row [ref=f15e205]:
+                      - cell "2026-09-06" [ref=f15e206]
+                      - cell "1" [ref=f15e207]
+                      - cell "2" [ref=f15e208]
+                    - row [ref=f15e209]:
+                      - cell "2026-09-07" [ref=f15e210]
+                      - cell "0" [ref=f15e211]
+                      - cell "0" [ref=f15e212]
+                    - row [ref=f15e213]:
+                      - cell "2026-09-08" [ref=f15e214]
+                      - cell "1" [ref=f15e215]
+                      - cell "0" [ref=f15e216]
+                    - row [ref=f15e217]:
+                      - cell "2026-09-09" [ref=f15e218]
+                      - cell "0" [ref=f15e219]
+                      - cell "0" [ref=f15e220]
+                    - row [ref=f15e221]:
+                      - cell "2026-09-10" [ref=f15e222]
+                      - cell "1" [ref=f15e223]
+                      - cell "0" [ref=f15e224]
+              - generic [ref=f15e225]:
+                - generic [ref=f15e226]:
+                  - heading "Status distribution" [level=3] [ref=f15e227]
+                  - application [ref=f15e231]:
+                    - generic [ref=f15e239]:
+                      - generic [ref=f15e240]:
+                        - generic [ref=f15e241]: Open
+                        - generic [ref=f15e243]: Assigned
+                        - generic [ref=f15e245]: In Progress
+                        - generic [ref=f15e247]: Reviewed
+                        - generic [ref=f15e249]: Completed
+                        - generic [ref=f15e251]: Closed
+                      - generic [ref=f15e253]: "1"
+                - generic [ref=f15e255]:
+                  - heading "Priority distribution" [level=3] [ref=f15e256]
+                  - application [ref=f15e260]:
+                    - generic [ref=f15e268]:
+                      - generic [ref=f15e269]:
+                        - generic [ref=f15e270]: Low
+                        - generic [ref=f15e272]: Medium
+                        - generic [ref=f15e274]: High
+                        - generic [ref=f15e276]: Urgent
+                      - generic [ref=f15e278]: "1"
+  - generic [aria-hidden] [ref=f15e280]: "0"

@@ -34,7 +34,7 @@ paths:
         or ticket counts - call both for one dashboard view. In particular, there's no
         `statusDistribution` here: build that chart from `/dashboard/overview`'s per-status counts
         (`openTickets`, `assignedTickets`, `inProgressTickets`, `reviewedTickets`, `completedTickets`,
-        `closedTickets`) instead.
+        `closedDateToday`) instead.
 
         - **admin**: scoped to a department they manage (`Department.managedBy`). Omit `departmentId` to
           get the first managed department returned by the database; supply it to pick a specific one,
@@ -189,13 +189,13 @@ paths:
                 message: Dashboard overview fetched successfully
                 departmentId: "01906c26-1234-7abc-adef-000000000020"
                 period: day
-                totalTicketsCreated: 400
+                totalTicketsCreatedToday: 400
                 openTickets: 2
                 assignedTickets: 10
                 inProgressTickets: 7
                 reviewedTickets: 25
                 completedTickets: 17
-                closedTickets: 339
+                closedDateToday: 339
         "400":
           $ref: "#/components/responses/ValidationError"
         "401":
@@ -265,7 +265,7 @@ components:
         period:
           type: string
           enum: [day, week, month, year, all]
-        totalTicketsCreated:
+        totalTicketsCreatedToday:
           type: integer
           minimum: 0
           description: >
@@ -287,9 +287,13 @@ components:
         completedTickets:
           type: integer
           minimum: 0
-        closedTickets:
+        closedDateToday:
           type: integer
           minimum: 0
+          description: >
+            Tickets closed within the selected `period`, windowed by `closedAt` rather than `createdAt`
+            - e.g. tickets closed today for the default `period=day`. This can include tickets that were
+            created before the window started.
 
     DashboardMetrics:
       type: object

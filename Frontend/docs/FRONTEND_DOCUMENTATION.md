@@ -479,7 +479,7 @@ Consumed widely: `DashboardPage.tsx` (department filter dropdown), `CreateTicket
 - `StatusDistributionEntry { status: TicketStatus, count: number }` and `PriorityDistributionEntry { priority: TicketPriority, count: number }`: count-per-category rows for pie/bar charts.
 - `TicketsOverTimeEntry { date: string, created: number, closed: number }`: one time-series data point: tickets created vs. closed on/around `date`.
 - `DashboardBreakdown { message, priorityDistribution, ticketsOverTime }`: the exact shape of `GET /dashboard`. A code comment explains the split deliberately: this endpoint omits `departmentId`/`period`/counts/`statusDistribution` because those live on `DashboardOverview` instead, since the two endpoints are always fetched together and shouldn't duplicate each other's data.
-- `DashboardOverview { message, departmentId: string | null, period, totalTickets, openTickets, assignedTickets, inProgressTickets, reviewedTickets, completedTickets, closedTickets }`: the KPI counts per ticket status, plus the echoed filter values, from `GET /dashboard/overview`.
+- `DashboardOverview { message, departmentId: string | null, period, totalTicketsCreatedToday, openTickets, assignedTickets, inProgressTickets, reviewedTickets, completedTickets, closedDateToday }`: the KPI counts per ticket status, plus the echoed filter values, from `GET /dashboard/overview`. `closedDateToday` is windowed by `closedAt` rather than `createdAt`, so it can include tickets created before the selected period.
 - `DashboardMetrics extends DashboardOverview { statusDistribution, priorityDistribution, ticketsOverTime }`: a client-side-only view model (not returned directly by any endpoint) that `DashboardPage.tsx` assembles by combining one `getOverview` call and one `get` (breakdown) call, deriving `statusDistribution` itself from the overview's per-status counts.
 
 **`department.ts`**:
@@ -942,7 +942,7 @@ flowchart TD
 
 **Props:** `metrics: DashboardMetrics`.
 
-**Internal logic:** Builds a static `tiles` array of `{ label, value }` pairs from `metrics.totalTickets`, `openTickets`, `assignedTickets`, `inProgressTickets`, `reviewedTickets`, `completedTickets`, `closedTickets`. No state, no effects. Renders a responsive grid (`grid-cols-2` on mobile, up to `grid-cols-4` on large screens) of bordered white cards showing the label (uppercase, muted) and the value (large, bold).
+**Internal logic:** Builds a static `tiles` array of `{ label, value }` pairs from `metrics.totalTicketsCreatedToday`, `openTickets`, `assignedTickets`, `inProgressTickets`, `reviewedTickets`, `completedTickets`, `closedDateToday`. Both the total and closed tiles pick their label wording from `metrics.period` (e.g. "Total tickets created today" / "Closed today" vs. "...this week"). No state, no effects. Renders a responsive grid (`grid-cols-2` on mobile, up to `grid-cols-4` on large screens) of bordered white cards showing the label (uppercase, muted) and the value (large, bold).
 
 **Data flow:** Purely prop-driven, same pattern as `DashboardCharts`. No upward callbacks.
 

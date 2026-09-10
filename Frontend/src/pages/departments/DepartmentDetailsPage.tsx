@@ -43,10 +43,7 @@ export function DepartmentDetailsPage() {
     if (!id) return;
     setIsLoading(true);
     setError(null);
-    Promise.all([
-      departmentService.getById(id),
-      userService.list(),
-    ])
+    Promise.all([departmentService.getById(id), userService.list()])
       .then(([deptRes, userRes]) => {
         setDepartment(deptRes.department);
         setName(deptRes.department.departmentName);
@@ -148,7 +145,7 @@ export function DepartmentDetailsPage() {
         }
       />
 
-      <section className="max-w-2xl shadow-soft rounded-xl border border-slate-200/80 bg-white p-5 sm:p-6">
+      <section className="max-w-2xl lg:w-2xl lg:mx-auto shadow-soft rounded-xl border border-slate-200/80 bg-white p-5 sm:p-6">
         <form
           onSubmit={(e) => void handleSave(e)}
           className="flex flex-col gap-4"

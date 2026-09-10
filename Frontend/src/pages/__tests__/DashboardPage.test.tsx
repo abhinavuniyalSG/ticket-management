@@ -44,13 +44,13 @@ function makeOverview(overrides: Partial<DashboardOverview> = {}): DashboardOver
     message: "ok",
     departmentId: null,
     period: "day",
-    totalTicketsCreated: 33,
+    totalTicketsCreatedToday: 33,
     openTickets: 3,
     assignedTickets: 4,
     inProgressTickets: 5,
     reviewedTickets: 6,
     completedTickets: 7,
-    closedTickets: 8,
+    closedDateToday: 8,
     ...overrides,
   };
 }

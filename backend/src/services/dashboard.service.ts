@@ -89,7 +89,9 @@ function getCreatedAtRangeForOverviewPeriod(
 }
 
 /** `GET /dashboard`'s `priorityDistribution` is scoped to this same current period. */
-function getCreatedAtRangeForCurrentPeriod(period: TicketTrendPeriod): CreatedAtRange {
+function getCreatedAtRangeForCurrentPeriod(
+  period: TicketTrendPeriod,
+): CreatedAtRange {
   switch (period) {
     case TicketTrendPeriod.day:
       return { createdFrom: startOfToday() };
@@ -138,7 +140,8 @@ export class DashboardService {
       query.departmentId,
     );
     const period = query.period ?? TicketTrendPeriod.day;
-    const { createdFrom, createdTo } = getCreatedAtRangeForCurrentPeriod(period);
+    const { createdFrom, createdTo } =
+      getCreatedAtRangeForCurrentPeriod(period);
 
     const [priorityCounts, trend] = await Promise.all([
       DashboardRepository.countTicketsByPriority({
@@ -165,9 +168,8 @@ export class DashboardService {
     adminId: string,
     requestedDepartmentId?: string,
   ): Promise<string> {
-    const managedDepartments = await DepartmentRepository.findByManager(
-      adminId,
-    );
+    const managedDepartments =
+      await DepartmentRepository.findByManager(adminId);
     if (managedDepartments.length === 0) {
       throw new HttpError(403, "Forbidden: you do not manage any department");
     }
@@ -233,7 +235,8 @@ export class DashboardService {
       requester,
       query.departmentId,
     );
-    const { createdFrom, createdTo } = getCreatedAtRangeForOverviewPeriod(query);
+    const { createdFrom, createdTo } =
+      getCreatedAtRangeForOverviewPeriod(query);
 
     const counts = await DashboardRepository.countTicketsByStatus({
       departmentId,
@@ -245,13 +248,13 @@ export class DashboardService {
       message: "Dashboard overview fetched successfully",
       departmentId: departmentId ?? null,
       period: query.period ?? DashboardOverviewPeriod.day,
-      totalTicketsCreated: counts.total,
+      totalTicketsCreatedToday: counts.totalCreated_today,
       openTickets: counts.open,
       assignedTickets: counts.assigned,
       inProgressTickets: counts.inProgress,
       reviewedTickets: counts.reviewed,
       completedTickets: counts.completed,
-      closedTickets: counts.closed,
+      closedDateToday: counts.closed_date_today,
     };
   }
 }

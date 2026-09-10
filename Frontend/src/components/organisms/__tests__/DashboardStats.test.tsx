@@ -8,13 +8,13 @@ function makeMetrics(overrides: Partial<DashboardMetrics> = {}): DashboardMetric
     message: "ok",
     departmentId: null,
     period: "day",
-    totalTicketsCreated: 42,
+    totalTicketsCreatedToday: 42,
     openTickets: 10,
     assignedTickets: 8,
     inProgressTickets: 6,
     reviewedTickets: 4,
     completedTickets: 9,
-    closedTickets: 5,
+    closedDateToday: 5,
     statusDistribution: [],
     priorityDistribution: [],
     ticketsOverTime: [],
@@ -38,12 +38,13 @@ describe("DashboardStats", () => {
     expect(screen.getByText("4")).toBeInTheDocument();
     expect(screen.getByText("Completed")).toBeInTheDocument();
     expect(screen.getByText("9")).toBeInTheDocument();
-    expect(screen.getByText("Closed")).toBeInTheDocument();
+    expect(screen.getByText("Closed today")).toBeInTheDocument();
     expect(screen.getByText("5")).toBeInTheDocument();
   });
 
-  it("labels the total tile with the selected period's wording", () => {
+  it("labels the total and closed tiles with the selected period's wording", () => {
     render(<DashboardStats metrics={makeMetrics({ period: "week" })} />);
     expect(screen.getByText("Total tickets created this week")).toBeInTheDocument();
+    expect(screen.getByText("Closed this week")).toBeInTheDocument();
   });
 });

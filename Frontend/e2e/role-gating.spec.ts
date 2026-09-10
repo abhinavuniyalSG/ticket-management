@@ -27,13 +27,13 @@ async function mockEmptyTickets(page: import("@playwright/test").Page) {
 async function mockDashboard(page: import("@playwright/test").Page) {
   const metrics = {
     message: "OK",
-    totalTickets: 0,
+    totalTicketsCreatedToday: 0,
     openTickets: 0,
     assignedTickets: 0,
     inProgressTickets: 0,
     reviewedTickets: 0,
     completedTickets: 0,
-    closedTickets: 0,
+    closedDateToday: 0,
     statusDistribution: [],
     priorityDistribution: [],
     ticketsOverTime: [],

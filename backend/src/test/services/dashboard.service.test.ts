@@ -28,13 +28,13 @@ vi.mock("../../database/repositry/department.repository.js", () => ({
 }));
 
 const statusCounts = {
-  total: 10,
+  totalCreated_today: 10,
   open: 2,
   assigned: 2,
   inProgress: 2,
   reviewed: 2,
   completed: 1,
-  closed: 1,
+  closed_date_today: 1,
 };
 
 const priorityCounts = { low: 4, medium: 3, high: 2, urgent: 1 };
@@ -371,13 +371,13 @@ describe("getDashboardOverview: access and department scoping", () => {
       message: "Dashboard overview fetched successfully",
       departmentId: null,
       period: DashboardOverviewPeriod.day,
-      totalTicketsCreated: 10,
+      totalTicketsCreatedToday: 10,
       openTickets: 2,
       assignedTickets: 2,
       inProgressTickets: 2,
       reviewedTickets: 2,
       completedTickets: 1,
-      closedTickets: 1,
+      closedDateToday: 1,
     });
   });
 });

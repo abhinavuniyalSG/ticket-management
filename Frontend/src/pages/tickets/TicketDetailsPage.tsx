@@ -217,36 +217,52 @@ export function TicketDetailsPage() {
         }
       />
 
-      <div className="flex flex-col gap-6">
-        <div className="shadow-soft rounded-xl border border-slate-200/80 bg-white p-5 sm:p-6">
-          <div className="mb-4 flex flex-wrap gap-2">
-            <StatusBadge status={ticket.status} />
-            <PriorityBadge priority={ticket.priority} />
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="flex flex-col gap-6 lg:col-span-2">
+          <div className="shadow-soft rounded-xl border border-slate-200/80 bg-white p-5 sm:p-6">
+            <h2 className="mb-3 text-sm font-semibold text-slate-900">
+              Description
+            </h2>
+            <p className="whitespace-pre-wrap text-sm text-slate-700">
+              {ticket.description}
+            </p>
           </div>
-          <p className="whitespace-pre-wrap text-sm text-slate-700">
-            {ticket.description}
-          </p>
+
+          <div className="shadow-soft rounded-xl border border-slate-200/80 bg-white p-5 sm:p-6">
+            <h2 className="mb-1 text-sm font-semibold text-slate-900">
+              Details
+            </h2>
+            <TicketMeta ticket={ticket} variant="list" className="mt-2" />
+          </div>
         </div>
 
-        <TicketMeta ticket={ticket} />
-
-        {(allowedTransitions.length > 0 || canAssign) && (
+        <div className="flex flex-col gap-6 lg:col-span-1">
           <div className="shadow-soft rounded-xl border border-slate-200/80 bg-white p-5 sm:p-6">
-            <h2 className="text-sm font-semibold text-slate-900">Actions</h2>
+            <h2 className="text-sm font-semibold text-slate-900">Overview</h2>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <StatusBadge status={ticket.status} />
+              <PriorityBadge priority={ticket.priority} />
+            </div>
 
             {allowedTransitions.length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {allowedTransitions.map((status) => (
-                  <Button
-                    key={status}
-                    variant="secondary"
-                    disabled={isMutating}
-                    onClick={() => void handleStatusChange(status)}
-                  >
-                    {STATUS_ACTION_LABELS[status] ??
-                      `Move to ${STATUS_LABELS[status]}`}
-                  </Button>
-                ))}
+              <div className="mt-5 border-t border-slate-100 pt-4">
+                <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">
+                  Actions
+                </h3>
+                <div className="flex flex-col gap-2">
+                  {allowedTransitions.map((status) => (
+                    <Button
+                      key={status}
+                      variant="secondary"
+                      disabled={isMutating}
+                      className="w-full"
+                      onClick={() => void handleStatusChange(status)}
+                    >
+                      {STATUS_ACTION_LABELS[status] ??
+                        `Move to ${STATUS_LABELS[status]}`}
+                    </Button>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -255,7 +271,7 @@ export function TicketDetailsPage() {
                 <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">
                   Assignment
                 </p>
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <div className="flex flex-col gap-2">
                   {canAssignAction && (
                     <>
                       <Select
@@ -268,10 +284,11 @@ export function TicketDetailsPage() {
                         }))}
                         onChange={(e) => setSelectedAssignee(e.target.value)}
                         disabled={isMutating}
-                        className="w-full sm:max-w-xs sm:flex-1"
+                        className="w-full"
                       />
                       <Button
                         variant="secondary"
+                        className="w-full"
                         disabled={!selectedAssignee || isMutating}
                         onClick={() => void handleAssign()}
                       >
@@ -282,6 +299,7 @@ export function TicketDetailsPage() {
                   {ticket.assignedToId && canUnassignAction && (
                     <Button
                       variant="secondary"
+                      className="w-full"
                       disabled={isMutating}
                       onClick={() => void handleUnassign()}
                     >
@@ -292,7 +310,7 @@ export function TicketDetailsPage() {
               </div>
             )}
           </div>
-        )}
+        </div>
       </div>
 
       <ConfirmDialog

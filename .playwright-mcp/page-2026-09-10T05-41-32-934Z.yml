@@ -1,0 +1,148 @@
+- generic [ref=f6e1]:
+  - generic [ref=f6e36]:
+    - complementary [ref=f6e37]:
+      - generic [ref=f6e38]:
+        - generic [ref=f6e39]: T
+        - generic [ref=f6e40]: TicketDesk
+      - navigation "Primary" [ref=f6e41]:
+        - link "Dashboard" [ref=f6e42] [cursor=pointer]:
+          - /url: /dashboard
+        - link "Tickets" [ref=f6e45] [cursor=pointer]:
+          - /url: /tickets
+        - link "Users" [ref=f6e49] [cursor=pointer]:
+          - /url: /users
+        - link "Profile" [ref=f6e55] [cursor=pointer]:
+          - /url: /profile
+      - generic [ref=f6e59]:
+        - generic [ref=f6e60]:
+          - generic [ref=f6e61]: AR
+          - generic [ref=f6e62]:
+            - paragraph [ref=f6e63]: Ankit Rawat
+            - paragraph [ref=f6e64]: Admin
+        - button "Log out" [ref=f6e65] [cursor=pointer]
+    - main [ref=f6e67]:
+      - generic [ref=f6e68]:
+        - generic [ref=f6e69]:
+          - generic [ref=f6e70]:
+            - heading "Dashboard" [level=1] [ref=f6e71]
+            - paragraph [ref=f6e72]: Your department's ticket overview.
+          - generic [ref=f6e73]:
+            - group "Select time range" [ref=f6e74]:
+              - button "Day" [pressed] [ref=f6e75] [cursor=pointer]
+              - button "Week" [ref=f6e76] [cursor=pointer]
+              - button "Month" [ref=f6e77] [cursor=pointer]
+              - button "Year" [ref=f6e78] [cursor=pointer]
+            - generic [ref=f6e79]:
+              - log [ref=f6e81]: Engineering, 1 of 2.2 results available.Use Up and Down to choose options, press Enter to select the currently focused option, press Escape to exit the menu, press Tab to select the option and exit the menu.
+              - generic [ref=f6e83] [cursor=pointer]:
+                - generic [ref=f6e84]: Default department
+                - combobox "Filter dashboard by department" [expanded] [active] [ref=f6e86]
+              - listbox [ref=f6e261]:
+                - option "Engineering" [ref=f6e262] [cursor=pointer]
+                - option "IT & Infrastructure" [ref=f6e263] [cursor=pointer]
+        - generic [ref=f6e91]:
+          - generic [ref=f6e92]:
+            - generic [ref=f6e93]:
+              - paragraph [ref=f6e94]: Total tickets created today
+              - paragraph [ref=f6e95]: "0"
+            - generic [ref=f6e96]:
+              - paragraph [ref=f6e97]: Open
+              - paragraph [ref=f6e98]: "0"
+            - generic [ref=f6e99]:
+              - paragraph [ref=f6e100]: Assigned
+              - paragraph [ref=f6e101]: "0"
+            - generic [ref=f6e102]:
+              - paragraph [ref=f6e103]: In progress
+              - paragraph [ref=f6e104]: "0"
+            - generic [ref=f6e105]:
+              - paragraph [ref=f6e106]: Reviewed
+              - paragraph [ref=f6e107]: "0"
+            - generic [ref=f6e108]:
+              - paragraph [ref=f6e109]: Completed
+              - paragraph [ref=f6e110]: "0"
+            - generic [ref=f6e111]:
+              - paragraph [ref=f6e112]: Closed Date today
+              - paragraph [ref=f6e113]: "0"
+          - generic [ref=f6e114]:
+            - generic [ref=f6e115]:
+              - heading "Tickets over time (7 days)" [level=3] [ref=f6e116]
+              - generic [ref=f6e119]:
+                - list [ref=f6e121]:
+                  - listitem [ref=f6e122]:
+                    - img "Closed legend icon" [ref=f6e123]
+                    - text: Closed
+                  - listitem [ref=f6e125]:
+                    - img "Created legend icon" [ref=f6e126]
+                    - text: Created
+                - application [ref=f6e128]:
+                  - generic [ref=f6e158]:
+                    - generic [ref=f6e159]:
+                      - generic [ref=f6e160]: 4 Sept
+                      - generic [ref=f6e162]: 5 Sept
+                      - generic [ref=f6e164]: 6 Sept
+                      - generic [ref=f6e166]: 7 Sept
+                      - generic [ref=f6e168]: 8 Sept
+                      - generic [ref=f6e170]: 9 Sept
+                      - generic [ref=f6e172]: 10 Sept
+                    - generic [ref=f6e174]:
+                      - generic [ref=f6e175]: "0"
+                      - generic [ref=f6e177]: "1"
+                      - generic [ref=f6e179]: "2"
+                      - generic [ref=f6e181]: "3"
+                      - generic [ref=f6e183]: "4"
+              - table [ref=f6e186]:
+                - caption [ref=f6e187]: Tickets created and closed per day over the last 7 days
+                - rowgroup [ref=f6e188]:
+                  - row [ref=f6e189]:
+                    - columnheader "Date" [ref=f6e190]
+                    - columnheader "Created" [ref=f6e191]
+                    - columnheader "Closed" [ref=f6e192]
+                - rowgroup [ref=f6e193]:
+                  - row [ref=f6e194]:
+                    - cell "2026-09-04" [ref=f6e195]
+                    - cell "1" [ref=f6e196]
+                    - cell "0" [ref=f6e197]
+                  - row [ref=f6e198]:
+                    - cell "2026-09-05" [ref=f6e199]
+                    - cell "3" [ref=f6e200]
+                    - cell "1" [ref=f6e201]
+                  - row [ref=f6e202]:
+                    - cell "2026-09-06" [ref=f6e203]
+                    - cell "1" [ref=f6e204]
+                    - cell "2" [ref=f6e205]
+                  - row [ref=f6e206]:
+                    - cell "2026-09-07" [ref=f6e207]
+                    - cell "0" [ref=f6e208]
+                    - cell "0" [ref=f6e209]
+                  - row [ref=f6e210]:
+                    - cell "2026-09-08" [ref=f6e211]
+                    - cell "1" [ref=f6e212]
+                    - cell "0" [ref=f6e213]
+                  - row [ref=f6e214]:
+                    - cell "2026-09-09" [ref=f6e215]
+                    - cell "0" [ref=f6e216]
+                    - cell "0" [ref=f6e217]
+                  - row [ref=f6e218]:
+                    - cell "2026-09-10" [ref=f6e219]
+                    - cell "0" [ref=f6e220]
+                    - cell "0" [ref=f6e221]
+            - generic [ref=f6e222]:
+              - generic [ref=f6e223]:
+                - heading "Status distribution" [level=3] [ref=f6e224]
+                - application [ref=f6e228]:
+                  - generic [ref=f6e230]:
+                    - generic [ref=f6e231]: Open
+                    - generic [ref=f6e233]: Assigned
+                    - generic [ref=f6e235]: In Progress
+                    - generic [ref=f6e237]: Reviewed
+                    - generic [ref=f6e239]: Completed
+                    - generic [ref=f6e241]: Closed
+              - generic [ref=f6e243]:
+                - heading "Priority distribution" [level=3] [ref=f6e244]
+                - application [ref=f6e248]:
+                  - generic [ref=f6e250]:
+                    - generic [ref=f6e251]: Low
+                    - generic [ref=f6e253]: Medium
+                    - generic [ref=f6e255]: High
+                    - generic [ref=f6e257]: Urgent
+  - generic [aria-hidden] [ref=f6e259]: "0"

@@ -19,7 +19,12 @@ import { ApiError } from "../../types/api";
 import type { User, UserRole } from "../../types/user";
 import type { Department } from "../../types/department";
 import { ROLE_LABELS, USER_ROLES } from "../../constants/options";
-import { canDeleteUser, canEditUserDepartment, canEditUserName, canEditUserRole } from "../../utils/userPermissions";
+import {
+  canDeleteUser,
+  canEditUserDepartment,
+  canEditUserName,
+  canEditUserRole,
+} from "../../utils/userPermissions";
 
 export function UserDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -53,7 +58,9 @@ export function UserDetailsPage() {
         setDepartments(deptRes.departments);
       })
       .catch((err: unknown) => {
-        setError(err instanceof ApiError ? err.message : "Unable to load this user.");
+        setError(
+          err instanceof ApiError ? err.message : "Unable to load this user.",
+        );
       })
       .finally(() => setIsLoading(false));
   }, [id]);
@@ -89,14 +96,18 @@ export function UserDetailsPage() {
     setIsSaving(true);
     try {
       const res = await userService.update(target.id, {
-        ...(canEditName ? { firstName: firstName.trim(), lastName: lastName.trim() } : {}),
+        ...(canEditName
+          ? { firstName: firstName.trim(), lastName: lastName.trim() }
+          : {}),
         ...(canEditDept ? { departmentId: departmentId || null } : {}),
         ...(canEditRole ? { role } : {}),
       });
       setTarget(res.user);
       toast.success(res.message);
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Unable to update this user.");
+      toast.error(
+        err instanceof ApiError ? err.message : "Unable to update this user.",
+      );
     } finally {
       setIsSaving(false);
     }
@@ -109,7 +120,9 @@ export function UserDetailsPage() {
       toast.success(res.message);
       navigate("/users", { replace: true });
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Unable to delete this user.");
+      toast.error(
+        err instanceof ApiError ? err.message : "Unable to delete this user.",
+      );
       setIsDeleting(false);
       setIsDeleteOpen(false);
     }
@@ -133,7 +146,15 @@ export function UserDetailsPage() {
 
       <div className="flex flex-col gap-6">
         <div className="flex flex-wrap gap-2">
-          <Badge color={target.role === "super_admin" ? "purple" : target.role === "admin" ? "blue" : "slate"}>
+          <Badge
+            color={
+              target.role === "super_admin"
+                ? "purple"
+                : target.role === "admin"
+                  ? "blue"
+                  : "slate"
+            }
+          >
             {ROLE_LABELS[target.role]}
           </Badge>
           <Badge color={target.isVerified ? "green" : "amber"}>
@@ -141,9 +162,12 @@ export function UserDetailsPage() {
           </Badge>
         </div>
 
-        <section className="shadow-soft rounded-xl border border-slate-200/80 bg-white p-5 sm:p-6">
+        <section className="lg:w-2xl lg:mx-auto shadow-soft rounded-xl border border-slate-200/80 bg-white p-5 sm:p-6">
           <h2 className="mb-4 text-sm font-semibold text-slate-900">Details</h2>
-          <form onSubmit={(e) => void handleSave(e)} className="flex flex-col gap-4">
+          <form
+            onSubmit={(e) => void handleSave(e)}
+            className="flex flex-col gap-4"
+          >
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField label="First name" htmlFor="user-first-name">
                 <Input
@@ -169,7 +193,10 @@ export function UserDetailsPage() {
                 id="user-department"
                 value={departmentId}
                 placeholder="Unassigned"
-                options={departments.map((d) => ({ value: d.departmentId, label: d.departmentName }))}
+                options={departments.map((d) => ({
+                  value: d.departmentId,
+                  label: d.departmentName,
+                }))}
                 disabled={!canEditDept || isSaving}
                 onChange={(e) => setDepartmentId(e.target.value)}
               />
@@ -178,7 +205,10 @@ export function UserDetailsPage() {
               <Select
                 id="user-role"
                 value={role}
-                options={USER_ROLES.map((r) => ({ value: r, label: ROLE_LABELS[r] }))}
+                options={USER_ROLES.map((r) => ({
+                  value: r,
+                  label: ROLE_LABELS[r],
+                }))}
                 disabled={!canEditRole || isSaving}
                 onChange={(e) => setRole(e.target.value as UserRole)}
               />

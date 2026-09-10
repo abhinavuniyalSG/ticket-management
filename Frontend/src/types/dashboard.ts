@@ -34,13 +34,13 @@ export interface DashboardOverview {
   message: string;
   departmentId: string | null;
   period: DashboardPeriod;
-  totalTicketsCreated: number;
+  totalTicketsCreatedToday: number;
   openTickets: number;
   assignedTickets: number;
   inProgressTickets: number;
   reviewedTickets: number;
   completedTickets: number;
-  closedTickets: number;
+  closedDateToday: number;
 }
 
 /** The combined view-model DashboardPage builds from one overview call + one breakdown call. */

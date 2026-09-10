@@ -1,0 +1,248 @@
+- generic [ref=f16e3]:
+  - complementary [ref=f16e4]:
+    - generic [ref=f16e5]:
+      - generic [ref=f16e6]: T
+      - generic [ref=f16e7]: TicketDesk
+    - navigation "Primary" [ref=f16e8]:
+      - link "Dashboard" [ref=f16e9] [cursor=pointer]:
+        - /url: /dashboard
+      - link "Tickets" [ref=f16e12] [cursor=pointer]:
+        - /url: /tickets
+      - link "Users" [ref=f16e16] [cursor=pointer]:
+        - /url: /users
+      - link "Profile" [ref=f16e22] [cursor=pointer]:
+        - /url: /profile
+    - generic [ref=f16e26]:
+      - generic [ref=f16e27]:
+        - generic [ref=f16e28]: AR
+        - generic [ref=f16e29]:
+          - paragraph [ref=f16e30]: Ankit Rawat
+          - paragraph [ref=f16e31]: Admin
+      - button "Log out" [ref=f16e32] [cursor=pointer]
+  - main [ref=f16e34]:
+    - generic [ref=f16e35]:
+      - generic [ref=f16e36]:
+        - generic [ref=f16e37]:
+          - heading "Tickets" [level=1] [ref=f16e38]
+          - paragraph [ref=f16e39]: View and manage support tickets.
+        - generic [ref=f16e40]:
+          - button "Filters" [ref=f16e41] [cursor=pointer]
+          - link "New ticket" [ref=f16e42] [cursor=pointer]:
+            - /url: /tickets/new
+      - table [ref=f16e284]:
+        - rowgroup [ref=f16e285]:
+          - row [ref=f16e286]:
+            - columnheader "Title" [ref=f16e287]
+            - columnheader "Status" [ref=f16e288]
+            - columnheader "Priority" [ref=f16e289]
+            - columnheader "Department" [ref=f16e290]
+            - columnheader "Creator" [ref=f16e291]
+            - columnheader "AssignedTo" [ref=f16e292]
+            - columnheader "Created" [ref=f16e293]
+        - rowgroup [ref=f16e294]:
+          - row [ref=f16e295]:
+            - cell [ref=f16e296]:
+              - link "Memory leak in background worker process" [ref=f16e297] [cursor=pointer]:
+                - /url: /tickets/01a07fad-966e-7a59-8837-cfb415918c86
+            - cell "Closed" [ref=f16e298]
+            - cell "Urgent" [ref=f16e300]
+            - cell "Engineering" [ref=f16e302]
+            - cell "Deepanshu" [ref=f16e303]
+            - cell "Deepanshu" [ref=f16e304]
+            - cell "3 Sept 2026, 21:18" [ref=f16e305]
+          - row [ref=f16e306]:
+            - cell [ref=f16e307]:
+              - link "Set up new printer in the third floor office" [ref=f16e308] [cursor=pointer]:
+                - /url: /tickets/01a07fad-966f-7b79-91b8-6837cdb0a7a3
+            - cell "Completed" [ref=f16e309]
+            - cell "Medium" [ref=f16e311]
+            - cell "IT & Infrastructure" [ref=f16e313]
+            - cell "Aditya Kulkarni" [ref=f16e314]
+            - cell "Fatima Sheikh" [ref=f16e315]
+            - cell "3 Sept 2026, 21:12" [ref=f16e316]
+          - row [ref=f16e317]:
+            - cell [ref=f16e318]:
+              - link "Database query timeout on the reports endpoint" [ref=f16e319] [cursor=pointer]:
+                - /url: /tickets/01a07fad-966d-7377-b630-dd6f1565f0e1
+            - cell "Completed" [ref=f16e320]
+            - cell "Medium" [ref=f16e322]
+            - cell "Engineering" [ref=f16e324]
+            - cell "Sneha Kapoor" [ref=f16e325]
+            - cell "Sneha Kapoor" [ref=f16e326]
+            - cell "3 Sept 2026, 07:19" [ref=f16e327]
+          - row [ref=f16e328]:
+            - cell [ref=f16e329]:
+              - link "Refactor authentication middleware for readability" [ref=f16e330] [cursor=pointer]:
+                - /url: /tickets/01a07fad-966f-7358-be44-77428565642d
+            - cell "Open" [ref=f16e331]
+            - cell "Urgent" [ref=f16e333]
+            - cell "Engineering" [ref=f16e335]
+            - cell "Amit" [ref=f16e336]
+            - cell "Unassigned" [ref=f16e337]
+            - cell "3 Sept 2026, 03:48" [ref=f16e338]
+          - row [ref=f16e339]:
+            - cell [ref=f16e340]:
+              - link "Laptop replacement request for new hire" [ref=f16e341] [cursor=pointer]:
+                - /url: /tickets/01a06b83-08fc-7270-b314-16a1d786895b
+            - cell "Open" [ref=f16e342]
+            - cell "Medium" [ref=f16e344]
+            - cell "IT & Infrastructure" [ref=f16e346]
+            - cell "Siddharth Bose" [ref=f16e347]
+            - cell "Unassigned" [ref=f16e348]
+            - cell "30 Aug 2026, 19:29" [ref=f16e349]
+          - row [ref=f16e350]:
+            - cell [ref=f16e351]:
+              - link "Production database running low on disk space" [ref=f16e352] [cursor=pointer]:
+                - /url: /tickets/01a06b83-0907-73b3-bdcf-eb201967fc3f
+            - cell "Closed" [ref=f16e353]
+            - cell "Medium" [ref=f16e355]
+            - cell "IT & Infrastructure" [ref=f16e357]
+            - cell "Aditya Kulkarni" [ref=f16e358]
+            - cell "Aditya Kulkarni" [ref=f16e359]
+            - cell "27 Aug 2026, 13:42" [ref=f16e360]
+          - row [ref=f16e361]:
+            - cell [ref=f16e362]:
+              - link "Clean up unused database indexes" [ref=f16e363] [cursor=pointer]:
+                - /url: /tickets/01a06b83-07b6-758f-899f-f5cd6dd818b3
+            - cell "Completed" [ref=f16e364]
+            - cell "High" [ref=f16e366]
+            - cell "Engineering" [ref=f16e368]
+            - cell "Ankit Rawat" [ref=f16e369]
+            - cell "Ankit Rawat" [ref=f16e370]
+            - cell "21 Aug 2026, 09:16" [ref=f16e371]
+          - row [ref=f16e372]:
+            - cell [ref=f16e373]:
+              - link "Investigate suspicious login attempts on the VPN" [ref=f16e374] [cursor=pointer]:
+                - /url: /tickets/01a06b83-091b-726f-ab70-1dbb4d64354f
+            - cell "Reviewed" [ref=f16e375]
+            - cell "Medium" [ref=f16e377]
+            - cell "IT & Infrastructure" [ref=f16e379]
+            - cell "Aditya Kulkarni" [ref=f16e380]
+            - cell "Siddharth Bose" [ref=f16e381]
+            - cell "17 Aug 2026, 05:54" [ref=f16e382]
+          - row [ref=f16e383]:
+            - cell [ref=f16e384]:
+              - link "Investigate memory leak in worker process" [ref=f16e385] [cursor=pointer]:
+                - /url: /tickets/01a06b83-0798-77f6-8bac-d66c0be79a11
+            - cell "Open" [ref=f16e386]
+            - cell "Medium" [ref=f16e388]
+            - cell "Engineering" [ref=f16e390]
+            - cell "Deepanshu" [ref=f16e391]
+            - cell "Unassigned" [ref=f16e392]
+            - cell "4 Aug 2026, 23:50" [ref=f16e393]
+          - row [ref=f16e394]:
+            - cell [ref=f16e395]:
+              - link "Refactor ticket state machine into a dedicated module" [ref=f16e396] [cursor=pointer]:
+                - /url: /tickets/01a06b83-07a6-7df5-94c9-77ca69814577
+            - cell "Closed" [ref=f16e397]
+            - cell "Medium" [ref=f16e399]
+            - cell "Engineering" [ref=f16e401]
+            - cell "Siddharth Bose" [ref=f16e402]
+            - cell "Deepanshu" [ref=f16e403]
+            - cell "15 Jul 2026, 09:21" [ref=f16e404]
+          - row [ref=f16e405]:
+            - cell [ref=f16e406]:
+              - link "Upgrade Node.js runtime to latest LTS" [ref=f16e407] [cursor=pointer]:
+                - /url: /tickets/01a06b83-07a8-719f-bfc8-40a49fca5411
+            - cell "Closed" [ref=f16e408]
+            - cell "Medium" [ref=f16e410]
+            - cell "Engineering" [ref=f16e412]
+            - cell "Amit" [ref=f16e413]
+            - cell "Amit" [ref=f16e414]
+            - cell "26 Jun 2026, 14:21" [ref=f16e415]
+          - row [ref=f16e416]:
+            - cell [ref=f16e417]:
+              - link "VPN access failing for remote employees" [ref=f16e418] [cursor=pointer]:
+                - /url: /tickets/01a06b83-091c-749d-a89b-822f53616c3b
+            - cell "Closed" [ref=f16e419]
+            - cell "High" [ref=f16e421]
+            - cell "IT & Infrastructure" [ref=f16e423]
+            - cell "Siddharth Bose" [ref=f16e424]
+            - cell "Aditya Kulkarni" [ref=f16e425]
+            - cell "24 Jun 2026, 19:06" [ref=f16e426]
+          - row [ref=f16e427]:
+            - cell [ref=f16e428]:
+              - link "Production database running low on disk space" [ref=f16e429] [cursor=pointer]:
+                - /url: /tickets/01a06b83-0904-7860-890c-439b5e65ca17
+            - cell "Completed" [ref=f16e430]
+            - cell "Low" [ref=f16e432]
+            - cell "IT & Infrastructure" [ref=f16e434]
+            - cell "Pooja Reddy" [ref=f16e435]
+            - cell "Aditya Kulkarni" [ref=f16e436]
+            - cell "15 Jun 2026, 00:15" [ref=f16e437]
+          - row [ref=f16e438]:
+            - cell [ref=f16e439]:
+              - link "Investigate suspicious login attempts on the VPN" [ref=f16e440] [cursor=pointer]:
+                - /url: /tickets/01a06b83-0912-79ca-8098-3b6e69a5a345
+            - cell "Reviewed" [ref=f16e441]
+            - cell "Low" [ref=f16e443]
+            - cell "IT & Infrastructure" [ref=f16e445]
+            - cell "Pooja Reddy" [ref=f16e446]
+            - cell "Pooja Reddy" [ref=f16e447]
+            - cell "10 Jun 2026, 11:10" [ref=f16e448]
+          - row [ref=f16e449]:
+            - cell [ref=f16e450]:
+              - link "Add pagination to /tickets endpoint" [ref=f16e451] [cursor=pointer]:
+                - /url: /tickets/01a06b83-07b0-7e62-8b84-6bdcd01534f5
+            - cell "Closed" [ref=f16e452]
+            - cell "Low" [ref=f16e454]
+            - cell "Engineering" [ref=f16e456]
+            - cell "Sneha Kapoor" [ref=f16e457]
+            - cell "Ankit Rawat" [ref=f16e458]
+            - cell "8 Jun 2026, 21:04" [ref=f16e459]
+          - row [ref=f16e460]:
+            - cell [ref=f16e461]:
+              - link "Set up MFA enforcement for all internal accounts" [ref=f16e462] [cursor=pointer]:
+                - /url: /tickets/01a06b83-091d-7688-bdff-d31bd39e6d03
+            - cell "Reviewed" [ref=f16e463]
+            - cell "Medium" [ref=f16e465]
+            - cell "IT & Infrastructure" [ref=f16e467]
+            - cell "Aditya Kulkarni" [ref=f16e468]
+            - cell "Fatima Sheikh" [ref=f16e469]
+            - cell "5 Jun 2026, 20:29" [ref=f16e470]
+          - row [ref=f16e471]:
+            - cell [ref=f16e472]:
+              - link "Production database running low on disk space" [ref=f16e473] [cursor=pointer]:
+                - /url: /tickets/01a06b83-090a-7d98-92b2-7b1c8a43cdc3
+            - cell "Closed" [ref=f16e474]
+            - cell "Low" [ref=f16e476]
+            - cell "IT & Infrastructure" [ref=f16e478]
+            - cell "Aditya Kulkarni" [ref=f16e479]
+            - cell "Fatima Sheikh" [ref=f16e480]
+            - cell "4 Jun 2026, 06:15" [ref=f16e481]
+          - row [ref=f16e482]:
+            - cell [ref=f16e483]:
+              - link "Set up automated backup verification job" [ref=f16e484] [cursor=pointer]:
+                - /url: /tickets/01a06b83-0918-7cd7-8d16-0056150352ae
+            - cell "Closed" [ref=f16e485]
+            - cell "Medium" [ref=f16e487]
+            - cell "IT & Infrastructure" [ref=f16e489]
+            - cell "Siddharth Bose" [ref=f16e490]
+            - cell "Siddharth Bose" [ref=f16e491]
+            - cell "3 Jun 2026, 06:17" [ref=f16e492]
+          - row [ref=f16e493]:
+            - cell [ref=f16e494]:
+              - link "Decommission unused staging servers" [ref=f16e495] [cursor=pointer]:
+                - /url: /tickets/01a06b83-091a-7082-94f3-c7ebe0367d1f
+            - cell "Closed" [ref=f16e496]
+            - cell "Medium" [ref=f16e498]
+            - cell "IT & Infrastructure" [ref=f16e500]
+            - cell "Aditya Kulkarni" [ref=f16e501]
+            - cell "Aditya Kulkarni" [ref=f16e502]
+            - cell "1 Jun 2026, 15:51" [ref=f16e503]
+          - row [ref=f16e504]:
+            - cell [ref=f16e505]:
+              - link "Reduce Docker image build time" [ref=f16e506] [cursor=pointer]:
+                - /url: /tickets/01a06b83-079c-771c-8c2f-fac408bcb87f
+            - cell "Closed" [ref=f16e507]
+            - cell "Low" [ref=f16e509]
+            - cell "Engineering" [ref=f16e511]
+            - cell "Deepanshu" [ref=f16e512]
+            - cell "Sneha Kapoor" [ref=f16e513]
+            - cell "18 May 2026, 02:15" [ref=f16e514]
+      - navigation "Pagination" [ref=f16e515]:
+        - paragraph [ref=f16e516]: Showing 21–40 of 184
+        - generic [ref=f16e517]:
+          - button "Previous" [ref=f16e518] [cursor=pointer]
+          - generic [ref=f16e519]: Page 2 of 10
+          - button "Next" [ref=f16e520] [cursor=pointer]

@@ -4,13 +4,13 @@ import { TicketPriority, TicketStatus } from "../../types/ticket.js";
 import type { SelectQueryBuilder } from "typeorm";
 
 export interface TicketStatusCounts {
-  total: number;
+  totalCreated_today: number;
   open: number;
   assigned: number;
   inProgress: number;
   reviewed: number;
   completed: number;
-  closed: number;
+  closed_date_today: number;
 }
 
 export interface TicketPriorityCounts {
@@ -177,10 +177,13 @@ export class DashboardRepository {
       params.rangeFrom = from;
     }
     if (to) {
-      conditions.push(`${column} < :rangeTo`);
+      conditions.push(`${column} <= :rangeTo`);
       params.rangeTo = to;
     }
-    return { sql: conditions.length > 0 ? conditions.join(" AND ") : "TRUE", params };
+    return {
+      sql: conditions.length > 0 ? conditions.join(" AND ") : "TRUE",
+      params,
+    };
   }
 
   /**
@@ -252,13 +255,13 @@ export class DashboardRepository {
     const row = await query.getRawOne();
 
     return {
-      total: Number(row.total ?? 0),
+      totalCreated_today: Number(row.total ?? 0),
       open: Number(row.open ?? 0),
       assigned: Number(row.assigned ?? 0),
       inProgress: Number(row.in_progress ?? 0),
       reviewed: Number(row.reviewed ?? 0),
       completed: Number(row.completed ?? 0),
-      closed: Number(row.closed ?? 0),
+      closed_date_today: Number(row.closed ?? 0),
     };
   }
 
