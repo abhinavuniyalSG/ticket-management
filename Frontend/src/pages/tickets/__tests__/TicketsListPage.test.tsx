@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter, Routes, Route } from "react-router-dom";
+import { MemoryRouter, Routes, Route, useLocation } from "react-router-dom";
 import { TicketsListPage } from "../TicketsListPage";
 import { AuthContext } from "../../../app/providers/AuthContext";
 import type { AuthContextValue } from "../../../app/providers/AuthContext";
@@ -73,7 +73,12 @@ function makeTicket(overrides: Partial<Ticket> = {}): Ticket {
   };
 }
 
-function renderPage(user: SafeUser) {
+function LocationSearchDisplay() {
+  const location = useLocation();
+  return <div data-testid="location-search">{location.search}</div>;
+}
+
+function renderPage(user: SafeUser, initialEntries: string[] = ["/tickets"]) {
   const authValue: AuthContextValue = {
     user,
     status: "authenticated",
@@ -84,7 +89,8 @@ function renderPage(user: SafeUser) {
   };
   return render(
     <AuthContext.Provider value={authValue}>
-      <MemoryRouter initialEntries={["/tickets"]}>
+      <MemoryRouter initialEntries={initialEntries}>
+        <LocationSearchDisplay />
         <Routes>
           <Route path="/tickets" element={<TicketsListPage />} />
           <Route path="/tickets/new" element={<div>New ticket page</div>} />
@@ -424,5 +430,40 @@ describe("TicketsListPage", () => {
         expect.objectContaining({ status: "closed", page: 1 }),
       ),
     );
+  });
+
+  it("reflects the current page and filters in the URL so the view can be bookmarked or shared", async () => {
+    vi.mocked(ticketService.list).mockResolvedValue({
+      message: "ok",
+      tickets: [makeTicket()],
+      pagination: makePagination({ page: 1, totalItems: 45, totalPages: 3, hasNextPage: true }),
+    });
+    const user = userEvent.setup();
+    renderPage(makeUser());
+    await findTicketTitles("Printer is on fire");
+
+    expect(screen.getByTestId("location-search")).toHaveTextContent("");
+
+    await user.click(screen.getByRole("button", { name: "Next" }));
+
+    await waitFor(() =>
+      expect(screen.getByTestId("location-search")).toHaveTextContent("page=2"),
+    );
+  });
+
+  it("hydrates filters and the page number from the URL on load, without resetting back to page 1", async () => {
+    vi.mocked(ticketService.list).mockResolvedValue({
+      message: "ok",
+      tickets: [makeTicket()],
+      pagination: makePagination({ page: 2, totalItems: 45, totalPages: 3, hasNextPage: true }),
+    });
+
+    renderPage(makeUser(), ["/tickets?status=closed&page=2"]);
+    await findTicketTitles("Printer is on fire");
+
+    expect(ticketService.list).toHaveBeenCalledWith(
+      expect.objectContaining({ status: "closed", page: 2 }),
+    );
+    expect(screen.getByText("Page 2 of 3")).toBeInTheDocument();
   });
 });

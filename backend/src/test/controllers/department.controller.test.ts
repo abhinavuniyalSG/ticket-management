@@ -32,29 +32,35 @@ beforeEach(() => {
 });
 
 describe("getAllDepartmentsController", () => {
-  it("passes the normalized query through and returns 200", async () => {
+  it("passes the requester and normalized query through, and returns 200", async () => {
     const res = makeRes();
     vi.mocked(DepartmentService.getAllDepartments).mockResolvedValue({ message: "ok", departments: [] } as any);
-    const req = { normalized: { query: { departmentName: "Support" } }, query: {} } as any;
+    const req = {
+      user: requester,
+      normalized: { query: { departmentName: "Support" } },
+      query: {},
+    } as any;
 
     DepartmentController.getAllDepartmentsController(req, res, next);
     await flush();
 
-    expect(DepartmentService.getAllDepartments).toHaveBeenCalledWith({ departmentName: "Support" });
+    expect(DepartmentService.getAllDepartments).toHaveBeenCalledWith(requester, {
+      departmentName: "Support",
+    });
     expect(res.status).toHaveBeenCalledWith(200);
   });
 });
 
 describe("getDepartmentDetailsController", () => {
-  it("reads the id param and returns 200", async () => {
+  it("passes the requester and id param through, and returns 200", async () => {
     const res = makeRes();
     vi.mocked(DepartmentService.getDepartmentById).mockResolvedValue({ message: "ok", department: {} } as any);
-    const req = { normalized: { params: { id: "d1" } }, params: {} } as any;
+    const req = { user: requester, normalized: { params: { id: "d1" } }, params: {} } as any;
 
     DepartmentController.getDepartmentDetailsController(req, res, next);
     await flush();
 
-    expect(DepartmentService.getDepartmentById).toHaveBeenCalledWith("d1");
+    expect(DepartmentService.getDepartmentById).toHaveBeenCalledWith(requester, "d1");
     expect(res.status).toHaveBeenCalledWith(200);
   });
 });

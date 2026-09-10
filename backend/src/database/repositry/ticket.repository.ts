@@ -39,6 +39,16 @@ export class TicketRepository {
       .getOne();
   }
 
+  /**
+   * ticket.createdById is onDelete: "RESTRICT" - a user who created any
+   * ticket can't be deleted at the DB level. Callers check this first so
+   * they can reject with a clear message instead of letting the foreign key
+   * violation surface as a raw 500.
+   */
+  public static async countByCreator(createdById: string): Promise<number> {
+    return this.repository.count({ where: { createdById } });
+  }
+
   public static async findAll(
     options: TicketFilterOptions,
   ): Promise<PaginatedResult<Ticket>> {

@@ -1,5 +1,5 @@
 import ReactSelect from "react-select";
-import type { StylesConfig } from "react-select";
+import type { AriaLiveMessages, GroupBase, StylesConfig } from "react-select";
 
 export interface SelectOption {
   value: string;
@@ -19,6 +19,27 @@ interface SelectProps {
   "aria-label"?: string;
   "aria-describedby"?: string;
 }
+
+/**
+ * react-select's own default onFocus/onFilter/guidance messages are rendered
+ * as adjacent screen-reader-only text nodes with no separating space, so
+ * "Engineering, 1 of 4." runs straight into "4 results available." and gets
+ * announced as "Engineering, 1 of 4.4 results available." (worse still, the
+ * "1 of N" part is only included at all on Apple platforms). Overriding
+ * onFocus and onFilter to end with a space keeps the messages distinct and
+ * makes the option count consistent across platforms.
+ */
+const ariaLiveMessages: AriaLiveMessages<SelectOption, false, GroupBase<SelectOption>> = {
+  onFocus: ({ focused, label, options }) => {
+    const flatOptions = options as SelectOption[];
+    const position = flatOptions.length
+      ? `, ${flatOptions.indexOf(focused as SelectOption) + 1} of ${flatOptions.length}`
+      : "";
+    return `${label}${position}. `;
+  },
+  onFilter: ({ inputValue, resultsMessage }) =>
+    `${resultsMessage}${inputValue ? ` for search term ${inputValue}` : ""}. `,
+};
 
 export function Select({
   options,
@@ -90,6 +111,7 @@ export function Select({
       isClearable={Boolean(placeholder) && selected !== null}
       isSearchable
       styles={styles}
+      ariaLiveMessages={ariaLiveMessages}
       aria-invalid={invalid || undefined}
       {...rest}
     />

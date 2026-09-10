@@ -14,9 +14,10 @@ export class DepartmentController {
     res: Response,
     next: NextFunction,
   ) => {
+      const requester = req.user as RequesterInfo;
       const query =
         (req.normalized?.query as DepartmentQueryInput) ?? req.query;
-      const result = await DepartmentService.getAllDepartments(query);
+      const result = await DepartmentService.getAllDepartments(requester, query);
       return res.status(200).json(result);
   });
 
@@ -25,8 +26,9 @@ export class DepartmentController {
     res: Response,
     next: NextFunction,
   ) => {
+      const requester = req.user as RequesterInfo;
       const { id } = (req.normalized?.params as { id: string }) ?? req.params;
-      const result = await DepartmentService.getDepartmentById(id);
+      const result = await DepartmentService.getDepartmentById(requester, id);
       return res.status(200).json(result);
   });
 

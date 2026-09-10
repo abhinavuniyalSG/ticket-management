@@ -7,18 +7,18 @@ import { authMiddleware } from "../middleware/authentication.middleware.js";
 
 class AuthenticationRoutes {
   public router = express.Router();
-  private limiter = RateLimiterMiddleware.loginLimiter;
   private validator = requestValidator.validate;
   private requestSchema = new AuthenticationSchema();
   private initialize = () => {
     this.router.post(
       "/register",
+      RateLimiterMiddleware.registerLimiter,
       this.validator("body", this.requestSchema.registerSchema),
       AuthenticationController.registerController,
     );
     this.router.post(
       "/login",
-      this.limiter,
+      RateLimiterMiddleware.loginLimiter,
       this.validator("body", this.requestSchema.loginSchema),
       AuthenticationController.loginController,
     );
@@ -27,7 +27,7 @@ class AuthenticationRoutes {
     this.router.post(
       "/change-password",
       authMiddleware,
-      this.limiter,
+      RateLimiterMiddleware.changePasswordLimiter,
       this.validator("body", this.requestSchema.changePasswordSchema),
       AuthenticationController.changePasswordController,
     );
@@ -39,7 +39,7 @@ class AuthenticationRoutes {
     );
     this.router.post(
       "/changepassword/verify/:token",
-      this.limiter,
+      RateLimiterMiddleware.resetPasswordLimiter,
       this.validator("params", this.requestSchema.resetPasswordParamSchema),
       this.validator("body", this.requestSchema.resetPasswordSchema),
       AuthenticationController.resetPasswordController,
@@ -51,7 +51,7 @@ class AuthenticationRoutes {
     );
     this.router.post(
       "/resend-verification",
-      this.limiter,
+      RateLimiterMiddleware.resendVerificationLimiter,
       this.validator("body", this.requestSchema.resendVerificationSchema),
       AuthenticationController.resendVerificationController,
     );

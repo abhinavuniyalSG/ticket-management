@@ -128,22 +128,41 @@ describe("createDepartment", () => {
 });
 
 describe("getAllDepartments / getDepartmentById", () => {
-  it("returns all departments, sanitizing the manager on each", async () => {
+  it("returns all departments, sanitizing the manager on each for a super_admin requester", async () => {
     vi.mocked(DepartmentRepository.findAll).mockResolvedValue({
       data: [makeDepartment({ manager: { id: "m-1", password: "x", refreshToken: "y" } })],
       total: 1,
     });
 
-    const result = await DepartmentService.getAllDepartments();
+    const result = await DepartmentService.getAllDepartments(requester());
 
     expect(result.departments[0]).not.toHaveProperty("managerPassword");
     expect((result.departments[0] as any).manager).not.toHaveProperty("password");
+    expect((result.departments[0] as any).manager).toHaveProperty("id", "m-1");
+  });
+
+  it("strips the manager entirely for a non-super_admin requester, even though the department itself is still visible", async () => {
+    vi.mocked(DepartmentRepository.findAll).mockResolvedValue({
+      data: [
+        makeDepartment({
+          manager: { id: "m-1", firstName: "Ada", email: "ada@example.com" },
+        }),
+      ],
+      total: 1,
+    });
+
+    const adminResult = await DepartmentService.getAllDepartments(requester({ role: roleEnum.admin }));
+    expect(adminResult.departments[0]).not.toHaveProperty("manager");
+    expect(adminResult.departments[0]).toHaveProperty("departmentName", "Support");
+
+    const userResult = await DepartmentService.getAllDepartments(requester({ role: roleEnum.user }));
+    expect(userResult.departments[0]).not.toHaveProperty("manager");
   });
 
   it("defaults page to 1 and, with no limit given, returns every department in one unpaginated batch", async () => {
     vi.mocked(DepartmentRepository.findAll).mockResolvedValue({ data: [], total: 5 });
 
-    const result = await DepartmentService.getAllDepartments();
+    const result = await DepartmentService.getAllDepartments(requester());
 
     expect(DepartmentRepository.findAll).toHaveBeenCalledWith(
       expect.objectContaining({ page: 1, limit: undefined }),
@@ -161,7 +180,7 @@ describe("getAllDepartments / getDepartmentById", () => {
   it("passes through an explicit page/limit and returns pagination metadata", async () => {
     vi.mocked(DepartmentRepository.findAll).mockResolvedValue({ data: [], total: 45 });
 
-    const result = await DepartmentService.getAllDepartments({ page: 2, limit: 10 });
+    const result = await DepartmentService.getAllDepartments(requester(), { page: 2, limit: 10 });
 
     expect(DepartmentRepository.findAll).toHaveBeenCalledWith(
       expect.objectContaining({ page: 2, limit: 10 }),
@@ -179,7 +198,9 @@ describe("getAllDepartments / getDepartmentById", () => {
   it("throws 404 when the department isn't found", async () => {
     vi.mocked(DepartmentRepository.findById).mockResolvedValue(null);
 
-    await expect(DepartmentService.getDepartmentById("missing")).rejects.toMatchObject({
+    await expect(
+      DepartmentService.getDepartmentById(requester(), "missing"),
+    ).rejects.toMatchObject({
       statusCode: 404,
     });
   });
@@ -187,9 +208,22 @@ describe("getAllDepartments / getDepartmentById", () => {
   it("returns the department when found", async () => {
     vi.mocked(DepartmentRepository.findById).mockResolvedValue(makeDepartment());
 
-    const result = await DepartmentService.getDepartmentById("dept-1");
+    const result = await DepartmentService.getDepartmentById(requester(), "dept-1");
 
     expect(result.department.departmentId).toBe("dept-1");
+  });
+
+  it("redacts the manager from a single department lookup for a non-super_admin requester", async () => {
+    vi.mocked(DepartmentRepository.findById).mockResolvedValue(
+      makeDepartment({ manager: { id: "m-1", firstName: "Ada", email: "ada@example.com" } }),
+    );
+
+    const result = await DepartmentService.getDepartmentById(
+      requester({ role: roleEnum.admin }),
+      "dept-1",
+    );
+
+    expect(result.department).not.toHaveProperty("manager");
   });
 });
 

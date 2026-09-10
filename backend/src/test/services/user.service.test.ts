@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { UserService } from "../../services/user.service.js";
 import { UserRepository } from "../../database/repositry/user.repository.js";
 import { DepartmentRepository } from "../../database/repositry/department.repository.js";
+import { TicketRepository } from "../../database/repositry/ticket.repository.js";
 import { roleEnum } from "../../types/user.js";
 import type { RequesterInfo } from "../../services/user.service.js";
 
@@ -18,6 +19,12 @@ vi.mock("../../database/repositry/user.repository.js", () => ({
 vi.mock("../../database/repositry/department.repository.js", () => ({
   DepartmentRepository: {
     findByManager: vi.fn(),
+  },
+}));
+
+vi.mock("../../database/repositry/ticket.repository.js", () => ({
+  TicketRepository: {
+    countByCreator: vi.fn(),
   },
 }));
 
@@ -50,6 +57,7 @@ beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(UserRepository.findByRoleAndDepartment).mockResolvedValue([]);
   vi.mocked(DepartmentRepository.findByManager).mockResolvedValue([]);
+  vi.mocked(TicketRepository.countByCreator).mockResolvedValue(0);
 });
 
 describe("getAllUsers", () => {
@@ -592,5 +600,27 @@ describe("deleteUser", () => {
     await expect(
       UserService.deleteUser("other-1", requester({ id: "user-1" })),
     ).rejects.toMatchObject({ statusCode: 403 });
+  });
+
+  it("rejects deleting a user who has created tickets with a clear 409 instead of hitting the DB", async () => {
+    vi.mocked(UserRepository.findById).mockResolvedValue(makeUser({ id: "user-1" }));
+    vi.mocked(TicketRepository.countByCreator).mockResolvedValue(3);
+
+    await expect(
+      UserService.deleteUser("user-1", requester({ id: "user-1" })),
+    ).rejects.toMatchObject({ statusCode: 409, message: expect.stringContaining("3 tickets") });
+
+    expect(UserRepository.deleteUser).not.toHaveBeenCalled();
+  });
+
+  it("checks permission before the ticket count, so an unauthorized deletion still gets a 403", async () => {
+    vi.mocked(UserRepository.findById).mockResolvedValue(makeUser({ id: "other-1" }));
+    vi.mocked(TicketRepository.countByCreator).mockResolvedValue(3);
+
+    await expect(
+      UserService.deleteUser("other-1", requester({ id: "user-1" })),
+    ).rejects.toMatchObject({ statusCode: 403 });
+
+    expect(TicketRepository.countByCreator).not.toHaveBeenCalled();
   });
 });

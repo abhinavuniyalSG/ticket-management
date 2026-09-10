@@ -1,6 +1,6 @@
-import { cloneElement, isValidElement, useEffect, useMemo, useState } from "react";
+import { cloneElement, isValidElement, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { PageContainer } from "../../components/layout/PageContainer";
 import { PageHeader } from "../../components/layout/PageHeader";
 import { Select } from "../../components/atoms/Select";
@@ -92,16 +92,41 @@ function toIsoEnd(date: string): string | undefined {
   return date ? new Date(`${date}T23:59:59.999Z`).toISOString() : undefined;
 }
 
+/** Reads the filters straight from the URL so a bookmarked/shared/refreshed
+ * link reproduces the same view instead of always starting from scratch. */
+function filtersFromSearchParams(params: URLSearchParams): FilterState {
+  return {
+    title: params.get("title") ?? EMPTY_FILTERS.title,
+    status: params.get("status") ?? EMPTY_FILTERS.status,
+    priority: params.get("priority") ?? EMPTY_FILTERS.priority,
+    departmentId: params.get("departmentId") ?? EMPTY_FILTERS.departmentId,
+    assignedToId: params.get("assignedToId") ?? EMPTY_FILTERS.assignedToId,
+    createdById: params.get("createdById") ?? EMPTY_FILTERS.createdById,
+    createdFrom: params.get("createdFrom") ?? EMPTY_FILTERS.createdFrom,
+    createdTo: params.get("createdTo") ?? EMPTY_FILTERS.createdTo,
+    sortBy: params.get("sortBy") ?? EMPTY_FILTERS.sortBy,
+    sortOrder: params.get("sortOrder") ?? EMPTY_FILTERS.sortOrder,
+  };
+}
+
+function pageFromSearchParams(params: URLSearchParams): number {
+  const page = Number(params.get("page"));
+  return Number.isInteger(page) && page > 0 ? page : 1;
+}
+
 export function TicketsListPage() {
   const { user } = useAuth();
   const canSeeUserFilters =
     user?.role === "admin" || user?.role === "super_admin";
 
-  const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [filters, setFilters] = useState<FilterState>(() =>
+    filtersFromSearchParams(searchParams),
+  );
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [tickets, setTickets] = useState<Ticket[] | null>(null);
   const [pagination, setPagination] = useState<PaginationMeta | null>(null);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(() => pageFromSearchParams(searchParams));
   const [departments, setDepartments] = useState<Department[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -151,10 +176,32 @@ export function TicketsListPage() {
     ],
   );
 
-  // Any filter change starts the results back over at page 1.
+  // Any filter change starts the results back over at page 1 - but not on
+  // the very first render, which would otherwise stomp on a page number
+  // that was just read from the URL (e.g. a bookmarked or refreshed link).
+  const isFirstFilterQuery = useRef(true);
   useEffect(() => {
+    if (isFirstFilterQuery.current) {
+      isFirstFilterQuery.current = false;
+      return;
+    }
     setPage(1);
   }, [filterQuery]);
+
+  // Keeps the URL in sync with the current filters/page so the view can be
+  // bookmarked or shared, and survives a refresh instead of always resetting
+  // to page 1. Uses replace so filtering/paging doesn't flood browser history.
+  useEffect(() => {
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(filters) as [keyof FilterState, string][]) {
+      if (value && value !== EMPTY_FILTERS[key]) {
+        params.set(key, value);
+      }
+    }
+    if (page > 1) params.set("page", String(page));
+    setSearchParams(params, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters, page]);
 
   const query = useMemo<TicketQueryParams>(
     () => ({ ...filterQuery, page, limit: DEFAULT_PAGE_SIZE }),

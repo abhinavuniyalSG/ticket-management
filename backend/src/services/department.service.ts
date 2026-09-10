@@ -29,10 +29,24 @@ export interface DepartmentQueryInput {
 }
 
 export class DepartmentService {
-  private static sanitizeDepartment(department: Department) {
+  /**
+   * The frontend only lets super_admin into the departments section
+   * (constants/navigation.ts restricts that nav item to super_admin), but
+   * viewing a department is open to every authenticated role so a regular
+   * user can populate a department picker when filing a ticket. Without this
+   * check, that same open GET was handing every role the manager's full name
+   * and email - visible via a direct API call even though the UI hides it.
+   * Everyone still gets id/name/email/managedBy (the department id is used
+   * elsewhere, e.g. an admin's own "do I manage this department" checks);
+   * only the nested manager user record is restricted.
+   */
+  private static sanitizeDepartment(
+    department: Department,
+    requester: RequesterInfo,
+  ) {
     const { manager, ...rest } = department;
 
-    if (manager) {
+    if (manager && requester.role === roleEnum.superAdmin) {
       const { password, refreshToken, ...sanitizedManager } = manager as any;
       return { ...rest, manager: sanitizedManager };
     }
@@ -117,15 +131,19 @@ export class DepartmentService {
     return {
       message: "Department created successfully",
       department: fullDepartment
-        ? this.sanitizeDepartment(fullDepartment)
+        ? this.sanitizeDepartment(fullDepartment, requester)
         : department,
     };
   }
 
   /**
-   * Any authenticated role can view all departments.
+   * Any authenticated role can view all departments (manager details are
+   * redacted for anyone but super_admin - see sanitizeDepartment).
    */
-  public static async getAllDepartments(query: DepartmentQueryInput = {}) {
+  public static async getAllDepartments(
+    requester: RequesterInfo,
+    query: DepartmentQueryInput = {},
+  ) {
     const page = query.page ?? DEFAULT_PAGE;
     // Left undefined when the caller doesn't send a limit: the repository
     // only paginates when both page and limit are set, so this returns
@@ -140,15 +158,16 @@ export class DepartmentService {
 
     return {
       message: "Departments fetched successfully",
-      departments: departments.map((d) => this.sanitizeDepartment(d)),
+      departments: departments.map((d) => this.sanitizeDepartment(d, requester)),
       pagination: buildPaginationMeta(total, page, limit ?? total),
     };
   }
 
   /**
-   * Any authenticated role can view a department's details.
+   * Any authenticated role can view a department's details (manager details
+   * are redacted for anyone but super_admin - see sanitizeDepartment).
    */
-  public static async getDepartmentById(id: string) {
+  public static async getDepartmentById(requester: RequesterInfo, id: string) {
     const department = await DepartmentRepository.findById(id);
 
     if (!department) {
@@ -157,7 +176,7 @@ export class DepartmentService {
 
     return {
       message: "Department details fetched successfully",
-      department: this.sanitizeDepartment(department),
+      department: this.sanitizeDepartment(department, requester),
     };
   }
 
@@ -242,7 +261,7 @@ export class DepartmentService {
 
     return {
       message: "Department updated successfully",
-      department: this.sanitizeDepartment(updatedDepartment),
+      department: this.sanitizeDepartment(updatedDepartment, requester),
     };
   }
 

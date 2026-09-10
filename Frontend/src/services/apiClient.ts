@@ -49,20 +49,33 @@ interface ErrorBody {
   errors?: string[];
 }
 
-async function parseJson(res: Response): Promise<unknown> {
+interface ParsedBody {
+  json: unknown;
+  /** The raw response text, kept around for when the body isn't JSON (e.g. the
+   * plain-text 429 body express-rate-limit sends) so that message isn't lost. */
+  rawText: string;
+}
+
+async function parseBody(res: Response): Promise<ParsedBody> {
   const text = await res.text();
-  if (!text) return undefined;
+  if (!text) return { json: undefined, rawText: "" };
   try {
-    return JSON.parse(text);
+    return { json: JSON.parse(text), rawText: text };
   } catch {
-    return undefined;
+    return { json: undefined, rawText: text };
   }
 }
 
-function toApiError(status: number, body: unknown): ApiError {
-  const errorBody = (body ?? {}) as ErrorBody;
+function toApiError(status: number, body: ParsedBody): ApiError {
+  const errorBody = (body.json ?? {}) as ErrorBody;
+  const rawText = body.rawText.trim();
+  // A short, non-HTML plain-text body (like express-rate-limit's default 429
+  // message) is almost certainly a human-readable error - show it rather than
+  // a generic fallback. Anything longer or HTML-shaped is more likely an
+  // infra error page, which isn't safe or useful to surface as-is.
+  const isPlainTextMessage = rawText.length > 0 && rawText.length <= 300 && !rawText.startsWith("<");
   const message =
-    errorBody.message ?? "Something went wrong. Please try again.";
+    errorBody.message ?? (isPlainTextMessage ? rawText : "Something went wrong. Please try again.");
   return new ApiError(status, message, errorBody.errors);
 }
 
@@ -104,15 +117,15 @@ export async function apiRequest<T>(
       return apiRequest<T>(path, options, true);
     }
     sessionExpiredHandler?.();
-    const body = await parseJson(res);
+    const body = await parseBody(res);
     throw toApiError(res.status, body);
   }
 
-  const body = await parseJson(res);
+  const body = await parseBody(res);
 
   if (!res.ok) {
     throw toApiError(res.status, body);
   }
 
-  return body as T;
+  return body.json as T;
 }

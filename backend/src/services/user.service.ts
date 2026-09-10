@@ -1,6 +1,7 @@
 import { logger } from "../core/logger.js";
 import { UserRepository } from "../database/repositry/user.repository.js";
 import { DepartmentRepository } from "../database/repositry/department.repository.js";
+import { TicketRepository } from "../database/repositry/ticket.repository.js";
 import { HttpError } from "../utils/httpError.utils.js";
 import { roleEnum } from "../types/user.js";
 import type { User } from "../database/models/user.model.js";
@@ -294,55 +295,55 @@ export class UserService {
       throw new HttpError(404, "User not found");
     }
 
+    let isAllowed = false;
+    let forbiddenMessage = "Forbidden: insufficient permissions";
+
     if (requester.role === roleEnum.superAdmin) {
-      await UserRepository.deleteUser(id);
-        logger.info("User deleted", { userId: id, deletedBy: requester.id });
-        return { message: "User deleted successfully" };
+      isAllowed = true;
+    } else if (requester.role === roleEnum.admin) {
+      forbiddenMessage = "Forbidden: cannot delete user outside your department";
+
+      if (requester.id === targetUser.id) {
+        isAllowed = true;
+      } else {
+        const adminUser = await UserRepository.findById(requester.id);
+        const isSameDept =
+          Boolean(adminUser?.departmentId) &&
+          adminUser?.departmentId === targetUser.departmentId;
+
+        // An admin set as a department's manager (Department.managedBy) may
+        // also delete users in that department, even if it isn't their own
+        // home department - mirrors the same scoping used for tickets.
+        const managesTargetDepartment =
+          targetUser.department?.managedBy === requester.id;
+
+        isAllowed = isSameDept || managesTargetDepartment;
+      }
+    } else if (requester.role === roleEnum.user) {
+      forbiddenMessage = "Forbidden: you can only delete your own account";
+      isAllowed = requester.id === targetUser.id;
     }
 
-    if (requester.role === roleEnum.admin) {
-      if (requester.id === targetUser.id) {
-        await UserRepository.deleteUser(id);
-        logger.info("User deleted", { userId: id, deletedBy: requester.id });
-        return { message: "User deleted successfully" };
-      }
+    if (!isAllowed) {
+      throw new HttpError(403, forbiddenMessage);
+    }
 
-      const adminUser = await UserRepository.findById(requester.id);
-      const isSameDept =
-        Boolean(adminUser?.departmentId) &&
-        adminUser?.departmentId === targetUser.departmentId;
-
-      // An admin set as a department's manager (Department.managedBy) may
-      // also delete users in that department, even if it isn't their own
-      // home department - mirrors the same scoping used for tickets.
-      const managesTargetDepartment =
-        targetUser.department?.managedBy === requester.id;
-
-      if (isSameDept || managesTargetDepartment) {
-        await UserRepository.deleteUser(id);
-        logger.info("User deleted", { userId: id, deletedBy: requester.id });
-        return { message: "User deleted successfully" };
-      }
-
+    // ticket.createdById is onDelete: "RESTRICT", so the DB itself refuses to
+    // delete a user who has created any ticket. Check for that up front and
+    // reject with a clear message instead of letting a foreign key violation
+    // reach the client as an opaque 500.
+    const createdTicketCount = await TicketRepository.countByCreator(id);
+    if (createdTicketCount > 0) {
       throw new HttpError(
-        403,
-        "Forbidden: cannot delete user outside your department",
+        409,
+        `Cannot delete this user: they have created ${createdTicketCount} ticket${
+          createdTicketCount === 1 ? "" : "s"
+        }. Reassign or delete those tickets first.`,
       );
     }
 
-    if (requester.role === roleEnum.user) {
-      if (requester.id === targetUser.id) {
-        await UserRepository.deleteUser(id);
-        logger.info("User deleted", { userId: id, deletedBy: requester.id });
-        return { message: "User deleted successfully" };
-      }
-
-      throw new HttpError(
-        403,
-        "Forbidden: you can only delete your own account",
-      );
-    }
-
-    throw new HttpError(403, "Forbidden: insufficient permissions");
+    await UserRepository.deleteUser(id);
+    logger.info("User deleted", { userId: id, deletedBy: requester.id });
+    return { message: "User deleted successfully" };
   }
 }
