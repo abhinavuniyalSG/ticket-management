@@ -92,6 +92,7 @@ export function CreateDepartmentPage() {
                 id="dept-name"
                 value={name}
                 maxLength={100}
+                placeholder="e.g. Customer Support"
                 invalid={Boolean(errors.name)}
                 onChange={(e) => setName(e.target.value)}
                 disabled={isSubmitting}
@@ -106,6 +107,7 @@ export function CreateDepartmentPage() {
               <Input
                 id="dept-email"
                 type="email"
+                placeholder="support@example.com"
                 value={email}
                 invalid={Boolean(errors.email)}
                 onChange={(e) => setEmail(e.target.value)}

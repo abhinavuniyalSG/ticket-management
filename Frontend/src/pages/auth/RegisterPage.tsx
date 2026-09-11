@@ -69,16 +69,29 @@ export function RegisterPage() {
     return nextErrors;
   };
 
-  // Live (not submit-gated) password checks, used to disable the submit
-  // button and surface "passwords do not match" as soon as it's true,
-  // instead of waiting for the user to click "Create account".
+  // Live (not submit-gated) checks, used to disable "Create account" until
+  // every required field is actually filled in and valid - and to surface
+  // "passwords do not match" as soon as it's true - instead of only finding
+  // out any of this after clicking the button.
   const passwordTouched = values.password.length > 0;
   const confirmTouched = values.confirmPassword.length > 0;
   const passwordsMatch = values.password === values.confirmPassword;
+  const isFirstNameValid = values.firstName.trim().length > 0 && values.firstName.length <= 50;
+  const isLastNameValid = values.lastName.length <= 50;
+  const isEmailValid = values.email.trim().length > 0 && isValidEmail(values.email);
   const canSubmit =
-    (!passwordTouched || isPasswordValid(values.password)) && (!confirmTouched || passwordsMatch);
+    isFirstNameValid &&
+    isLastNameValid &&
+    isEmailValid &&
+    passwordTouched &&
+    isPasswordValid(values.password) &&
+    confirmTouched &&
+    passwordsMatch;
   const confirmPasswordError =
     errors.confirmPassword ?? (confirmTouched && !passwordsMatch ? "Passwords do not match" : undefined);
+  const disabledReason = canSubmit
+    ? undefined
+    : "Fill in your first name, a valid email, and a matching password that meets all the requirements above.";
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -122,6 +135,7 @@ export function RegisterPage() {
               id="register-first-name"
               value={values.firstName}
               maxLength={50}
+              placeholder="e.g. Jane"
               invalid={Boolean(errors.firstName)}
               onChange={(e) => setField("firstName")(e.target.value)}
               disabled={isSubmitting}
@@ -132,6 +146,7 @@ export function RegisterPage() {
               id="register-last-name"
               value={values.lastName}
               maxLength={50}
+              placeholder="e.g. Doe"
               invalid={Boolean(errors.lastName)}
               onChange={(e) => setField("lastName")(e.target.value)}
               disabled={isSubmitting}
@@ -143,6 +158,7 @@ export function RegisterPage() {
             id="register-email"
             type="email"
             autoComplete="email"
+            placeholder="you@example.com"
             value={values.email}
             invalid={Boolean(errors.email)}
             onChange={(e) => setField("email")(e.target.value)}
@@ -153,6 +169,7 @@ export function RegisterPage() {
           label="Password"
           id="register-password"
           autoComplete="new-password"
+          placeholder="Create a password"
           value={values.password}
           showRequirements
           required
@@ -164,6 +181,7 @@ export function RegisterPage() {
           label="Confirm password"
           id="register-confirm-password"
           autoComplete="new-password"
+          placeholder="Re-enter your password"
           value={values.confirmPassword}
           error={confirmPasswordError}
           required
@@ -185,7 +203,13 @@ export function RegisterPage() {
           />
           Show passwords
         </label>
-        <Button type="submit" isLoading={isSubmitting} disabled={!canSubmit} className="w-full">
+        <Button
+          type="submit"
+          isLoading={isSubmitting}
+          disabled={!canSubmit}
+          title={disabledReason}
+          className="w-full"
+        >
           Create account
         </Button>
       </form>

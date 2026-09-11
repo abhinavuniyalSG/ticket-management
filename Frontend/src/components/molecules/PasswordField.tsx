@@ -2,6 +2,7 @@ import { useState } from "react";
 import { FormField } from "./FormField";
 import { Input } from "../atoms/Input";
 import { PasswordRequirementsChecklist } from "./PasswordRequirementsChecklist";
+import { isPasswordValid } from "../../utils/validation";
 
 interface PasswordFieldProps {
   label: string;
@@ -10,6 +11,7 @@ interface PasswordFieldProps {
   onChange: (value: string) => void;
   error?: string;
   hint?: string;
+  placeholder?: string;
   required?: boolean;
   disabled?: boolean;
   autoComplete?: string;
@@ -28,6 +30,7 @@ export function PasswordField({
   onChange,
   error,
   hint,
+  placeholder,
   required,
   disabled,
   autoComplete,
@@ -53,11 +56,12 @@ export function PasswordField({
           type={isVisible ? "text" : "password"}
           autoComplete={autoComplete}
           value={value}
+          placeholder={placeholder}
           invalid={Boolean(error)}
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled}
         />
-        {showRequirements && (
+        {showRequirements && value.length > 0 && !isPasswordValid(value) && (
           <PasswordRequirementsChecklist password={value} id={`${id}-requirements`} />
         )}
         {!isControlled && (

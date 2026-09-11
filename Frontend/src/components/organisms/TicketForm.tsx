@@ -95,6 +95,7 @@ export function TicketForm({
           id="ticket-title"
           value={values.title}
           maxLength={200}
+          placeholder="Brief summary of the issue"
           invalid={Boolean(errors.title)}
           aria-describedby={errors.title ? "ticket-title-error" : undefined}
           onChange={(e) =>
@@ -114,6 +115,7 @@ export function TicketForm({
           id="ticket-description"
           value={values.description}
           rows={isTableView ? 3 : 1}
+          placeholder="Describe the issue in detail, including any steps to reproduce it."
           invalid={Boolean(errors.description)}
           aria-describedby={
             errors.description ? "ticket-description-error" : undefined

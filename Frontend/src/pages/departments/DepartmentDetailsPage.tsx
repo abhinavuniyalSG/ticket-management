@@ -160,6 +160,7 @@ export function DepartmentDetailsPage() {
               id="dept-detail-name"
               value={name}
               maxLength={100}
+              placeholder="e.g. Customer Support"
               invalid={Boolean(formErrors.name)}
               onChange={(e) => setName(e.target.value)}
               disabled={isSaving}
@@ -174,6 +175,7 @@ export function DepartmentDetailsPage() {
             <Input
               id="dept-detail-email"
               type="email"
+              placeholder="support@example.com"
               value={email}
               invalid={Boolean(formErrors.email)}
               onChange={(e) => setEmail(e.target.value)}

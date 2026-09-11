@@ -58,15 +58,19 @@ export function ProfileChangePasswordPage() {
     return nextErrors;
   };
 
-  // Live (not submit-gated) password checks - see RegisterPage for why.
-  const passwordTouched = values.newPassword.length > 0;
+  // Live (not submit-gated) password checks - see RegisterPage for why. All
+  // three password fields are required, so an empty form should also keep
+  // the button disabled, not just one with an invalid value in it.
   const confirmTouched = values.confirmPassword.length > 0;
   const passwordsMatch = values.newPassword === values.confirmPassword;
   const sameAsOldPassword =
-    passwordTouched && values.oldPassword.length > 0 && values.newPassword === values.oldPassword;
+    values.oldPassword.length > 0 && values.newPassword === values.oldPassword;
   const canSubmit =
-    (!passwordTouched || (isPasswordValid(values.newPassword) && !sameAsOldPassword)) &&
-    (!confirmTouched || passwordsMatch);
+    values.oldPassword.length > 0 &&
+    isPasswordValid(values.newPassword) &&
+    !sameAsOldPassword &&
+    confirmTouched &&
+    passwordsMatch;
   const newPasswordError = sameAsOldPassword
     ? "New password must be different from the old password"
     : undefined;
@@ -125,6 +129,7 @@ export function ProfileChangePasswordPage() {
               label="Current password"
               id="pcp-old-password"
               autoComplete="current-password"
+              placeholder="Enter your current password"
               value={values.oldPassword}
               error={errors.oldPassword}
               required
@@ -136,6 +141,7 @@ export function ProfileChangePasswordPage() {
               label="New password"
               id="pcp-new-password"
               autoComplete="new-password"
+              placeholder="Create a new password"
               value={values.newPassword}
               error={newPasswordError}
               showRequirements
@@ -148,6 +154,7 @@ export function ProfileChangePasswordPage() {
               label="Confirm password"
               id="pcp-confirm-password"
               autoComplete="new-password"
+              placeholder="Re-enter your new password"
               value={values.confirmPassword}
               error={confirmPasswordError}
               required
@@ -169,7 +176,17 @@ export function ProfileChangePasswordPage() {
               />
               Show passwords
             </label>
-            <Button type="submit" isLoading={isSubmitting} disabled={!canSubmit} className="w-full">
+            <Button
+              type="submit"
+              isLoading={isSubmitting}
+              disabled={!canSubmit}
+              title={
+                canSubmit
+                  ? undefined
+                  : "Enter your current password and a matching new password that meets all the requirements above."
+              }
+              className="w-full"
+            >
               Change password
             </Button>
           </form>

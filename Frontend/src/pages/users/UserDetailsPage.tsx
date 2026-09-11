@@ -174,6 +174,7 @@ export function UserDetailsPage() {
                   id="user-first-name"
                   value={firstName}
                   maxLength={50}
+                  placeholder="e.g. Jane"
                   disabled={!canEditName || isSaving}
                   onChange={(e) => setFirstName(e.target.value)}
                 />
@@ -183,6 +184,7 @@ export function UserDetailsPage() {
                   id="user-last-name"
                   value={lastName}
                   maxLength={50}
+                  placeholder="e.g. Doe"
                   disabled={!canEditName || isSaving}
                   onChange={(e) => setLastName(e.target.value)}
                 />

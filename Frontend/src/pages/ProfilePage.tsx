@@ -120,6 +120,7 @@ export function ProfilePage() {
                   id="profile-first-name"
                   value={firstName}
                   maxLength={50}
+                  placeholder="e.g. Jane"
                   invalid={Boolean(nameErrors.firstName)}
                   onChange={(e) => setFirstName(e.target.value)}
                   disabled={isSavingName}
@@ -130,6 +131,7 @@ export function ProfilePage() {
                   id="profile-last-name"
                   value={lastName}
                   maxLength={50}
+                  placeholder="e.g. Doe"
                   invalid={Boolean(nameErrors.lastName)}
                   onChange={(e) => setLastName(e.target.value)}
                   disabled={isSavingName}

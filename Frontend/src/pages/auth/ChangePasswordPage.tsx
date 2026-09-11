@@ -93,6 +93,7 @@ export function ChangePasswordPage() {
               id="cp-email"
               type="email"
               autoComplete="email"
+              placeholder="you@example.com"
               value={values.email}
               invalid={Boolean(errors.email)}
               onChange={(e) => setField("email")(e.target.value)}
@@ -103,6 +104,7 @@ export function ChangePasswordPage() {
             label="Current password"
             id="cp-old-password"
             autoComplete="current-password"
+            placeholder="Enter your current password"
             value={values.oldPassword}
             error={errors.oldPassword}
             required
@@ -113,6 +115,7 @@ export function ChangePasswordPage() {
             label="New password"
             id="cp-new-password"
             autoComplete="new-password"
+            placeholder="Create a new password"
             value={values.newPassword}
             error={errors.newPassword}
             hint="At least 8 characters, with uppercase, lowercase, a number and a special character."

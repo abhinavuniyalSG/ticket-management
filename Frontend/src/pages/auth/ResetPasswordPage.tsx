@@ -43,10 +43,11 @@ export function ResetPasswordPage() {
   };
 
   // Live (not submit-gated) password checks - see RegisterPage for why.
-  const passwordTouched = newPassword.length > 0;
+  // Unlike a login form, both fields being required here means an empty
+  // form should also keep the button disabled, not just an invalid one.
   const confirmTouched = confirmPassword.length > 0;
   const passwordsMatch = newPassword === confirmPassword;
-  const canSubmit = (!passwordTouched || isPasswordValid(newPassword)) && (!confirmTouched || passwordsMatch);
+  const canSubmit = isPasswordValid(newPassword) && confirmTouched && passwordsMatch;
   const confirmPasswordError =
     errors.confirmPassword ?? (confirmTouched && !passwordsMatch ? "Passwords do not match" : undefined);
 
@@ -80,6 +81,7 @@ export function ResetPasswordPage() {
             label="New password"
             id="reset-new-password"
             autoComplete="new-password"
+            placeholder="Create a new password"
             value={newPassword}
             showRequirements
             required
@@ -91,6 +93,7 @@ export function ResetPasswordPage() {
             label="Confirm password"
             id="reset-confirm-password"
             autoComplete="new-password"
+            placeholder="Re-enter your new password"
             value={confirmPassword}
             error={confirmPasswordError}
             required
@@ -112,7 +115,17 @@ export function ResetPasswordPage() {
             />
             Show passwords
           </label>
-          <Button type="submit" isLoading={isSubmitting} disabled={!canSubmit} className="w-full">
+          <Button
+            type="submit"
+            isLoading={isSubmitting}
+            disabled={!canSubmit}
+            title={
+              canSubmit
+                ? undefined
+                : "Enter a matching new password that meets all the requirements above."
+            }
+            className="w-full"
+          >
             Reset password
           </Button>
         </form>

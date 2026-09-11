@@ -75,6 +75,7 @@ export function LoginPage() {
             id="login-email"
             type="email"
             autoComplete="email"
+            placeholder="you@example.com"
             value={email}
             invalid={Boolean(errors.email)}
             onChange={(e) => setEmail(e.target.value)}
@@ -85,6 +86,7 @@ export function LoginPage() {
           label="Password"
           id="login-password"
           autoComplete="current-password"
+          placeholder="Enter your password"
           value={password}
           error={errors.password}
           required

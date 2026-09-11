@@ -6,11 +6,22 @@ test.beforeEach(async ({ page }) => {
   await page.goto("/register");
 });
 
-test("requires a first name and a valid email before submitting", async ({ page }) => {
-  await page.getByRole("button", { name: "Create account" }).click();
+test("disables Create account until first name, email, and a matching valid password are all filled in", async ({
+  page,
+}) => {
+  await expect(page.getByRole("button", { name: "Create account" })).toBeDisabled();
 
-  await expect(page.getByText("First name is required")).toBeVisible();
-  await expect(page.getByText("Email is required")).toBeVisible();
+  await page.getByLabel("First name").fill("Ada");
+  await expect(page.getByRole("button", { name: "Create account" })).toBeDisabled();
+
+  await page.getByLabel("Email").fill("ada@example.com");
+  await expect(page.getByRole("button", { name: "Create account" })).toBeDisabled();
+
+  await page.getByRole("textbox", { name: "Password", exact: true }).fill("Str0ng!Pass");
+  await expect(page.getByRole("button", { name: "Create account" })).toBeDisabled();
+
+  await page.getByLabel("Confirm password").fill("Str0ng!Pass");
+  await expect(page.getByRole("button", { name: "Create account" })).toBeEnabled();
 });
 
 test("shows the password requirements live and disables submit until they're met", async ({ page }) => {

@@ -29,14 +29,20 @@ function renderPage() {
 }
 
 describe("ForgotPasswordPage", () => {
-  it("shows a validation error for an invalid email and does not call the service", async () => {
+  it("disables Send reset email until a valid email is entered", async () => {
     const user = userEvent.setup();
     renderPage();
 
-    await user.type(screen.getByLabelText(/^Email/), "not-an-email");
-    await user.click(screen.getByRole("button", { name: "Send reset email" }));
+    const button = screen.getByRole("button", { name: "Send reset email" });
+    expect(button).toBeDisabled();
 
-    expect(screen.getByText("Enter a valid email address")).toBeInTheDocument();
+    await user.type(screen.getByLabelText(/^Email/), "not-an-email");
+    expect(button).toBeDisabled();
+
+    await user.clear(screen.getByLabelText(/^Email/));
+    await user.type(screen.getByLabelText(/^Email/), "jane@example.com");
+    expect(button).toBeEnabled();
+
     expect(authService.forgotPassword).not.toHaveBeenCalled();
   });
 

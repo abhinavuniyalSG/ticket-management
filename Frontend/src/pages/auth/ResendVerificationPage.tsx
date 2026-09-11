@@ -60,6 +60,7 @@ export function ResendVerificationPage() {
               id="resend-email"
               type="email"
               autoComplete="email"
+              placeholder="you@example.com"
               value={email}
               invalid={Boolean(error)}
               onChange={(e) => setEmail(e.target.value)}

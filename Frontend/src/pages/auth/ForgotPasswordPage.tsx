@@ -66,6 +66,10 @@ export function ForgotPasswordPage() {
     await sendResetEmail();
   };
 
+  // Disabled until there's a valid email to send to, rather than only
+  // finding out it's missing/invalid after clicking submit.
+  const canSubmit = isValidEmail(email);
+
   return (
     <AuthLayout
       title="Forgot your password?"
@@ -96,13 +100,20 @@ export function ForgotPasswordPage() {
               id="forgot-password-email"
               type="email"
               autoComplete="email"
+              placeholder="you@example.com"
               value={email}
               invalid={Boolean(error)}
               onChange={(e) => setEmail(e.target.value)}
               disabled={isSubmitting}
             />
           </FormField>
-          <Button type="submit" isLoading={isSubmitting} className="w-full">
+          <Button
+            type="submit"
+            isLoading={isSubmitting}
+            disabled={!canSubmit}
+            title={canSubmit ? undefined : "Enter a valid email address."}
+            className="w-full"
+          >
             Send reset email
           </Button>
           <p className="text-center text-sm text-slate-500">
