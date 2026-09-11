@@ -264,8 +264,15 @@ describe("TicketsListPage", () => {
     await findTicketTitles("Printer is on fire");
     await user.click(screen.getByRole("button", { name: "Filters" }));
 
-    expect(screen.getByText("All assigned to")).toBeInTheDocument();
-    expect(screen.getByText("All creators")).toBeInTheDocument();
+    const filterFieldLabel = (text: string) =>
+      screen.getByText(text, { selector: "span.text-xs.font-semibold" });
+
+    expect(
+      within(filterFieldLabel("AssignedTo").closest("label")!).getByText("All"),
+    ).toBeInTheDocument();
+    expect(
+      within(filterFieldLabel("Creator").closest("label")!).getByText("All"),
+    ).toBeInTheDocument();
 
     await user.click(screen.getByRole("combobox", { name: "AssignedTo" }));
     expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual(["Jane Doe"]);
@@ -312,8 +319,9 @@ describe("TicketsListPage", () => {
     renderPage(makeUser());
     await findTicketTitles("Printer is on fire");
 
-    await user.click(screen.getByRole("button", { name: "Filters" }));
-    await user.type(screen.getByLabelText("Title"), "printer");
+    // The title search box is always visible now (matching Users/
+    // Departments), not tucked inside the collapsible filters panel.
+    await user.type(screen.getByLabelText("Search tickets by title"), "printer");
 
     await waitFor(
       () =>
@@ -344,7 +352,13 @@ describe("TicketsListPage", () => {
     await user.click(screen.getByRole("button", { name: "Filters (1)" }));
     await user.click(screen.getByRole("button", { name: "Reset filters" }));
     await waitFor(() =>
-      expect(screen.getByText("All priorities")).toBeInTheDocument(),
+      expect(
+        within(
+          screen
+            .getByText("Priority", { selector: "span.text-xs.font-semibold" })
+            .closest("label")!,
+        ).getByText("All"),
+      ).toBeInTheDocument(),
     );
     expect(
       screen.getByRole("button", { name: "Reset filters" }),

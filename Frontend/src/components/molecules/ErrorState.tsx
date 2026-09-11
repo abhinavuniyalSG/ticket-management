@@ -21,7 +21,7 @@ export function ErrorState({ title = "Something went wrong", message, onRetry }:
       <p className="text-sm font-semibold text-red-800">{title}</p>
       <p className="max-w-sm text-sm text-red-600">{message}</p>
       {onRetry && (
-        <Button variant="secondary" onClick={onRetry} className="mt-2">
+        <Button variant="primary" onClick={onRetry} className="mt-2">
           Try again
         </Button>
       )}

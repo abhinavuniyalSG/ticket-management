@@ -6,11 +6,14 @@ import { PageHeader } from "../../components/layout/PageHeader";
 import { Select } from "../../components/atoms/Select";
 import { Input } from "../../components/atoms/Input";
 import { Button } from "../../components/atoms/Button";
+import { Tooltip } from "../../components/atoms/Tooltip";
 import { Spinner } from "../../components/atoms/Spinner";
+import { SearchInput } from "../../components/molecules/SearchInput";
 import { EmptyState } from "../../components/molecules/EmptyState";
 import { ErrorState } from "../../components/molecules/ErrorState";
 import { Pagination } from "../../components/molecules/Pagination";
 import { TicketTable } from "../../components/organisms/TicketTable";
+import { CLOSE_ICON, FILTER_ICON, PLUS_ICON } from "../../components/organisms/navIcons";
 import { ticketService } from "../../services/ticketService";
 import { useDebouncedValue } from "../../hooks/useDebouncedValue";
 import { departmentService } from "../../services/departmentService";
@@ -77,8 +80,8 @@ function FilterField({
     : children;
 
   return (
-    <label className="flex flex-col gap-1 text-xs font-semibold text-slate-700">
-      <span>{label}</span>
+    <label className="flex flex-col gap-1">
+      <span className="text-xs font-semibold text-slate-700">{label}</span>
       {field}
     </label>
   );
@@ -237,6 +240,17 @@ export function TicketsListPage() {
     ([key, value]) => !["sortBy", "sortOrder"].includes(key) && value !== "",
   ).length;
   const hasActiveFilters = activeFilterCount > 0;
+  // Title now has its own always-visible search box (matching Users/
+  // Departments), so it isn't counted in the "Filters (n)" badge, which is
+  // only meant to hint at filters hidden inside the collapsed panel.
+  const hiddenFilterCount = Object.entries(filters).filter(
+    ([key, value]) => !["title", "sortBy", "sortOrder"].includes(key) && value !== "",
+  ).length;
+  const filtersButtonLabel = isFiltersOpen
+    ? "Hide filters"
+    : hiddenFilterCount > 0
+      ? `Filters (${hiddenFilterCount})`
+      : "Filters";
 
   // A regular user's tickets are already scoped server-side to ones they created
   // or are assigned to, so there's no one else to filter by - just themselves.
@@ -253,21 +267,40 @@ export function TicketsListPage() {
         description="View and manage support tickets."
         actions={
           <>
-            <Button
-              variant="secondary"
-              onClick={() => setIsFiltersOpen((prev) => !prev)}
-            >
-              {isFiltersOpen ? "Hide filters" : "Filters"}
-              {!isFiltersOpen && hasActiveFilters
-                ? ` (${activeFilterCount})`
-                : ""}
-            </Button>
-            <Link
-              to="/tickets/new"
-              className="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm shadow-indigo-600/20 transition-all duration-150 hover:bg-indigo-700 hover:shadow-md hover:shadow-indigo-600/25 active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-            >
-              New ticket
-            </Link>
+            <SearchInput
+              label="Search tickets by title"
+              placeholder="Search by title"
+              value={filters.title}
+              onChange={(e) => setFilter("title")(e.target.value)}
+              className="w-39.75 shrink-0"
+            />
+            <Tooltip label={filtersButtonLabel} className="shrink-0">
+              <Button
+                variant="secondary"
+                className="relative"
+                aria-label={filtersButtonLabel}
+                onClick={() => setIsFiltersOpen((prev) => !prev)}
+              >
+                {isFiltersOpen ? CLOSE_ICON : FILTER_ICON}
+                {!isFiltersOpen && hiddenFilterCount > 0 && (
+                  <span
+                    aria-hidden="true"
+                    className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-semibold text-white"
+                  >
+                    {hiddenFilterCount}
+                  </span>
+                )}
+              </Button>
+            </Tooltip>
+            <Tooltip label="New ticket" className="shrink-0">
+              <Link
+                to="/tickets/new"
+                aria-label="New ticket"
+                className="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm shadow-indigo-600/20 transition-all duration-150 hover:bg-indigo-700 hover:shadow-md hover:shadow-indigo-600/25 active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              >
+                {PLUS_ICON}
+              </Link>
+            </Tooltip>
           </>
         }
       />
@@ -275,17 +308,9 @@ export function TicketsListPage() {
       {isFiltersOpen && (
         <div className="mb-5 shadow-soft rounded-xl border border-slate-200/80 bg-white p-4">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            <FilterField label="Title">
-              <Input
-                type="text"
-                placeholder="Search by title"
-                value={filters.title}
-                onChange={(e) => setFilter("title")(e.target.value)}
-              />
-            </FilterField>
             <FilterField label="Status">
               <Select
-                placeholder="All statuses"
+                placeholder="All"
                 value={filters.status}
                 options={TICKET_STATUSES.map((s) => ({
                   value: s,
@@ -296,7 +321,7 @@ export function TicketsListPage() {
             </FilterField>
             <FilterField label="Priority">
               <Select
-                placeholder="All priorities"
+                placeholder="All"
                 value={filters.priority}
                 options={TICKET_PRIORITIES.map((p) => ({
                   value: p,
@@ -307,7 +332,7 @@ export function TicketsListPage() {
             </FilterField>
             <FilterField label="Department">
               <Select
-                placeholder="All departments"
+                placeholder="All"
                 value={filters.departmentId}
                 options={departments.map((d) => ({
                   value: d.departmentId,
@@ -318,7 +343,7 @@ export function TicketsListPage() {
             </FilterField>
             <FilterField label="AssignedTo">
               <Select
-                placeholder="All assigned to"
+                placeholder="All"
                 value={filters.assignedToId}
                 options={userFilterOptions}
                 onChange={(e) => setFilter("assignedToId")(e.target.value)}
@@ -326,7 +351,7 @@ export function TicketsListPage() {
             </FilterField>
             <FilterField label="Creator">
               <Select
-                placeholder="All creators"
+                placeholder="All"
                 value={filters.createdById}
                 options={userFilterOptions}
                 onChange={(e) => setFilter("createdById")(e.target.value)}
@@ -337,6 +362,7 @@ export function TicketsListPage() {
                 type="date"
                 value={filters.createdFrom}
                 onChange={(e) => setFilter("createdFrom")(e.target.value)}
+                className={filters.createdFrom ? "" : "text-slate-400!"}
               />
             </FilterField>
             <FilterField label="Created to">
@@ -344,6 +370,7 @@ export function TicketsListPage() {
                 type="date"
                 value={filters.createdTo}
                 onChange={(e) => setFilter("createdTo")(e.target.value)}
+                className={filters.createdTo ? "" : "text-slate-400!"}
               />
             </FilterField>
             <FilterField label="Sort by">
@@ -353,6 +380,7 @@ export function TicketsListPage() {
                   ([value, label]) => ({ value, label }),
                 )}
                 onChange={(e) => setFilter("sortBy")(e.target.value)}
+                muted
               />
             </FilterField>
             <FilterField label="Sort order">
@@ -363,6 +391,7 @@ export function TicketsListPage() {
                   { value: "asc", label: "Ascending" },
                 ]}
                 onChange={(e) => setFilter("sortOrder")(e.target.value)}
+                muted
               />
             </FilterField>
           </div>

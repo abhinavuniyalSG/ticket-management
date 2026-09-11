@@ -5,7 +5,8 @@ import { ROLE_LABELS } from "../../constants/options";
 import { useAuth } from "../../hooks/useAuth";
 import { useLogout } from "../../hooks/useLogout";
 import { fullName } from "../../utils/format";
-import { NAV_ICONS } from "./navIcons";
+import { LOGOUT_ICON, NAV_ICONS } from "./navIcons";
+import { Button } from "../atoms/Button";
 
 interface MobileNavigationProps {
   isOpen: boolean;
@@ -86,13 +87,10 @@ export function MobileNavigation({ isOpen, onClose }: MobileNavigationProps) {
         <div className="border-t border-slate-200 p-4">
           <p className="truncate text-sm font-medium text-slate-900">{fullName(user)}</p>
           <p className="mb-3 truncate text-xs text-slate-500">{ROLE_LABELS[user.role]}</p>
-          <button
-            type="button"
-            onClick={() => void handleLogout()}
-            className="w-full cursor-pointer rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:border-slate-400 hover:bg-slate-50"
-          >
+          <Button type="button" variant="secondary" className="w-full" onClick={() => void handleLogout()}>
+            {LOGOUT_ICON}
             Log out
-          </button>
+          </Button>
         </div>
       </nav>
     </div>

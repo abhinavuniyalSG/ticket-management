@@ -51,3 +51,54 @@ export const NAV_ICONS: Record<string, ReactNode> = {
     </svg>
   ),
 };
+
+/** Door-with-arrow icon for the "Log out" action, styled to match NAV_ICONS. */
+export const LOGOUT_ICON: ReactNode = (
+  <svg {...wrapperProps}>
+    <path
+      d="M8 4H5a1 1 0 00-1 1v10a1 1 0 001 1h3"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M8 10h8.5M13.5 6.5L17 10l-3.5 3.5"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+/** Funnel icon for a "show filters" toggle, styled to match NAV_ICONS. */
+export const FILTER_ICON: ReactNode = (
+  <svg {...wrapperProps}>
+    <path
+      d="M4 4h12l-4.5 6v5l-3 1.5v-6.5L4 4z"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+/** X icon used to represent "hide/close" (e.g. collapsing an open filter panel). */
+export const CLOSE_ICON: ReactNode = (
+  <svg {...wrapperProps}>
+    <path
+      d="M6 6l8 8M14 6l-8 8"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+    />
+  </svg>
+);
+
+/** Plus icon for a "create new" action. */
+export const PLUS_ICON: ReactNode = (
+  <svg {...wrapperProps}>
+    <path d="M10 4.5v11M4.5 10h11" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+  </svg>
+);

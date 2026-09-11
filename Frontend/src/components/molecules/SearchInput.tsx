@@ -1,3 +1,4 @@
+import { useId } from "react";
 import type { InputHTMLAttributes } from "react";
 
 interface SearchInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "type"> {
@@ -5,9 +6,13 @@ interface SearchInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "
 }
 
 export function SearchInput({ label = "Search", className = "", ...rest }: SearchInputProps) {
+  // A hardcoded id would collide if this ever renders more than once on the
+  // same page, so each instance gets its own.
+  const id = useId();
+
   return (
-    <div className={`relative ${className}`}>
-      <label htmlFor="search-input" className="sr-only">
+    <div className={`relative min-w-0 ${className}`}>
+      <label htmlFor={id} className="sr-only">
         {label}
       </label>
       <svg
@@ -20,9 +25,9 @@ export function SearchInput({ label = "Search", className = "", ...rest }: Searc
         <path d="M18 18l-4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
       </svg>
       <input
-        id="search-input"
+        id={id}
         type="search"
-        className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 shadow-none placeholder:text-slate-400 hover:border-slate-400 focus:border-indigo-500 focus:outline-none"
+        className="w-full truncate rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 shadow-none placeholder:text-slate-400 hover:border-slate-400 focus:border-indigo-500 focus:outline-none"
         {...rest}
       />
     </div>

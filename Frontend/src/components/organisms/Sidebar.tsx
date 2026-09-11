@@ -4,7 +4,8 @@ import { ROLE_LABELS } from "../../constants/options";
 import { useAuth } from "../../hooks/useAuth";
 import { useLogout } from "../../hooks/useLogout";
 import { fullName, initials } from "../../utils/format";
-import { NAV_ICONS } from "./navIcons";
+import { LOGOUT_ICON, NAV_ICONS } from "./navIcons";
+import { Button } from "../atoms/Button";
 
 export function Sidebar() {
   const { user } = useAuth();
@@ -49,13 +50,10 @@ export function Sidebar() {
             <p className="truncate text-xs text-slate-500">{ROLE_LABELS[user.role]}</p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() => void handleLogout()}
-          className="w-full cursor-pointer rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:border-slate-400 hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-        >
+        <Button type="button" variant="secondary" className="w-full" onClick={() => void handleLogout()}>
+          {LOGOUT_ICON}
           Log out
-        </button>
+        </Button>
       </div>
     </aside>
   );

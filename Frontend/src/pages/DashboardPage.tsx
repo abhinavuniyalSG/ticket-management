@@ -163,7 +163,7 @@ export function DashboardPage() {
                   label: d.departmentName,
                 }))}
                 onChange={(e) => setDepartmentId(e.target.value)}
-                className="min-w-[100px]"
+                className="w-40 shrink-0"
               />
             )}
           </>

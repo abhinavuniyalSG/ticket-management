@@ -253,7 +253,7 @@ export function TicketDetailsPage() {
                   {allowedTransitions.map((status) => (
                     <Button
                       key={status}
-                      variant="secondary"
+                      variant="primary"
                       disabled={isMutating}
                       className="w-full"
                       onClick={() => void handleStatusChange(status)}
@@ -287,7 +287,7 @@ export function TicketDetailsPage() {
                         className="w-full"
                       />
                       <Button
-                        variant="secondary"
+                        variant="primary"
                         className="w-full"
                         disabled={!selectedAssignee || isMutating}
                         onClick={() => void handleAssign()}
@@ -298,7 +298,7 @@ export function TicketDetailsPage() {
                   )}
                   {ticket.assignedToId && canUnassignAction && (
                     <Button
-                      variant="secondary"
+                      variant="primary"
                       className="w-full"
                       disabled={isMutating}
                       onClick={() => void handleUnassign()}

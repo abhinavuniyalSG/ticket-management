@@ -1,5 +1,11 @@
-import ReactSelect from "react-select";
-import type { AriaLiveMessages, GroupBase, StylesConfig } from "react-select";
+import ReactSelect, { components as reactSelectComponents } from "react-select";
+import type {
+  AriaLiveMessages,
+  ClearIndicatorProps,
+  DropdownIndicatorProps,
+  GroupBase,
+  StylesConfig,
+} from "react-select";
 
 export interface SelectOption {
   value: string;
@@ -18,6 +24,11 @@ interface SelectProps {
   name?: string;
   "aria-label"?: string;
   "aria-describedby"?: string;
+  /** Renders the selected value in the same muted grey as the placeholder text,
+   * for fields (like a "Sort by") that always have a value rather than a
+   * meaningful "unset" state, so they read consistently with fields next to
+   * them that are still on their placeholder. */
+  muted?: boolean;
 }
 
 /**
@@ -41,6 +52,46 @@ const ariaLiveMessages: AriaLiveMessages<SelectOption, false, GroupBase<SelectOp
     `${resultsMessage}${inputValue ? ` for search term ${inputValue}` : ""}. `,
 };
 
+/**
+ * react-select's built-in chevron is a solid filled shape, which reads as
+ * much bolder than the thin-stroke icons used everywhere else in the app.
+ * Swap it for a matching thin-stroke chevron so it's visually consistent.
+ */
+function DropdownIndicator(props: DropdownIndicatorProps<SelectOption, false>) {
+  return (
+    <reactSelectComponents.DropdownIndicator {...props}>
+      <svg viewBox="0 0 20 20" fill="none" className="h-4 w-4" aria-hidden="true">
+        <path
+          d="M5.5 8l4.5 4.5 4.5-4.5"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </reactSelectComponents.DropdownIndicator>
+  );
+}
+
+/**
+ * react-select's built-in clear "x" is the same kind of solid filled shape
+ * as its chevron, so it gets the same thin-stroke treatment for consistency.
+ */
+function ClearIndicator(props: ClearIndicatorProps<SelectOption, false>) {
+  return (
+    <reactSelectComponents.ClearIndicator {...props}>
+      <svg viewBox="0 0 20 20" fill="none" className="h-4 w-4" aria-hidden="true">
+        <path
+          d="M6 6l8 8M14 6l-8 8"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
+      </svg>
+    </reactSelectComponents.ClearIndicator>
+  );
+}
+
 export function Select({
   options,
   placeholder,
@@ -51,11 +102,17 @@ export function Select({
   className = "",
   id,
   name,
+  muted = false,
   ...rest
 }: SelectProps) {
   const selected = options.find((option) => option.value === value) ?? null;
 
   const styles: StylesConfig<SelectOption, false> = {
+    // Without this, the control's automatic flex min-size stays pinned to
+    // its content width, so it never actually shrinks small enough for the
+    // singleValue/placeholder ellipsis below to kick in inside a tight flex
+    // row (e.g. the Users page filter bar at in-between viewport widths).
+    container: (base) => ({ ...base, minWidth: 0 }),
     control: (base, state) => ({
       ...base,
       minHeight: "2.25rem",
@@ -69,7 +126,7 @@ export function Select({
       cursor: "pointer",
     }),
     valueContainer: (base) => ({ ...base, padding: "0 0.5rem" }),
-    singleValue: (base) => ({ ...base, color: "#475569" }),
+    singleValue: (base) => ({ ...base, color: muted ? "#94a3b8" : "#475569" }),
     placeholder: (base) => ({ ...base, color: "#94a3b8" }),
     input: (base) => ({ ...base, color: "#334155" }),
     indicatorSeparator: () => ({ display: "none" }),
@@ -111,6 +168,7 @@ export function Select({
       isClearable={Boolean(placeholder) && selected !== null}
       isSearchable
       styles={styles}
+      components={{ DropdownIndicator, ClearIndicator }}
       ariaLiveMessages={ariaLiveMessages}
       aria-invalid={invalid || undefined}
       {...rest}

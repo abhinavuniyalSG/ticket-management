@@ -20,7 +20,11 @@ import { useAuth } from "../../hooks/useAuth";
 import { ApiError, type PaginationMeta } from "../../types/api";
 import type { User } from "../../types/user";
 import type { Department } from "../../types/department";
-import { DEFAULT_PAGE_SIZE, ROLE_LABELS, USER_ROLES } from "../../constants/options";
+import {
+  DEFAULT_PAGE_SIZE,
+  ROLE_LABELS,
+  USER_ROLES,
+} from "../../constants/options";
 import { canDeleteUser } from "../../utils/userPermissions";
 
 export function UsersListPage() {
@@ -71,7 +75,9 @@ export function UsersListPage() {
         setPagination(res.pagination);
       })
       .catch((err: unknown) => {
-        setError(err instanceof ApiError ? err.message : "Unable to load users.");
+        setError(
+          err instanceof ApiError ? err.message : "Unable to load users.",
+        );
       })
       .finally(() => setIsLoading(false));
   };
@@ -90,7 +96,8 @@ export function UsersListPage() {
     }
   }, [isSuperAdmin]);
 
-  const hasActiveFilters = search !== "" || roleFilter !== "" || departmentFilter !== "";
+  const hasActiveFilters =
+    search !== "" || roleFilter !== "" || departmentFilter !== "";
 
   const clearFilters = () => {
     setSearch("");
@@ -104,10 +111,14 @@ export function UsersListPage() {
     try {
       const res = await userService.remove(deleteTarget.id);
       toast.success(res.message);
-      setUsers((prev) => (prev ? prev.filter((u) => u.id !== deleteTarget.id) : prev));
+      setUsers((prev) =>
+        prev ? prev.filter((u) => u.id !== deleteTarget.id) : prev,
+      );
       setDeleteTarget(null);
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Unable to delete this user.");
+      toast.error(
+        err instanceof ApiError ? err.message : "Unable to delete this user.",
+      );
     } finally {
       setIsDeleting(false);
     }
@@ -131,16 +142,19 @@ export function UsersListPage() {
           value={roleFilter}
           options={USER_ROLES.map((r) => ({ value: r, label: ROLE_LABELS[r] }))}
           onChange={(e) => setRoleFilter(e.target.value)}
-          className="sm:max-w-[160px]"
+          className="sm:w-[159px]"
         />
         {isSuperAdmin && (
           <Select
             aria-label="Filter by department"
             placeholder="All departments"
             value={departmentFilter}
-            options={departments.map((d) => ({ value: d.departmentName, label: d.departmentName }))}
+            options={departments.map((d) => ({
+              value: d.departmentName,
+              label: d.departmentName,
+            }))}
             onChange={(e) => setDepartmentFilter(e.target.value)}
-            className="sm:max-w-[200px]"
+            className="sm:w-[159px]"
           />
         )}
         <Button
@@ -159,7 +173,9 @@ export function UsersListPage() {
         </div>
       )}
 
-      {!isLoading && error && <ErrorState message={error} onRetry={loadUsers} />}
+      {!isLoading && error && (
+        <ErrorState message={error} onRetry={loadUsers} />
+      )}
 
       {!isLoading && !error && users && users.length === 0 && (
         <EmptyState
@@ -179,7 +195,12 @@ export function UsersListPage() {
                   variant="danger"
                   onClick={() => setDeleteTarget(target)}
                   icon={
-                    <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="h-4 w-4">
+                    <svg
+                      aria-hidden="true"
+                      viewBox="0 0 20 20"
+                      fill="none"
+                      className="h-4 w-4"
+                    >
                       <path
                         d="M4 6h12M8 6V4.5a1 1 0 011-1h2a1 1 0 011 1V6M5.5 6l.6 9.5a1 1 0 001 .9h5.8a1 1 0 001-.9l.6-9.5"
                         stroke="currentColor"
@@ -198,7 +219,11 @@ export function UsersListPage() {
               result); collapses to nothing once the list already fills it. */}
           <div className="flex-1" />
           {pagination && (
-            <Pagination pagination={pagination} onPageChange={setPage} isLoading={isLoading} />
+            <Pagination
+              pagination={pagination}
+              onPageChange={setPage}
+              isLoading={isLoading}
+            />
           )}
         </>
       )}
