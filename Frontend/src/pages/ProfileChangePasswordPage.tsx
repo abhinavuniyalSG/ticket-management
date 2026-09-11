@@ -10,8 +10,10 @@ import { Input } from "../components/atoms/Input";
 import { Button } from "../components/atoms/Button";
 import { authService } from "../services/authService";
 import { useAuth } from "../hooks/useAuth";
+import { useTouched } from "../hooks/useTouched";
+import { useDebouncedValue } from "../hooks/useDebouncedValue";
 import { ApiError } from "../types/api";
-import { getPasswordErrors, isPasswordValid, isValidEmail } from "../utils/validation";
+import { isPasswordValid } from "../utils/validation";
 
 interface FormValues {
   email: string;
@@ -20,7 +22,7 @@ interface FormValues {
   confirmPassword: string;
 }
 
-type FormErrors = Partial<Record<keyof FormValues, string>>;
+type PasswordFieldName = "oldPassword" | "newPassword" | "confirmPassword";
 
 export function ProfileChangePasswordPage() {
   const { user, logout } = useAuth();
@@ -32,31 +34,35 @@ export function ProfileChangePasswordPage() {
     newPassword: "",
     confirmPassword: "",
   });
-  const [errors, setErrors] = useState<FormErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const { markTouched, isTouched } = useTouched<PasswordFieldName>();
+
+  // Debounced so the cross-field messages below ("must be different",
+  // "do not match") don't flash on every keystroke while the user is still
+  // typing - they appear once the user pauses for a moment, or immediately
+  // if they blur away sooner. See RegisterPage for the same pattern.
+  const debouncedNewPassword = useDebouncedValue(values.newPassword, 500);
+  const debouncedConfirmPassword = useDebouncedValue(values.confirmPassword, 500);
+  const [newPasswordBlurred, setNewPasswordBlurred] = useState(false);
+  const [confirmBlurred, setConfirmBlurred] = useState(false);
 
   const setField = (field: keyof FormValues) => (value: string) =>
     setValues((prev) => ({ ...prev, [field]: value }));
 
-  const validate = (): FormErrors => {
-    const nextErrors: FormErrors = {};
-    if (!isValidEmail(values.email)) nextErrors.email = "Enter a valid email address";
-    if (!values.oldPassword) nextErrors.oldPassword = "Current password is required";
-
-    const passwordErrors = getPasswordErrors(values.newPassword);
-    if (passwordErrors.length > 0) nextErrors.newPassword = passwordErrors.join(", ");
-    else if (values.newPassword === values.oldPassword) {
-      nextErrors.newPassword = "New password must be different from the old password";
-    }
-
-    if (values.confirmPassword !== values.newPassword) {
-      nextErrors.confirmPassword = "Passwords do not match";
-    }
-
-    return nextErrors;
+  const handleNewPasswordChange = (value: string) => {
+    setNewPasswordBlurred(false);
+    setField("newPassword")(value);
   };
+
+  const handleConfirmPasswordChange = (value: string) => {
+    setConfirmBlurred(false);
+    setField("confirmPassword")(value);
+  };
+
+  const oldPasswordError =
+    isTouched("oldPassword") && !values.oldPassword ? "Current password is required" : undefined;
 
   // Live (not submit-gated) password checks - see RegisterPage for why. All
   // three password fields are required, so an empty form should also keep
@@ -71,19 +77,23 @@ export function ProfileChangePasswordPage() {
     !sameAsOldPassword &&
     confirmTouched &&
     passwordsMatch;
-  const newPasswordError = sameAsOldPassword
-    ? "New password must be different from the old password"
-    : undefined;
+
+  const newPasswordHasSettled = debouncedNewPassword === values.newPassword;
+  const newPasswordError =
+    sameAsOldPassword && (newPasswordBlurred || newPasswordHasSettled)
+      ? "New password must be different from the old password"
+      : undefined;
+
+  const confirmHasSettled = debouncedConfirmPassword === values.confirmPassword;
   const confirmPasswordError =
-    errors.confirmPassword ?? (confirmTouched && !passwordsMatch ? "Passwords do not match" : undefined);
+    confirmTouched && !passwordsMatch && (confirmBlurred || confirmHasSettled)
+      ? "Passwords do not match"
+      : undefined;
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFormError(null);
-
-    const nextErrors = validate();
-    setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) return;
+    if (!canSubmit) return;
 
     setIsSubmitting(true);
     try {
@@ -131,9 +141,10 @@ export function ProfileChangePasswordPage() {
               autoComplete="current-password"
               placeholder="Enter your current password"
               value={values.oldPassword}
-              error={errors.oldPassword}
+              error={oldPasswordError}
               required
               onChange={setField("oldPassword")}
+              onBlur={markTouched("oldPassword")}
               disabled={isSubmitting}
               isVisible={showPassword}
             />
@@ -146,7 +157,8 @@ export function ProfileChangePasswordPage() {
               error={newPasswordError}
               showRequirements
               required
-              onChange={setField("newPassword")}
+              onChange={handleNewPasswordChange}
+              onBlur={() => setNewPasswordBlurred(true)}
               disabled={isSubmitting}
               isVisible={showPassword}
             />
@@ -158,7 +170,8 @@ export function ProfileChangePasswordPage() {
               value={values.confirmPassword}
               error={confirmPasswordError}
               required
-              onChange={setField("confirmPassword")}
+              onChange={handleConfirmPasswordChange}
+              onBlur={() => setConfirmBlurred(true)}
               disabled={isSubmitting}
               isVisible={showPassword}
             />

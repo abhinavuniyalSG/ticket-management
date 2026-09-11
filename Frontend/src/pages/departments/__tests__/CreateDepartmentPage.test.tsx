@@ -90,21 +90,44 @@ describe("CreateDepartmentPage", () => {
     expect(screen.queryByRole("option", { name: "Ray Regular" })).not.toBeInTheDocument();
   });
 
-  it("validates the form before submitting", async () => {
+  it("disables Create department until the name and email are both valid", async () => {
     const user = userEvent.setup();
     renderPage();
 
-    // Leave the email blank rather than typing an invalid value: an
-    // <input type="email"> blocks form submission via native constraint
-    // validation before our onSubmit handler ever runs, so an empty (but
-    // non-required) field is the only reliable way to exercise the app's
-    // own "invalid email" branch through a real submit.
-    await user.type(screen.getByLabelText(/Department name/), "S");
-    await user.click(screen.getByRole("button", { name: "Create department" }));
+    const button = screen.getByRole("button", { name: "Create department" });
+    expect(button).toBeDisabled();
 
-    expect(await screen.findByText("Must be at least 2 characters")).toBeInTheDocument();
-    expect(screen.getByText("Enter a valid email address")).toBeInTheDocument();
+    await user.type(screen.getByLabelText(/Department name/), "S");
+    expect(button).toBeDisabled();
+
+    await user.type(screen.getByLabelText(/Department email/), "sales@example.com");
+    expect(button).toBeDisabled();
+
+    await user.type(screen.getByLabelText(/Department name/), "ales");
+    expect(button).toBeEnabled();
+
     expect(departmentService.create).not.toHaveBeenCalled();
+  });
+
+  it("validates the name and email on blur, not before, and clears live once fixed", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    const name = screen.getByLabelText(/Department name/);
+    const email = screen.getByLabelText(/Department email/);
+
+    await user.type(name, "S");
+    expect(screen.queryByText("Must be at least 2 characters")).not.toBeInTheDocument();
+    await user.click(email); // blurs Department name while too short
+    expect(await screen.findByText("Must be at least 2 characters")).toBeInTheDocument();
+
+    await user.click(name); // blurs Department email while still empty
+    expect(await screen.findByText("Enter a valid email address")).toBeInTheDocument();
+
+    await user.type(name, "ales");
+    expect(screen.queryByText("Must be at least 2 characters")).not.toBeInTheDocument();
+    await user.type(email, "sales@example.com");
+    expect(screen.queryByText("Enter a valid email address")).not.toBeInTheDocument();
   });
 
   it("creates a department and navigates to its details page", async () => {

@@ -41,10 +41,13 @@ describe("ResetPasswordPage", () => {
 
     await user.type(screen.getByLabelText(/^New password/), "weak");
     await user.type(screen.getByLabelText(/^Confirm password/), "different");
-    await user.click(screen.getByRole("button", { name: "Reset password" }));
 
     expect(screen.getByText(/At least 8 characters long/)).toBeInTheDocument();
-    expect(screen.getByText("Passwords do not match")).toBeInTheDocument();
+    // The submit button stays disabled while invalid, so it can't be clicked
+    // to trigger a submit attempt; the mismatch message instead appears on
+    // its own after the debounce/blur delay described in ResetPasswordPage.
+    expect(screen.getByRole("button", { name: "Reset password" })).toBeDisabled();
+    expect(await screen.findByText("Passwords do not match")).toBeInTheDocument();
     expect(authService.resetPassword).not.toHaveBeenCalled();
   });
 

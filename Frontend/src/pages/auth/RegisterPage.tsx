@@ -8,8 +8,10 @@ import { PasswordField } from "../../components/molecules/PasswordField";
 import { Input } from "../../components/atoms/Input";
 import { Button } from "../../components/atoms/Button";
 import { useAuth } from "../../hooks/useAuth";
+import { useTouched } from "../../hooks/useTouched";
+import { useDebouncedValue } from "../../hooks/useDebouncedValue";
 import { ApiError } from "../../types/api";
-import { getPasswordErrors, isPasswordValid, isValidEmail } from "../../utils/validation";
+import { isPasswordValid, isValidEmail } from "../../utils/validation";
 import { getDefaultRouteForRole } from "../../constants/navigation";
 
 interface FormValues {
@@ -20,8 +22,6 @@ interface FormValues {
   confirmPassword: string;
 }
 
-type FormErrors = Partial<Record<keyof FormValues, string>>;
-
 const INITIAL_VALUES: FormValues = {
   firstName: "",
   lastName: "",
@@ -30,15 +30,38 @@ const INITIAL_VALUES: FormValues = {
   confirmPassword: "",
 };
 
+function firstNameError(value: string): string | undefined {
+  if (!value.trim()) return "First name is required";
+  if (value.length > 50) return "Must not exceed 50 characters";
+  return undefined;
+}
+
+function lastNameError(value: string): string | undefined {
+  if (value.length > 50) return "Must not exceed 50 characters";
+  return undefined;
+}
+
+function emailFieldError(value: string): string | undefined {
+  if (!value.trim()) return "Email is required";
+  if (!isValidEmail(value)) return "Enter a valid email address";
+  return undefined;
+}
+
 export function RegisterPage() {
   const { user, status, register } = useAuth();
   const navigate = useNavigate();
 
   const [values, setValues] = useState<FormValues>(INITIAL_VALUES);
-  const [errors, setErrors] = useState<FormErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const { markTouched, isTouched } = useTouched<keyof FormValues>();
+
+  // Debounced so "Passwords do not match" doesn't flash on every keystroke
+  // while the user is still typing the confirmation - it only appears once
+  // they've paused for a moment, or immediately if they blur away sooner.
+  const debouncedConfirmPassword = useDebouncedValue(values.confirmPassword, 500);
+  const [confirmBlurred, setConfirmBlurred] = useState(false);
 
   if (status === "authenticated" && user) {
     return (
@@ -49,24 +72,9 @@ export function RegisterPage() {
   const setField = (field: keyof FormValues) => (value: string) =>
     setValues((prev) => ({ ...prev, [field]: value }));
 
-  const validate = (): FormErrors => {
-    const nextErrors: FormErrors = {};
-    if (!values.firstName.trim()) nextErrors.firstName = "First name is required";
-    else if (values.firstName.length > 50) nextErrors.firstName = "Must not exceed 50 characters";
-
-    if (values.lastName.length > 50) nextErrors.lastName = "Must not exceed 50 characters";
-
-    if (!values.email.trim()) nextErrors.email = "Email is required";
-    else if (!isValidEmail(values.email)) nextErrors.email = "Enter a valid email address";
-
-    const passwordErrors = getPasswordErrors(values.password);
-    if (passwordErrors.length > 0) nextErrors.password = passwordErrors.join(", ");
-
-    if (values.confirmPassword !== values.password) {
-      nextErrors.confirmPassword = "Passwords do not match";
-    }
-
-    return nextErrors;
+  const handleConfirmPasswordChange = (value: string) => {
+    setConfirmBlurred(false);
+    setField("confirmPassword")(value);
   };
 
   // Live (not submit-gated) checks, used to disable "Create account" until
@@ -76,9 +84,9 @@ export function RegisterPage() {
   const passwordTouched = values.password.length > 0;
   const confirmTouched = values.confirmPassword.length > 0;
   const passwordsMatch = values.password === values.confirmPassword;
-  const isFirstNameValid = values.firstName.trim().length > 0 && values.firstName.length <= 50;
-  const isLastNameValid = values.lastName.length <= 50;
-  const isEmailValid = values.email.trim().length > 0 && isValidEmail(values.email);
+  const isFirstNameValid = firstNameError(values.firstName) === undefined;
+  const isLastNameValid = lastNameError(values.lastName) === undefined;
+  const isEmailValid = emailFieldError(values.email) === undefined;
   const canSubmit =
     isFirstNameValid &&
     isLastNameValid &&
@@ -87,19 +95,23 @@ export function RegisterPage() {
     isPasswordValid(values.password) &&
     confirmTouched &&
     passwordsMatch;
-  const confirmPasswordError =
-    errors.confirmPassword ?? (confirmTouched && !passwordsMatch ? "Passwords do not match" : undefined);
   const disabledReason = canSubmit
     ? undefined
     : "Fill in your first name, a valid email, and a matching password that meets all the requirements above.";
 
+  // The debounced value has "caught up" to the live one once the user has
+  // paused typing for the debounce delay - that, or an explicit blur, is
+  // what reveals the mismatch message.
+  const confirmHasSettled = debouncedConfirmPassword === values.confirmPassword;
+  const confirmPasswordError =
+    confirmTouched && !passwordsMatch && (confirmBlurred || confirmHasSettled)
+      ? "Passwords do not match"
+      : undefined;
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFormError(null);
-
-    const nextErrors = validate();
-    setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) return;
+    if (!canSubmit) return;
 
     setIsSubmitting(true);
     try {
@@ -130,38 +142,55 @@ export function RegisterPage() {
           </p>
         )}
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <FormField label="First name" htmlFor="register-first-name" error={errors.firstName} required>
+          <FormField
+            label="First name"
+            htmlFor="register-first-name"
+            error={isTouched("firstName") ? firstNameError(values.firstName) : undefined}
+            required
+          >
             <Input
               id="register-first-name"
               value={values.firstName}
               maxLength={50}
               placeholder="e.g. Jane"
-              invalid={Boolean(errors.firstName)}
+              invalid={isTouched("firstName") && Boolean(firstNameError(values.firstName))}
               onChange={(e) => setField("firstName")(e.target.value)}
+              onBlur={markTouched("firstName")}
               disabled={isSubmitting}
             />
           </FormField>
-          <FormField label="Last name" htmlFor="register-last-name" error={errors.lastName}>
+          <FormField
+            label="Last name"
+            htmlFor="register-last-name"
+            error={isTouched("lastName") ? lastNameError(values.lastName) : undefined}
+          >
             <Input
               id="register-last-name"
               value={values.lastName}
               maxLength={50}
               placeholder="e.g. Doe"
-              invalid={Boolean(errors.lastName)}
+              invalid={isTouched("lastName") && Boolean(lastNameError(values.lastName))}
               onChange={(e) => setField("lastName")(e.target.value)}
+              onBlur={markTouched("lastName")}
               disabled={isSubmitting}
             />
           </FormField>
         </div>
-        <FormField label="Email" htmlFor="register-email" error={errors.email} required>
+        <FormField
+          label="Email"
+          htmlFor="register-email"
+          error={isTouched("email") ? emailFieldError(values.email) : undefined}
+          required
+        >
           <Input
             id="register-email"
             type="email"
             autoComplete="email"
             placeholder="you@example.com"
             value={values.email}
-            invalid={Boolean(errors.email)}
+            invalid={isTouched("email") && Boolean(emailFieldError(values.email))}
             onChange={(e) => setField("email")(e.target.value)}
+            onBlur={markTouched("email")}
             disabled={isSubmitting}
           />
         </FormField>
@@ -185,7 +214,8 @@ export function RegisterPage() {
           value={values.confirmPassword}
           error={confirmPasswordError}
           required
-          onChange={setField("confirmPassword")}
+          onChange={handleConfirmPasswordChange}
+          onBlur={() => setConfirmBlurred(true)}
           disabled={isSubmitting}
           isVisible={showPassword}
         />

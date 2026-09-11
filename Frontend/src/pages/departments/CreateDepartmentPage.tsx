@@ -10,10 +10,21 @@ import { Select } from "../../components/atoms/Select";
 import { Button } from "../../components/atoms/Button";
 import { departmentService } from "../../services/departmentService";
 import { userService } from "../../services/userService";
+import { useTouched } from "../../hooks/useTouched";
 import { ApiError } from "../../types/api";
 import type { User } from "../../types/user";
 import { fullName } from "../../utils/format";
 import { isValidEmail } from "../../utils/validation";
+
+type FieldName = "name" | "email";
+
+function nameError(value: string): string | undefined {
+  return value.trim().length < 2 ? "Must be at least 2 characters" : undefined;
+}
+
+function emailError(value: string): string | undefined {
+  return !isValidEmail(value) ? "Enter a valid email address" : undefined;
+}
 
 export function CreateDepartmentPage() {
   const navigate = useNavigate();
@@ -22,8 +33,10 @@ export function CreateDepartmentPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [managedBy, setManagedBy] = useState("");
-  const [errors, setErrors] = useState<{ name?: string; email?: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { markTouched, isTouched } = useTouched<FieldName>();
+
+  const canSubmit = nameError(name) === undefined && emailError(email) === undefined;
 
   useEffect(() => {
     userService
@@ -40,12 +53,7 @@ export function CreateDepartmentPage() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const nextErrors: typeof errors = {};
-    if (name.trim().length < 2)
-      nextErrors.name = "Must be at least 2 characters";
-    if (!isValidEmail(email)) nextErrors.email = "Enter a valid email address";
-    setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) return;
+    if (!canSubmit) return;
 
     setIsSubmitting(true);
     try {
@@ -85,7 +93,7 @@ export function CreateDepartmentPage() {
             <FormField
               label="Department name"
               htmlFor="dept-name"
-              error={errors.name}
+              error={isTouched("name") ? nameError(name) : undefined}
               required
             >
               <Input
@@ -93,15 +101,16 @@ export function CreateDepartmentPage() {
                 value={name}
                 maxLength={100}
                 placeholder="e.g. Customer Support"
-                invalid={Boolean(errors.name)}
+                invalid={isTouched("name") && Boolean(nameError(name))}
                 onChange={(e) => setName(e.target.value)}
+                onBlur={markTouched("name")}
                 disabled={isSubmitting}
               />
             </FormField>
             <FormField
               label="Department email"
               htmlFor="dept-email"
-              error={errors.email}
+              error={isTouched("email") ? emailError(email) : undefined}
               required
             >
               <Input
@@ -109,8 +118,9 @@ export function CreateDepartmentPage() {
                 type="email"
                 placeholder="support@example.com"
                 value={email}
-                invalid={Boolean(errors.email)}
+                invalid={isTouched("email") && Boolean(emailError(email))}
                 onChange={(e) => setEmail(e.target.value)}
+                onBlur={markTouched("email")}
                 disabled={isSubmitting}
               />
             </FormField>
@@ -133,7 +143,12 @@ export function CreateDepartmentPage() {
             />
           </FormField>
           <div className="flex justify-end gap-2 pt-2">
-            <Button type="submit" isLoading={isSubmitting}>
+            <Button
+              type="submit"
+              isLoading={isSubmitting}
+              disabled={!canSubmit}
+              title={canSubmit ? undefined : "Enter a department name and a valid email address."}
+            >
               Create department
             </Button>
           </div>

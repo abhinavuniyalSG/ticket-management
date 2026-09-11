@@ -13,11 +13,22 @@ import { ErrorState } from "../../components/molecules/ErrorState";
 import { ConfirmDialog } from "../../components/molecules/ConfirmDialog";
 import { departmentService } from "../../services/departmentService";
 import { userService } from "../../services/userService";
+import { useTouched } from "../../hooks/useTouched";
 import { ApiError } from "../../types/api";
 import type { Department } from "../../types/department";
 import type { User } from "../../types/user";
 import { fullName } from "../../utils/format";
 import { isValidEmail } from "../../utils/validation";
+
+type FieldName = "name" | "email";
+
+function nameError(value: string): string | undefined {
+  return value.trim().length < 2 ? "Must be at least 2 characters" : undefined;
+}
+
+function emailError(value: string): string | undefined {
+  return !isValidEmail(value) ? "Enter a valid email address" : undefined;
+}
 
 export function DepartmentDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -31,13 +42,12 @@ export function DepartmentDetailsPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [managedBy, setManagedBy] = useState("");
-  const [formErrors, setFormErrors] = useState<{
-    name?: string;
-    email?: string;
-  }>({});
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const { markTouched, isTouched } = useTouched<FieldName>();
+
+  const canSave = nameError(name) === undefined && emailError(email) === undefined;
 
   useEffect(() => {
     if (!id) return;
@@ -87,12 +97,7 @@ export function DepartmentDetailsPage() {
 
   const handleSave = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const nextErrors: typeof formErrors = {};
-    if (name.trim().length < 2)
-      nextErrors.name = "Must be at least 2 characters";
-    if (!isValidEmail(email)) nextErrors.email = "Enter a valid email address";
-    setFormErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) return;
+    if (!canSave) return;
 
     setIsSaving(true);
     try {
@@ -153,7 +158,7 @@ export function DepartmentDetailsPage() {
           <FormField
             label="Department name"
             htmlFor="dept-detail-name"
-            error={formErrors.name}
+            error={isTouched("name") ? nameError(name) : undefined}
             required
           >
             <Input
@@ -161,15 +166,16 @@ export function DepartmentDetailsPage() {
               value={name}
               maxLength={100}
               placeholder="e.g. Customer Support"
-              invalid={Boolean(formErrors.name)}
+              invalid={isTouched("name") && Boolean(nameError(name))}
               onChange={(e) => setName(e.target.value)}
+              onBlur={markTouched("name")}
               disabled={isSaving}
             />
           </FormField>
           <FormField
             label="Department email"
             htmlFor="dept-detail-email"
-            error={formErrors.email}
+            error={isTouched("email") ? emailError(email) : undefined}
             required
           >
             <Input
@@ -177,8 +183,9 @@ export function DepartmentDetailsPage() {
               type="email"
               placeholder="support@example.com"
               value={email}
-              invalid={Boolean(formErrors.email)}
+              invalid={isTouched("email") && Boolean(emailError(email))}
               onChange={(e) => setEmail(e.target.value)}
+              onBlur={markTouched("email")}
               disabled={isSaving}
             />
           </FormField>
@@ -200,7 +207,12 @@ export function DepartmentDetailsPage() {
             />
           </FormField>
           <div className="flex justify-end">
-            <Button type="submit" isLoading={isSaving}>
+            <Button
+              type="submit"
+              isLoading={isSaving}
+              disabled={!canSave}
+              title={canSave ? undefined : "Enter a department name and a valid email address."}
+            >
               Save changes
             </Button>
           </div>

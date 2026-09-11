@@ -5,13 +5,40 @@ test.beforeEach(async ({ page }) => {
   await mockLoggedOut(page);
 });
 
-test("shows validation errors when the form is submitted empty", async ({ page }) => {
+test("disables Sign in until both email and password are filled in", async ({ page }) => {
   await page.goto("/login");
 
-  await page.getByRole("button", { name: "Sign in" }).click();
+  const button = page.getByRole("button", { name: "Sign in" });
+  await expect(button).toBeDisabled();
 
+  await page.getByLabel("Email").fill("ada@example.com");
+  await expect(button).toBeDisabled();
+
+  await page.getByRole("textbox", { name: "Password", exact: true }).fill("Str0ng!Pass");
+  await expect(button).toBeEnabled();
+
+  await page.getByRole("textbox", { name: "Password", exact: true }).fill("");
+  await expect(button).toBeDisabled();
+});
+
+test("validates email and password on blur, not before, and clears live once fixed", async ({
+  page,
+}) => {
+  await page.goto("/login");
+  const email = page.getByLabel("Email");
+  const password = page.getByRole("textbox", { name: "Password", exact: true });
+
+  await email.click();
+  await password.click(); // blurs Email while still empty
   await expect(page.getByText("Email is required")).toBeVisible();
+
+  await email.click(); // blurs Password while still empty
   await expect(page.getByText("Password is required")).toBeVisible();
+
+  await email.fill("ada@example.com");
+  await expect(page.getByText("Email is required")).not.toBeVisible();
+  await password.fill("Str0ng!Pass");
+  await expect(page.getByText("Password is required")).not.toBeVisible();
 });
 
 test("shows an error message when the backend rejects the credentials", async ({ page }) => {

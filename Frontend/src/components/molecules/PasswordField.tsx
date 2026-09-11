@@ -9,6 +9,7 @@ interface PasswordFieldProps {
   id: string;
   value: string;
   onChange: (value: string) => void;
+  onBlur?: () => void;
   error?: string;
   hint?: string;
   placeholder?: string;
@@ -28,6 +29,7 @@ export function PasswordField({
   id,
   value,
   onChange,
+  onBlur,
   error,
   hint,
   placeholder,
@@ -59,6 +61,7 @@ export function PasswordField({
           placeholder={placeholder}
           invalid={Boolean(error)}
           onChange={(e) => onChange(e.target.value)}
+          onBlur={onBlur}
           disabled={disabled}
         />
         {showRequirements && value.length > 0 && !isPasswordValid(value) && (

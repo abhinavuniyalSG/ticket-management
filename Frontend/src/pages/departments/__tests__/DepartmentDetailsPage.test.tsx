@@ -144,24 +144,47 @@ describe("DepartmentDetailsPage", () => {
     expect(screen.queryByRole("option", { name: "Ray Regular" })).not.toBeInTheDocument();
   });
 
-  it("validates the form before saving", async () => {
+  it("disables Save changes once the name or email becomes invalid", async () => {
     mockedDepartmentService.getById.mockResolvedValue({ message: "ok", department: makeDepartment() });
     const user = userEvent.setup();
     renderPage();
 
     const nameInput = await screen.findByLabelText(/Department name/);
+    const button = screen.getByRole("button", { name: "Save changes" });
+    expect(button).toBeEnabled(); // starts valid, loaded from the department
+
     await user.clear(nameInput);
     await user.type(nameInput, "S");
-    // Clear the email too: an <input type="email"> blocks native form
-    // submission on a malformed value before onSubmit ever runs, so an
-    // empty (non-required) field is the reliable way to hit the app's own
-    // "invalid email" branch via a real submit.
-    await user.clear(screen.getByLabelText(/Department email/));
-    await user.click(screen.getByRole("button", { name: "Save changes" }));
+    expect(button).toBeDisabled();
 
-    expect(await screen.findByText("Must be at least 2 characters")).toBeInTheDocument();
-    expect(screen.getByText("Enter a valid email address")).toBeInTheDocument();
+    await user.clear(screen.getByLabelText(/Department email/));
+    expect(button).toBeDisabled();
+
     expect(mockedDepartmentService.update).not.toHaveBeenCalled();
+  });
+
+  it("validates the name and email on blur, not before, and clears live once fixed", async () => {
+    mockedDepartmentService.getById.mockResolvedValue({ message: "ok", department: makeDepartment() });
+    const user = userEvent.setup();
+    renderPage();
+
+    const nameInput = await screen.findByLabelText(/Department name/);
+    const emailInput = screen.getByLabelText(/Department email/);
+
+    await user.clear(nameInput);
+    await user.type(nameInput, "S");
+    expect(screen.queryByText("Must be at least 2 characters")).not.toBeInTheDocument();
+    await user.click(emailInput); // blurs Department name while too short
+    expect(await screen.findByText("Must be at least 2 characters")).toBeInTheDocument();
+
+    await user.clear(emailInput);
+    await user.click(nameInput); // blurs Department email while now empty
+    expect(await screen.findByText("Enter a valid email address")).toBeInTheDocument();
+
+    await user.type(nameInput, "ales");
+    expect(screen.queryByText("Must be at least 2 characters")).not.toBeInTheDocument();
+    await user.type(emailInput, "support@example.com");
+    expect(screen.queryByText("Enter a valid email address")).not.toBeInTheDocument();
   });
 
   it("saves changes and reflects the updated department", async () => {

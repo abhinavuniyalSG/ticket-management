@@ -5,15 +5,11 @@ import { AuthLayout } from "../../components/templates/AuthLayout";
 import { PasswordField } from "../../components/molecules/PasswordField";
 import { Button } from "../../components/atoms/Button";
 import { authService } from "../../services/authService";
+import { useDebouncedValue } from "../../hooks/useDebouncedValue";
 import { ApiError } from "../../types/api";
-import { getPasswordErrors, isPasswordValid } from "../../utils/validation";
+import { isPasswordValid } from "../../utils/validation";
 
 type PageState = "form" | "success" | "error";
-
-interface FormErrors {
-  newPassword?: string;
-  confirmPassword?: string;
-}
 
 export function ResetPasswordPage() {
   const { token } = useParams<{ token: string }>();
@@ -22,7 +18,6 @@ export function ResetPasswordPage() {
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [state, setState] = useState<PageState>(!token || !email ? "error" : "form");
@@ -30,16 +25,15 @@ export function ResetPasswordPage() {
     !token || !email ? "This password reset link is invalid." : "",
   );
 
-  const validate = (): FormErrors => {
-    const nextErrors: FormErrors = {};
-    const passwordErrors = getPasswordErrors(newPassword);
-    if (passwordErrors.length > 0) nextErrors.newPassword = passwordErrors.join(", ");
+  // Debounced so "Passwords do not match" doesn't flash on every keystroke
+  // while the user is still typing the confirmation - it only appears once
+  // they've paused for a moment, or immediately if they blur away sooner.
+  const debouncedConfirmPassword = useDebouncedValue(confirmPassword, 500);
+  const [confirmBlurred, setConfirmBlurred] = useState(false);
 
-    if (confirmPassword !== newPassword) {
-      nextErrors.confirmPassword = "Passwords do not match";
-    }
-
-    return nextErrors;
+  const handleConfirmPasswordChange = (value: string) => {
+    setConfirmBlurred(false);
+    setConfirmPassword(value);
   };
 
   // Live (not submit-gated) password checks - see RegisterPage for why.
@@ -48,16 +42,15 @@ export function ResetPasswordPage() {
   const confirmTouched = confirmPassword.length > 0;
   const passwordsMatch = newPassword === confirmPassword;
   const canSubmit = isPasswordValid(newPassword) && confirmTouched && passwordsMatch;
+  const confirmHasSettled = debouncedConfirmPassword === confirmPassword;
   const confirmPasswordError =
-    errors.confirmPassword ?? (confirmTouched && !passwordsMatch ? "Passwords do not match" : undefined);
+    confirmTouched && !passwordsMatch && (confirmBlurred || confirmHasSettled)
+      ? "Passwords do not match"
+      : undefined;
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!token || !email) return;
-
-    const nextErrors = validate();
-    setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) return;
+    if (!token || !email || !canSubmit) return;
 
     setIsSubmitting(true);
     try {
@@ -97,7 +90,8 @@ export function ResetPasswordPage() {
             value={confirmPassword}
             error={confirmPasswordError}
             required
-            onChange={setConfirmPassword}
+            onChange={handleConfirmPasswordChange}
+            onBlur={() => setConfirmBlurred(true)}
             disabled={isSubmitting}
             isVisible={showPassword}
           />

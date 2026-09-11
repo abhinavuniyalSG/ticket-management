@@ -8,12 +8,15 @@ import { PasswordField } from "../../components/molecules/PasswordField";
 import { Input } from "../../components/atoms/Input";
 import { Button } from "../../components/atoms/Button";
 import { useAuth } from "../../hooks/useAuth";
+import { useTouched } from "../../hooks/useTouched";
 import { ApiError } from "../../types/api";
 import { getDefaultRouteForRole } from "../../constants/navigation";
 
 interface LocationState {
   from?: { pathname: string };
 }
+
+type FieldName = "email" | "password";
 
 export function LoginPage() {
   const { user, status, login } = useAuth();
@@ -22,9 +25,9 @@ export function LoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { markTouched, isTouched } = useTouched<FieldName>();
 
   if (status === "authenticated" && user) {
     return (
@@ -32,15 +35,18 @@ export function LoginPage() {
     );
   }
 
+  // Disabled until both fields have something in them - matches Create
+  // account's "don't let the user find out what's missing only after they
+  // click submit" behavior.
+  const canSubmit = email.trim().length > 0 && password.length > 0;
+
+  const emailError = isTouched("email") && !email.trim() ? "Email is required" : undefined;
+  const passwordError = isTouched("password") && !password ? "Password is required" : undefined;
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFormError(null);
-
-    const nextErrors: typeof errors = {};
-    if (!email.trim()) nextErrors.email = "Email is required";
-    if (!password) nextErrors.password = "Password is required";
-    setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) return;
+    if (!canSubmit) return;
 
     setIsSubmitting(true);
     try {
@@ -70,15 +76,16 @@ export function LoginPage() {
             {formError}
           </p>
         )}
-        <FormField label="Email" htmlFor="login-email" error={errors.email} required>
+        <FormField label="Email" htmlFor="login-email" error={emailError} required>
           <Input
             id="login-email"
             type="email"
             autoComplete="email"
             placeholder="you@example.com"
             value={email}
-            invalid={Boolean(errors.email)}
+            invalid={Boolean(emailError)}
             onChange={(e) => setEmail(e.target.value)}
+            onBlur={markTouched("email")}
             disabled={isSubmitting}
           />
         </FormField>
@@ -88,12 +95,19 @@ export function LoginPage() {
           autoComplete="current-password"
           placeholder="Enter your password"
           value={password}
-          error={errors.password}
+          error={passwordError}
           required
           onChange={setPassword}
+          onBlur={markTouched("password")}
           disabled={isSubmitting}
         />
-        <Button type="submit" isLoading={isSubmitting} className="w-full">
+        <Button
+          type="submit"
+          isLoading={isSubmitting}
+          disabled={!canSubmit}
+          title={canSubmit ? undefined : "Enter your email and password."}
+          className="w-full"
+        >
           Sign in
         </Button>
       </form>

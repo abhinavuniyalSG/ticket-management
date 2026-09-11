@@ -25,15 +25,37 @@ function renderPage() {
 }
 
 describe("ResendVerificationPage", () => {
-  it("shows a validation error for an invalid email", async () => {
+  it("disables Send verification email until a valid email is entered", async () => {
     const user = userEvent.setup();
     renderPage();
 
-    await user.type(screen.getByLabelText(/^Email/), "not-an-email");
-    await user.click(screen.getByRole("button", { name: "Send verification email" }));
+    const button = screen.getByRole("button", { name: "Send verification email" });
+    expect(button).toBeDisabled();
 
-    expect(await screen.findByText("Enter a valid email address")).toBeInTheDocument();
+    await user.type(screen.getByLabelText(/^Email/), "not-an-email");
+    expect(button).toBeDisabled();
+
+    await user.clear(screen.getByLabelText(/^Email/));
+    await user.type(screen.getByLabelText(/^Email/), "jane@example.com");
+    expect(button).toBeEnabled();
+
     expect(authService.resendVerification).not.toHaveBeenCalled();
+  });
+
+  it("validates the email on blur, not before, and clears the error live once fixed", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    const email = screen.getByLabelText(/^Email/);
+    await user.type(email, "not-an-email");
+    expect(screen.queryByText("Enter a valid email address")).not.toBeInTheDocument();
+
+    await user.tab();
+    expect(await screen.findByText("Enter a valid email address")).toBeInTheDocument();
+
+    await user.clear(email);
+    await user.type(email, "jane@example.com");
+    expect(screen.queryByText("Enter a valid email address")).not.toBeInTheDocument();
   });
 
   it("submits the trimmed, lowercased email and shows a confirmation message", async () => {

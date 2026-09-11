@@ -15,6 +15,7 @@ import { ConfirmDialog } from "../../components/molecules/ConfirmDialog";
 import { userService } from "../../services/userService";
 import { departmentService } from "../../services/departmentService";
 import { useAuth } from "../../hooks/useAuth";
+import { useTouched } from "../../hooks/useTouched";
 import { ApiError } from "../../types/api";
 import type { User, UserRole } from "../../types/user";
 import type { Department } from "../../types/department";
@@ -43,6 +44,7 @@ export function UserDetailsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const { markTouched, isTouched } = useTouched<"firstName">();
 
   useEffect(() => {
     if (!id) return;
@@ -90,9 +92,16 @@ export function UserDetailsPage() {
   const canEditRole = canEditUserRole(actor);
   const canDelete = canDeleteUser(actor, target);
   const canEditAnything = canEditName || canEditDept || canEditRole;
+  // Only block on name validity when the name is actually editable (and
+  // therefore part of what gets submitted) - see handleSave below.
+  const canSave = !canEditName || firstName.trim().length > 0;
+  const firstNameError =
+    canEditName && isTouched("firstName") && !firstName.trim() ? "First name is required" : undefined;
 
   const handleSave = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!canSave) return;
+
     setIsSaving(true);
     try {
       const res = await userService.update(target.id, {
@@ -169,14 +178,16 @@ export function UserDetailsPage() {
             className="flex flex-col gap-4"
           >
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <FormField label="First name" htmlFor="user-first-name">
+              <FormField label="First name" htmlFor="user-first-name" error={firstNameError}>
                 <Input
                   id="user-first-name"
                   value={firstName}
                   maxLength={50}
                   placeholder="e.g. Jane"
+                  invalid={Boolean(firstNameError)}
                   disabled={!canEditName || isSaving}
                   onChange={(e) => setFirstName(e.target.value)}
+                  onBlur={markTouched("firstName")}
                 />
               </FormField>
               <FormField label="Last name" htmlFor="user-last-name">
@@ -217,7 +228,12 @@ export function UserDetailsPage() {
             </FormField>
             {canEditAnything && (
               <div className="flex justify-end">
-                <Button type="submit" isLoading={isSaving}>
+                <Button
+                  type="submit"
+                  isLoading={isSaving}
+                  disabled={!canSave}
+                  title={canSave ? undefined : "Enter a first name."}
+                >
                   Save changes
                 </Button>
               </div>

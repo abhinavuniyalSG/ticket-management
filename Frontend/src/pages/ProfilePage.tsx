@@ -12,6 +12,7 @@ import { ErrorState } from "../components/molecules/ErrorState";
 import { ConfirmDialog } from "../components/molecules/ConfirmDialog";
 import { userService } from "../services/userService";
 import { useAuth } from "../hooks/useAuth";
+import { useTouched } from "../hooks/useTouched";
 import { ApiError } from "../types/api";
 import type { User } from "../types/user";
 import { ROLE_LABELS } from "../constants/options";
@@ -26,8 +27,11 @@ export function ProfilePage() {
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [nameErrors, setNameErrors] = useState<{ firstName?: string; lastName?: string }>({});
   const [isSavingName, setIsSavingName] = useState(false);
+  const { markTouched, isTouched } = useTouched<"firstName">();
+
+  const canSaveName = firstName.trim().length > 0;
+  const firstNameError = isTouched("firstName") && !canSaveName ? "First name is required" : undefined;
 
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -71,10 +75,7 @@ export function ProfilePage() {
 
   const handleSaveName = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const nextErrors: typeof nameErrors = {};
-    if (!firstName.trim()) nextErrors.firstName = "First name is required";
-    setNameErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) return;
+    if (!canSaveName) return;
 
     setIsSavingName(true);
     try {
@@ -115,24 +116,24 @@ export function ProfilePage() {
           <h2 className="mb-4 text-sm font-semibold text-slate-900">Personal information</h2>
           <form onSubmit={(e) => void handleSaveName(e)} className="flex flex-col gap-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <FormField label="First name" htmlFor="profile-first-name" error={nameErrors.firstName} required>
+              <FormField label="First name" htmlFor="profile-first-name" error={firstNameError} required>
                 <Input
                   id="profile-first-name"
                   value={firstName}
                   maxLength={50}
                   placeholder="e.g. Jane"
-                  invalid={Boolean(nameErrors.firstName)}
+                  invalid={Boolean(firstNameError)}
                   onChange={(e) => setFirstName(e.target.value)}
+                  onBlur={markTouched("firstName")}
                   disabled={isSavingName}
                 />
               </FormField>
-              <FormField label="Last name" htmlFor="profile-last-name" error={nameErrors.lastName}>
+              <FormField label="Last name" htmlFor="profile-last-name">
                 <Input
                   id="profile-last-name"
                   value={lastName}
                   maxLength={50}
                   placeholder="e.g. Doe"
-                  invalid={Boolean(nameErrors.lastName)}
                   onChange={(e) => setLastName(e.target.value)}
                   disabled={isSavingName}
                 />
@@ -155,7 +156,12 @@ export function ProfilePage() {
               />
             </FormField>
             <div className="flex justify-end">
-              <Button type="submit" isLoading={isSavingName}>
+              <Button
+                type="submit"
+                isLoading={isSavingName}
+                disabled={!canSaveName}
+                title={canSaveName ? undefined : "Enter your first name."}
+              >
                 Save changes
               </Button>
             </div>

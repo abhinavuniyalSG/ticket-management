@@ -7,6 +7,7 @@ import { FormField } from "../../components/molecules/FormField";
 import { Input } from "../../components/atoms/Input";
 import { Button } from "../../components/atoms/Button";
 import { authService } from "../../services/authService";
+import { useTouched } from "../../hooks/useTouched";
 import { ApiError } from "../../types/api";
 import { isValidEmail } from "../../utils/validation";
 
@@ -20,10 +21,11 @@ function formatCountdown(totalSeconds: number): string {
 
 export function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [serverError, setServerError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(0);
+  const { markTouched, isTouched } = useTouched<"email">();
 
   useEffect(() => {
     if (secondsLeft <= 0) return;
@@ -42,7 +44,7 @@ export function ForgotPasswordPage() {
       setSecondsLeft(RESEND_COOLDOWN_SECONDS);
     } catch (err) {
       const message = err instanceof ApiError ? err.message : "Unable to send the reset email.";
-      setError(message);
+      setServerError(message);
       toast.error(message);
     } finally {
       setIsSubmitting(false);
@@ -51,12 +53,8 @@ export function ForgotPasswordPage() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setError(null);
-
-    if (!isValidEmail(email)) {
-      setError("Enter a valid email address");
-      return;
-    }
+    setServerError(null);
+    if (!canSubmit) return;
 
     await sendResetEmail();
   };
@@ -69,6 +67,15 @@ export function ForgotPasswordPage() {
   // Disabled until there's a valid email to send to, rather than only
   // finding out it's missing/invalid after clicking submit.
   const canSubmit = isValidEmail(email);
+  // Shown once the user leaves the field, not before - see RegisterPage.
+  const emailError = isTouched("email")
+    ? !email.trim()
+      ? "Email is required"
+      : !isValidEmail(email)
+        ? "Enter a valid email address"
+        : undefined
+    : undefined;
+  const displayedError = emailError ?? serverError ?? undefined;
 
   return (
     <AuthLayout
@@ -95,15 +102,16 @@ export function ForgotPasswordPage() {
         </div>
       ) : (
         <form onSubmit={(e) => void handleSubmit(e)} noValidate className="flex flex-col gap-5">
-          <FormField label="Email" htmlFor="forgot-password-email" error={error ?? undefined} required>
+          <FormField label="Email" htmlFor="forgot-password-email" error={displayedError} required>
             <Input
               id="forgot-password-email"
               type="email"
               autoComplete="email"
               placeholder="you@example.com"
               value={email}
-              invalid={Boolean(error)}
+              invalid={Boolean(displayedError)}
               onChange={(e) => setEmail(e.target.value)}
+              onBlur={markTouched("email")}
               disabled={isSubmitting}
             />
           </FormField>

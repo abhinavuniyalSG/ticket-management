@@ -126,9 +126,12 @@ describe("ProfilePage", () => {
 
     const firstName = await screen.findByLabelText(/^First name/);
     await user.clear(firstName);
-    await user.click(screen.getByRole("button", { name: "Save changes" }));
+    // The error is shown on blur (see ProfilePage), and the Save button
+    // stays disabled while empty, so it can't be clicked to submit.
+    await user.click(await screen.findByLabelText(/^Last name/));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("First name is required");
+    expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled();
     expect(userService.update).not.toHaveBeenCalled();
   });
 
