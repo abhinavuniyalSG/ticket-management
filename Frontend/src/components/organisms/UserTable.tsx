@@ -17,29 +17,47 @@ export function UserTable({ users, renderActions }: UserTableProps) {
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-slate-50/80">
             <tr>
-              <th scope="col" className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wide text-slate-700">
+              <th
+                scope="col"
+                className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-wide text-slate-700"
+              >
                 Name
               </th>
-              <th scope="col" className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wide text-slate-700">
+              <th
+                scope="col"
+                className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-wide text-slate-700"
+              >
                 Email
               </th>
-              <th scope="col" className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wide text-slate-700">
+              <th
+                scope="col"
+                className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-wide text-slate-700"
+              >
                 Role
               </th>
-              <th scope="col" className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wide text-slate-700">
+              <th
+                scope="col"
+                className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-wide text-slate-700"
+              >
                 Department
               </th>
-              <th scope="col" className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wide text-slate-700">
+              <th
+                scope="col"
+                className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-wide text-slate-700"
+              >
                 Verified
               </th>
               {renderActions && (
-                <th scope="col" className="px-4 py-3 text-right text-sm font-bold uppercase tracking-wide text-slate-700">
+                <th
+                  scope="col"
+                  className="px-4 py-3 text-right text-sm font-semibold uppercase tracking-wide text-slate-700"
+                >
                   Actions
                 </th>
               )}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-slate-100 text-[13px]">
             {users.map((user) => (
               <tr key={user.id} className="transition-colors hover:bg-slate-50">
                 <td className="px-4 py-3">
@@ -52,7 +70,15 @@ export function UserTable({ users, renderActions }: UserTableProps) {
                 </td>
                 <td className="px-4 py-3 text-slate-700">{user.email}</td>
                 <td className="px-4 py-3">
-                  <Badge color={user.role === "super_admin" ? "purple" : user.role === "admin" ? "blue" : "slate"}>
+                  <Badge
+                    color={
+                      user.role === "super_admin"
+                        ? "purple"
+                        : user.role === "admin"
+                          ? "blue"
+                          : "slate"
+                    }
+                  >
                     {ROLE_LABELS[user.role]}
                   </Badge>
                 </td>
@@ -66,7 +92,9 @@ export function UserTable({ users, renderActions }: UserTableProps) {
                 </td>
                 {renderActions && (
                   <td className="px-4 py-3 text-right">
-                    <div className="flex justify-end gap-1">{renderActions(user)}</div>
+                    <div className="flex justify-end gap-1">
+                      {renderActions(user)}
+                    </div>
                   </td>
                 )}
               </tr>
@@ -88,11 +116,21 @@ export function UserTable({ users, renderActions }: UserTableProps) {
               >
                 {fullName(user)}
               </Link>
-              {renderActions && <div className="flex gap-1">{renderActions(user)}</div>}
+              {renderActions && (
+                <div className="flex gap-1">{renderActions(user)}</div>
+              )}
             </div>
             <p className="truncate text-sm text-slate-500">{user.email}</p>
             <div className="mt-2 flex flex-wrap gap-2">
-              <Badge color={user.role === "super_admin" ? "purple" : user.role === "admin" ? "blue" : "slate"}>
+              <Badge
+                color={
+                  user.role === "super_admin"
+                    ? "purple"
+                    : user.role === "admin"
+                      ? "blue"
+                      : "slate"
+                }
+              >
                 {ROLE_LABELS[user.role]}
               </Badge>
               <Badge color={user.isVerified ? "green" : "amber"}>

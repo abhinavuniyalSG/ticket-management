@@ -18,51 +18,54 @@ export function TicketTable({ tickets }: TicketTableProps) {
             <tr>
               <th
                 scope="col"
-                className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wide text-slate-700"
+                className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-wide text-slate-700"
               >
                 Title
               </th>
               <th
                 scope="col"
-                className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wide text-slate-700"
+                className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-wide text-slate-700"
               >
                 Status
               </th>
               <th
                 scope="col"
-                className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wide text-slate-700"
+                className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-wide text-slate-700"
               >
                 Priority
               </th>
               <th
                 scope="col"
-                className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wide text-slate-700"
+                className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-wide text-slate-700"
               >
                 Department
               </th>
               <th
                 scope="col"
-                className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wide text-slate-700"
+                className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-wide text-slate-700"
               >
                 Creator
               </th>
               <th
                 scope="col"
-                className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wide text-slate-700"
+                className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-wide text-slate-700"
               >
                 AssignedTo
               </th>
               <th
                 scope="col"
-                className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wide text-slate-700"
+                className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-wide text-slate-700"
               >
                 Created
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-slate-100 text-[13px]">
             {tickets.map((ticket) => (
-              <tr key={ticket.ticketId} className="transition-colors hover:bg-slate-50">
+              <tr
+                key={ticket.ticketId}
+                className="transition-colors hover:bg-slate-50"
+              >
                 <td className="max-w-xs px-4 py-3">
                   <Link
                     to={`/tickets/${ticket.ticketId}`}

@@ -8,32 +8,50 @@ interface DepartmentTableProps {
   renderActions?: (department: Department) => ReactNode;
 }
 
-export function DepartmentTable({ departments, renderActions }: DepartmentTableProps) {
+export function DepartmentTable({
+  departments,
+  renderActions,
+}: DepartmentTableProps) {
   return (
     <>
       <div className="shadow-soft hidden overflow-x-auto rounded-xl border border-slate-200/80 bg-white md:block">
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-slate-50/80">
             <tr>
-              <th scope="col" className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wide text-slate-700">
+              <th
+                scope="col"
+                className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-wide text-slate-700"
+              >
                 Name
               </th>
-              <th scope="col" className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wide text-slate-700">
+              <th
+                scope="col"
+                className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-wide text-slate-700"
+              >
                 Email
               </th>
-              <th scope="col" className="px-4 py-3 text-left text-sm font-bold uppercase tracking-wide text-slate-700">
+              <th
+                scope="col"
+                className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-wide text-slate-700"
+              >
                 Manager
               </th>
               {renderActions && (
-                <th scope="col" className="px-4 py-3 text-right text-sm font-bold uppercase tracking-wide text-slate-700">
+                <th
+                  scope="col"
+                  className="px-4 py-3 text-right text-sm font-semibold uppercase tracking-wide text-slate-700"
+                >
                   Actions
                 </th>
               )}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-slate-100 text-[13px]">
             {departments.map((department) => (
-              <tr key={department.departmentId} className="transition-colors hover:bg-slate-50">
+              <tr
+                key={department.departmentId}
+                className="transition-colors hover:bg-slate-50"
+              >
                 <td className="px-4 py-3">
                   <Link
                     to={`/departments/${department.departmentId}`}
@@ -42,13 +60,19 @@ export function DepartmentTable({ departments, renderActions }: DepartmentTableP
                     {department.departmentName}
                   </Link>
                 </td>
-                <td className="px-4 py-3 text-slate-700">{department.departmentEmail}</td>
                 <td className="px-4 py-3 text-slate-700">
-                  {department.manager ? fullName(department.manager) : "Unmanaged"}
+                  {department.departmentEmail}
+                </td>
+                <td className="px-4 py-3 text-slate-700">
+                  {department.manager
+                    ? fullName(department.manager)
+                    : "Unmanaged"}
                 </td>
                 {renderActions && (
                   <td className="px-4 py-3 text-right">
-                    <div className="flex justify-end gap-1">{renderActions(department)}</div>
+                    <div className="flex justify-end gap-1">
+                      {renderActions(department)}
+                    </div>
                   </td>
                 )}
               </tr>
@@ -59,7 +83,10 @@ export function DepartmentTable({ departments, renderActions }: DepartmentTableP
 
       <ul className="flex flex-col gap-3 md:hidden">
         {departments.map((department) => (
-          <li key={department.departmentId} className="shadow-soft rounded-xl border border-slate-200/80 bg-white p-4">
+          <li
+            key={department.departmentId}
+            className="shadow-soft rounded-xl border border-slate-200/80 bg-white p-4"
+          >
             <div className="flex items-start justify-between gap-2">
               <Link
                 to={`/departments/${department.departmentId}`}
@@ -67,11 +94,16 @@ export function DepartmentTable({ departments, renderActions }: DepartmentTableP
               >
                 {department.departmentName}
               </Link>
-              {renderActions && <div className="flex gap-1">{renderActions(department)}</div>}
+              {renderActions && (
+                <div className="flex gap-1">{renderActions(department)}</div>
+              )}
             </div>
-            <p className="truncate text-sm text-slate-500">{department.departmentEmail}</p>
+            <p className="truncate text-sm text-slate-500">
+              {department.departmentEmail}
+            </p>
             <p className="mt-2 text-xs text-slate-500">
-              Manager: {department.manager ? fullName(department.manager) : "Unmanaged"}
+              Manager:{" "}
+              {department.manager ? fullName(department.manager) : "Unmanaged"}
             </p>
           </li>
         ))}

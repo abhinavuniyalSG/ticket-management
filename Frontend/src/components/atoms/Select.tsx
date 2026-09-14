@@ -127,7 +127,18 @@ export function Select({
     }),
     valueContainer: (base) => ({ ...base, padding: "0 0.5rem" }),
     singleValue: (base) => ({ ...base, color: muted ? "#94a3b8" : "#475569" }),
-    placeholder: (base) => ({ ...base, color: "#94a3b8" }),
+    // Unlike singleValue, react-select's base placeholder style defaults to
+    // `white-space: normal`, so as the control gets squeezed it wraps onto a
+    // second line instead of truncating - force the same nowrap+ellipsis
+    // treatment here so it behaves consistently as the box shrinks.
+    placeholder: (base) => ({
+      ...base,
+      color: "#94a3b8",
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+      whiteSpace: "nowrap",
+      maxWidth: "100%",
+    }),
     input: (base) => ({ ...base, color: "#334155" }),
     indicatorSeparator: () => ({ display: "none" }),
     dropdownIndicator: (base, state) => ({
