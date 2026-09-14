@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { PageContainer } from "../../components/layout/PageContainer";
 import { PageHeader } from "../../components/layout/PageHeader";
@@ -29,6 +30,7 @@ import { canDeleteUser } from "../../utils/userPermissions";
 
 export function UsersListPage() {
   const { user: actor } = useAuth();
+  const navigate = useNavigate();
   const isSuperAdmin = actor?.role === "super_admin";
 
   const [users, setUsers] = useState<User[] | null>(null);
@@ -188,12 +190,13 @@ export function UsersListPage() {
         <>
           <UserTable
             users={users}
-            renderActions={(target) =>
-              canDeleteUser(actor, target) ? (
+            renderActions={(target) => (
+              <>
                 <IconButton
-                  label={`Delete ${target.firstName} ${target.lastName}`}
-                  variant="danger"
-                  onClick={() => setDeleteTarget(target)}
+                  label={`Edit ${target.firstName} ${target.lastName}`}
+                  tooltip="Edit"
+                  variant="primary"
+                  onClick={() => navigate(`/users/${target.id}`)}
                   icon={
                     <svg
                       aria-hidden="true"
@@ -202,17 +205,47 @@ export function UsersListPage() {
                       className="h-4 w-4"
                     >
                       <path
-                        d="M4 6h12M8 6V4.5a1 1 0 011-1h2a1 1 0 011 1V6M5.5 6l.6 9.5a1 1 0 001 .9h5.8a1 1 0 001-.9l.6-9.5"
+                        d="M12.9 3.6a1.5 1.5 0 012.12 0l1.38 1.38a1.5 1.5 0 010 2.12l-8.6 8.6-4 1 1-4 8.1-8.1z"
                         stroke="currentColor"
                         strokeWidth="1.4"
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       />
+                      <path
+                        d="M11.5 5l3.5 3.5"
+                        stroke="currentColor"
+                        strokeWidth="1.4"
+                        strokeLinecap="round"
+                      />
                     </svg>
                   }
                 />
-              ) : null
-            }
+                {canDeleteUser(actor, target) && (
+                  <IconButton
+                    label={`Delete ${target.firstName} ${target.lastName}`}
+                    tooltip="Delete"
+                    variant="danger"
+                    onClick={() => setDeleteTarget(target)}
+                    icon={
+                      <svg
+                        aria-hidden="true"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        className="h-4 w-4"
+                      >
+                        <path
+                          d="M4 6h12M8 6V4.5a1 1 0 011-1h2a1 1 0 011 1V6M5.5 6l.6 9.5a1 1 0 001 .9h5.8a1 1 0 001-.9l.6-9.5"
+                          stroke="currentColor"
+                          strokeWidth="1.4"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    }
+                  />
+                )}
+              </>
+            )}
           />
           {/* Grows to fill any leftover height so pagination sits at the
               bottom of the page even when the list is short (e.g. a single

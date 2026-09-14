@@ -12,12 +12,11 @@ describe("formatDate", () => {
     expect(formatDate("not-a-date")).toBe("—");
   });
 
-  it("formats a valid ISO date string into a readable date", () => {
+  it("formats a valid ISO date string as numeric D/M/YYYY, 24-hour time", () => {
     const result = formatDate("2026-01-15T10:30:00.000Z");
-    // Avoid asserting an exact locale string (it depends on the machine's
-    // timezone); just check the meaningful parts made it through.
-    expect(result).toContain("2026");
-    expect(result).toContain("Jan");
+    // Avoid asserting the exact day/month/time (they depend on the machine's
+    // timezone); just check the format shape is right.
+    expect(result).toMatch(/^\d{1,2}\/\d{1,2}\/2026, \d{2}:\d{2}$/);
   });
 });
 

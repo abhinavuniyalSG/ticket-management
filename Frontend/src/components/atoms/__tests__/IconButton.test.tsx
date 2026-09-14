@@ -4,10 +4,10 @@ import userEvent from "@testing-library/user-event";
 import { IconButton } from "../IconButton";
 
 describe("IconButton", () => {
-  it("uses the label as the accessible name and title", () => {
+  it("uses the label as the accessible name and tooltip text", () => {
     render(<IconButton icon={<span>x</span>} label="Delete ticket" />);
-    const button = screen.getByRole("button", { name: "Delete ticket" });
-    expect(button).toHaveAttribute("title", "Delete ticket");
+    expect(screen.getByRole("button", { name: "Delete ticket" })).toBeInTheDocument();
+    expect(screen.getByRole("tooltip")).toHaveTextContent("Delete ticket");
   });
 
   it("renders the provided icon", () => {

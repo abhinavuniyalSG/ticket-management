@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { PageContainer } from "../../components/layout/PageContainer";
 import { PageHeader } from "../../components/layout/PageHeader";
@@ -19,6 +19,7 @@ import type { Department } from "../../types/department";
 import { DEFAULT_PAGE_SIZE } from "../../constants/options";
 
 export function DepartmentsListPage() {
+  const navigate = useNavigate();
   const [departments, setDepartments] = useState<Department[] | null>(null);
   const [pagination, setPagination] = useState<PaginationMeta | null>(null);
   const [page, setPage] = useState(1);
@@ -125,22 +126,48 @@ export function DepartmentsListPage() {
           <DepartmentTable
             departments={departments}
             renderActions={(department) => (
-              <IconButton
-                label={`Delete ${department.departmentName}`}
-                variant="danger"
-                onClick={() => setDeleteTarget(department)}
-                icon={
-                  <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="h-4 w-4">
-                    <path
-                      d="M4 6h12M8 6V4.5a1 1 0 011-1h2a1 1 0 011 1V6M5.5 6l.6 9.5a1 1 0 001 .9h5.8a1 1 0 001-.9l.6-9.5"
-                      stroke="currentColor"
-                      strokeWidth="1.4"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                }
-              />
+              <>
+                <IconButton
+                  label={`Edit ${department.departmentName}`}
+                  tooltip="Edit"
+                  variant="primary"
+                  onClick={() => navigate(`/departments/${department.departmentId}`)}
+                  icon={
+                    <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="h-4 w-4">
+                      <path
+                        d="M12.9 3.6a1.5 1.5 0 012.12 0l1.38 1.38a1.5 1.5 0 010 2.12l-8.6 8.6-4 1 1-4 8.1-8.1z"
+                        stroke="currentColor"
+                        strokeWidth="1.4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M11.5 5l3.5 3.5"
+                        stroke="currentColor"
+                        strokeWidth="1.4"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  }
+                />
+                <IconButton
+                  label={`Delete ${department.departmentName}`}
+                  tooltip="Delete"
+                  variant="danger"
+                  onClick={() => setDeleteTarget(department)}
+                  icon={
+                    <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="h-4 w-4">
+                      <path
+                        d="M4 6h12M8 6V4.5a1 1 0 011-1h2a1 1 0 011 1V6M5.5 6l.6 9.5a1 1 0 001 .9h5.8a1 1 0 001-.9l.6-9.5"
+                        stroke="currentColor"
+                        strokeWidth="1.4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  }
+                />
+              </>
             )}
           />
           {/* Grows to fill any leftover height so pagination sits at the
