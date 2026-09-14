@@ -14,6 +14,20 @@ interface RequestOptions {
 let sessionExpiredHandler: (() => void) | null = null;
 export function setSessionExpiredHandler(handler: (() => void) | null): void {
   sessionExpiredHandler = handler;
+  lastSessionExpiredAt = 0;
+}
+
+// A page often fires several requests at once (e.g. Promise.all on load), so
+// one expired session can produce a burst of near-simultaneous 401s - without
+// this, each one would independently call the handler and stack up multiple
+// "please sign in again" toasts for what is really a single event.
+let lastSessionExpiredAt = 0;
+const SESSION_EXPIRED_NOTIFY_WINDOW_MS = 2000;
+function notifySessionExpired(): void {
+  const now = Date.now();
+  if (now - lastSessionExpiredAt < SESSION_EXPIRED_NOTIFY_WINDOW_MS) return;
+  lastSessionExpiredAt = now;
+  sessionExpiredHandler?.();
 }
 
 function buildUrl(
@@ -66,7 +80,11 @@ async function parseBody(res: Response): Promise<ParsedBody> {
   }
 }
 
-function toApiError(status: number, body: ParsedBody): ApiError {
+function toApiError(
+  status: number,
+  body: ParsedBody,
+  isSessionExpired = false,
+): ApiError {
   const errorBody = (body.json ?? {}) as ErrorBody;
   const rawText = body.rawText.trim();
   // A short, non-HTML plain-text body (like express-rate-limit's default 429
@@ -81,7 +99,7 @@ function toApiError(status: number, body: ParsedBody): ApiError {
     (errorBody.errors?.length ? errorBody.errors.join(", ") : undefined) ??
     errorBody.message ??
     (isPlainTextMessage ? rawText : "Something went wrong. Please try again.");
-  return new ApiError(status, message, errorBody.errors);
+  return new ApiError(status, message, errorBody.errors, isSessionExpired);
 }
 
 // Coalesces concurrent refresh attempts into a single call instead of a
@@ -121,9 +139,9 @@ export async function apiRequest<T>(
     if (refreshed) {
       return apiRequest<T>(path, options, true);
     }
-    sessionExpiredHandler?.();
+    notifySessionExpired();
     const body = await parseBody(res);
-    throw toApiError(res.status, body);
+    throw toApiError(res.status, body, true);
   }
 
   const body = await parseBody(res);

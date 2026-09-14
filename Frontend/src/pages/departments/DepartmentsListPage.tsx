@@ -17,6 +17,7 @@ import { useDebouncedValue } from "../../hooks/useDebouncedValue";
 import { ApiError, type PaginationMeta } from "../../types/api";
 import type { Department } from "../../types/department";
 import { DEFAULT_PAGE_SIZE } from "../../constants/options";
+import { showApiErrorToast } from "../../utils/apiErrorToast";
 
 export function DepartmentsListPage() {
   const navigate = useNavigate();
@@ -78,7 +79,7 @@ export function DepartmentsListPage() {
       );
       setDeleteTarget(null);
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Unable to delete department.");
+      showApiErrorToast(err, "Unable to delete department.");
     } finally {
       setIsDeleting(false);
     }

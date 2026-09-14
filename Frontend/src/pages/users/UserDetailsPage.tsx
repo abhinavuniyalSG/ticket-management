@@ -20,6 +20,7 @@ import { ApiError } from "../../types/api";
 import type { User, UserRole } from "../../types/user";
 import type { Department } from "../../types/department";
 import { ROLE_LABELS, USER_ROLES } from "../../constants/options";
+import { showApiErrorToast } from "../../utils/apiErrorToast";
 import {
   canDeleteUser,
   canEditUserDepartment,
@@ -114,9 +115,7 @@ export function UserDetailsPage() {
       setTarget(res.user);
       toast.success(res.message);
     } catch (err) {
-      toast.error(
-        err instanceof ApiError ? err.message : "Unable to update this user.",
-      );
+      showApiErrorToast(err, "Unable to update this user.");
     } finally {
       setIsSaving(false);
     }
@@ -129,9 +128,7 @@ export function UserDetailsPage() {
       toast.success(res.message);
       navigate("/users", { replace: true });
     } catch (err) {
-      toast.error(
-        err instanceof ApiError ? err.message : "Unable to delete this user.",
-      );
+      showApiErrorToast(err, "Unable to delete this user.");
       setIsDeleting(false);
       setIsDeleteOpen(false);
     }

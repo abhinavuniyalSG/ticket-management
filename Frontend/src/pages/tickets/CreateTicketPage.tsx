@@ -15,6 +15,7 @@ import { ApiError } from "../../types/api";
 import type { Department } from "../../types/department";
 import type { User } from "../../types/user";
 import { canAssignOnCreate } from "../../utils/ticketPermissions";
+import { showApiErrorToast } from "../../utils/apiErrorToast";
 
 export function CreateTicketPage() {
   const { user } = useAuth();
@@ -67,9 +68,7 @@ export function CreateTicketPage() {
       toast.success(res.message);
       navigate(`/tickets/${res.ticket.ticketId}`, { replace: true });
     } catch (err) {
-      const message =
-        err instanceof ApiError ? err.message : "Unable to create the ticket.";
-      toast.error(message);
+      showApiErrorToast(err, "Unable to create the ticket.");
     } finally {
       setIsSubmitting(false);
     }

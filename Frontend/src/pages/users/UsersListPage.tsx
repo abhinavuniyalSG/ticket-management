@@ -27,6 +27,7 @@ import {
   USER_ROLES,
 } from "../../constants/options";
 import { canDeleteUser } from "../../utils/userPermissions";
+import { showApiErrorToast } from "../../utils/apiErrorToast";
 
 export function UsersListPage() {
   const { user: actor } = useAuth();
@@ -118,9 +119,7 @@ export function UsersListPage() {
       );
       setDeleteTarget(null);
     } catch (err) {
-      toast.error(
-        err instanceof ApiError ? err.message : "Unable to delete this user.",
-      );
+      showApiErrorToast(err, "Unable to delete this user.");
     } finally {
       setIsDeleting(false);
     }

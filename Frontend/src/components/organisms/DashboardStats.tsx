@@ -12,10 +12,10 @@ const TOTAL_TICKETS_LABEL: Record<DashboardPeriod, string> = {
 };
 
 const CLOSED_TICKETS_LABEL: Record<DashboardPeriod, string> = {
-  day: "Closed Date today",
-  week: "Closed Date in this week",
-  month: "Closed Date in this month",
-  year: "Closed Date in this year",
+  day: "Closed today",
+  week: "Closed this week",
+  month: "Closed this month",
+  year: "Closed this year",
 };
 
 export function DashboardStats({ metrics }: DashboardStatsProps) {

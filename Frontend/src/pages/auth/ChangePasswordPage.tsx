@@ -8,7 +8,7 @@ import { PasswordField } from "../../components/molecules/PasswordField";
 import { Input } from "../../components/atoms/Input";
 import { Button } from "../../components/atoms/Button";
 import { authService } from "../../services/authService";
-import { ApiError } from "../../types/api";
+import { getApiErrorMessage, showApiErrorToast } from "../../utils/apiErrorToast";
 import { getPasswordErrors, isValidEmail } from "../../utils/validation";
 
 interface FormValues {
@@ -61,10 +61,8 @@ export function ChangePasswordPage() {
       toast.success(res.message);
       setSuccess(true);
     } catch (error) {
-      const message =
-        error instanceof ApiError ? error.message : "Unable to change your password right now.";
-      setFormError(message);
-      toast.error(message);
+      setFormError(getApiErrorMessage(error, "Unable to change your password right now."));
+      showApiErrorToast(error, "Unable to change your password right now.");
     } finally {
       setIsSubmitting(false);
     }

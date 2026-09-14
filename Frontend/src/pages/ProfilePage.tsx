@@ -16,6 +16,7 @@ import { useTouched } from "../hooks/useTouched";
 import { ApiError } from "../types/api";
 import type { User } from "../types/user";
 import { ROLE_LABELS } from "../constants/options";
+import { showApiErrorToast } from "../utils/apiErrorToast";
 
 export function ProfilePage() {
   const { user: authUser, setUser, logout } = useAuth();
@@ -87,7 +88,7 @@ export function ProfilePage() {
       setUser(res.user);
       toast.success(res.message);
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Unable to update your profile.");
+      showApiErrorToast(err, "Unable to update your profile.");
     } finally {
       setIsSavingName(false);
     }
@@ -101,7 +102,7 @@ export function ProfilePage() {
       await logout();
       navigate("/login", { replace: true });
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Unable to delete your account.");
+      showApiErrorToast(err, "Unable to delete your account.");
       setIsDeleting(false);
       setIsDeleteOpen(false);
     }

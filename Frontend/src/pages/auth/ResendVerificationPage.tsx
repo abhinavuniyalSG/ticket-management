@@ -8,7 +8,7 @@ import { Input } from "../../components/atoms/Input";
 import { Button } from "../../components/atoms/Button";
 import { authService } from "../../services/authService";
 import { useTouched } from "../../hooks/useTouched";
-import { ApiError } from "../../types/api";
+import { getApiErrorMessage, showApiErrorToast } from "../../utils/apiErrorToast";
 import { isValidEmail } from "../../utils/validation";
 
 export function ResendVerificationPage() {
@@ -42,9 +42,8 @@ export function ResendVerificationPage() {
       toast.success(res.message);
       setSent(true);
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : "Unable to resend the email.";
-      setServerError(message);
-      toast.error(message);
+      setServerError(getApiErrorMessage(err, "Unable to resend the email."));
+      showApiErrorToast(err, "Unable to resend the email.");
     } finally {
       setIsSubmitting(false);
     }

@@ -10,7 +10,7 @@ import { Button } from "../../components/atoms/Button";
 import { useAuth } from "../../hooks/useAuth";
 import { useTouched } from "../../hooks/useTouched";
 import { useDebouncedValue } from "../../hooks/useDebouncedValue";
-import { ApiError } from "../../types/api";
+import { getApiErrorMessage, showApiErrorToast } from "../../utils/apiErrorToast";
 import { isPasswordValid, isValidEmail } from "../../utils/validation";
 import { getDefaultRouteForRole } from "../../constants/navigation";
 
@@ -124,10 +124,8 @@ export function RegisterPage() {
       toast.success("Account created. Please check your email to verify your account.");
       navigate("/verify-required", { replace: true });
     } catch (error) {
-      const message =
-        error instanceof ApiError ? error.message : "Unable to create your account right now.";
-      setFormError(message);
-      toast.error(message);
+      setFormError(getApiErrorMessage(error, "Unable to create your account right now."));
+      showApiErrorToast(error, "Unable to create your account right now.");
     } finally {
       setIsSubmitting(false);
     }

@@ -9,8 +9,8 @@ import { Input } from "../../components/atoms/Input";
 import { Button } from "../../components/atoms/Button";
 import { useAuth } from "../../hooks/useAuth";
 import { useTouched } from "../../hooks/useTouched";
-import { ApiError } from "../../types/api";
 import { getDefaultRouteForRole } from "../../constants/navigation";
+import { getApiErrorMessage, showApiErrorToast } from "../../utils/apiErrorToast";
 
 interface LocationState {
   from?: { pathname: string };
@@ -60,9 +60,8 @@ export function LoginPage() {
       const redirectTo = state?.from?.pathname ?? getDefaultRouteForRole(loggedInUser.role);
       navigate(redirectTo, { replace: true });
     } catch (error) {
-      const message = error instanceof ApiError ? error.message : "Unable to log in right now.";
-      setFormError(message);
-      toast.error(message);
+      setFormError(getApiErrorMessage(error, "Unable to log in right now."));
+      showApiErrorToast(error, "Unable to log in right now.");
     } finally {
       setIsSubmitting(false);
     }

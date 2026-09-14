@@ -11,7 +11,7 @@ import { Button } from "../../components/atoms/Button";
 import { departmentService } from "../../services/departmentService";
 import { userService } from "../../services/userService";
 import { useTouched } from "../../hooks/useTouched";
-import { ApiError } from "../../types/api";
+import { showApiErrorToast } from "../../utils/apiErrorToast";
 import type { User } from "../../types/user";
 import { fullName } from "../../utils/format";
 import { isValidEmail } from "../../utils/validation";
@@ -67,9 +67,7 @@ export function CreateDepartmentPage() {
         replace: true,
       });
     } catch (err) {
-      toast.error(
-        err instanceof ApiError ? err.message : "Unable to create department.",
-      );
+      showApiErrorToast(err, "Unable to create department.");
     } finally {
       setIsSubmitting(false);
     }

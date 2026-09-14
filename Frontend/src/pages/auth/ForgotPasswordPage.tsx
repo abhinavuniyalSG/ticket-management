@@ -8,7 +8,7 @@ import { Input } from "../../components/atoms/Input";
 import { Button } from "../../components/atoms/Button";
 import { authService } from "../../services/authService";
 import { useTouched } from "../../hooks/useTouched";
-import { ApiError } from "../../types/api";
+import { getApiErrorMessage, showApiErrorToast } from "../../utils/apiErrorToast";
 import { isValidEmail } from "../../utils/validation";
 
 const RESEND_COOLDOWN_SECONDS = 180;
@@ -43,9 +43,8 @@ export function ForgotPasswordPage() {
       setSent(true);
       setSecondsLeft(RESEND_COOLDOWN_SECONDS);
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : "Unable to send the reset email.";
-      setServerError(message);
-      toast.error(message);
+      setServerError(getApiErrorMessage(err, "Unable to send the reset email."));
+      showApiErrorToast(err, "Unable to send the reset email.");
     } finally {
       setIsSubmitting(false);
     }

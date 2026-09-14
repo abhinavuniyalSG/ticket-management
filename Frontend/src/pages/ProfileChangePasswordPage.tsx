@@ -12,8 +12,8 @@ import { authService } from "../services/authService";
 import { useAuth } from "../hooks/useAuth";
 import { useTouched } from "../hooks/useTouched";
 import { useDebouncedValue } from "../hooks/useDebouncedValue";
-import { ApiError } from "../types/api";
 import { isPasswordValid } from "../utils/validation";
+import { getApiErrorMessage, showApiErrorToast } from "../utils/apiErrorToast";
 
 interface FormValues {
   email: string;
@@ -106,10 +106,8 @@ export function ProfileChangePasswordPage() {
       await logout();
       navigate("/login", { replace: true });
     } catch (error) {
-      const message =
-        error instanceof ApiError ? error.message : "Unable to change your password right now.";
-      setFormError(message);
-      toast.error(message);
+      setFormError(getApiErrorMessage(error, "Unable to change your password right now."));
+      showApiErrorToast(error, "Unable to change your password right now.");
     } finally {
       setIsSubmitting(false);
     }

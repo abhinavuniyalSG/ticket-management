@@ -7,8 +7,8 @@ import { Spinner } from "../../components/atoms/Spinner";
 import { useAuth } from "../../hooks/useAuth";
 import { useLogout } from "../../hooks/useLogout";
 import { authService } from "../../services/authService";
-import { ApiError } from "../../types/api";
 import { getDefaultRouteForRole } from "../../constants/navigation";
+import { showApiErrorToast } from "../../utils/apiErrorToast";
 
 export function VerificationRequiredPage() {
   const { user, status } = useAuth();
@@ -37,11 +37,7 @@ export function VerificationRequiredPage() {
       const res = await authService.resendVerification(user.email);
       toast.success(res.message);
     } catch (error) {
-      toast.error(
-        error instanceof ApiError
-          ? error.message
-          : "Unable to resend the email.",
-      );
+      showApiErrorToast(error, "Unable to resend the email.");
     } finally {
       setIsSending(false);
     }

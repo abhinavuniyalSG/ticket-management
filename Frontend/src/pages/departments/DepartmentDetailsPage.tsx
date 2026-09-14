@@ -19,6 +19,7 @@ import type { Department } from "../../types/department";
 import type { User } from "../../types/user";
 import { fullName } from "../../utils/format";
 import { isValidEmail } from "../../utils/validation";
+import { showApiErrorToast } from "../../utils/apiErrorToast";
 
 type FieldName = "name" | "email";
 
@@ -109,11 +110,7 @@ export function DepartmentDetailsPage() {
       setDepartment(res.department);
       toast.success(res.message);
     } catch (err) {
-      toast.error(
-        err instanceof ApiError
-          ? err.message
-          : "Unable to update this department.",
-      );
+      showApiErrorToast(err, "Unable to update this department.");
     } finally {
       setIsSaving(false);
     }
@@ -126,11 +123,7 @@ export function DepartmentDetailsPage() {
       toast.success(res.message);
       navigate("/departments", { replace: true });
     } catch (err) {
-      toast.error(
-        err instanceof ApiError
-          ? err.message
-          : "Unable to delete this department.",
-      );
+      showApiErrorToast(err, "Unable to delete this department.");
       setIsDeleting(false);
       setIsDeleteOpen(false);
     }

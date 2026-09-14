@@ -12,6 +12,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { ApiError } from "../../types/api";
 import type { Ticket } from "../../types/ticket";
 import { canEditTicketContent } from "../../utils/ticketPermissions";
+import { showApiErrorToast } from "../../utils/apiErrorToast";
 
 export function EditTicketPage() {
   const { id } = useParams<{ id: string }>();
@@ -78,7 +79,7 @@ export function EditTicketPage() {
       toast.success(res.message);
       navigate(`/tickets/${ticket.ticketId}`, { replace: true });
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Unable to update this ticket.");
+      showApiErrorToast(err, "Unable to update this ticket.");
     } finally {
       setIsSubmitting(false);
     }

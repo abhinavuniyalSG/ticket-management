@@ -19,6 +19,7 @@ import type { Ticket, TicketStatus } from "../../types/ticket";
 import type { User } from "../../types/user";
 import { STATUS_LABELS } from "../../constants/options";
 import { fullName } from "../../utils/format";
+import { showApiErrorToast } from "../../utils/apiErrorToast";
 import {
   canAssignTicket,
   canDeleteTicket,
@@ -128,11 +129,7 @@ export function TicketDetailsPage() {
       setTicket(res.ticket);
       toast.success(res.message);
     } catch (err) {
-      toast.error(
-        err instanceof ApiError
-          ? err.message
-          : "Unable to update ticket status.",
-      );
+      showApiErrorToast(err, "Unable to update ticket status.");
     } finally {
       setIsMutating(false);
     }
@@ -149,9 +146,7 @@ export function TicketDetailsPage() {
       setSelectedAssignee("");
       toast.success(res.message);
     } catch (err) {
-      toast.error(
-        err instanceof ApiError ? err.message : "Unable to assign this ticket.",
-      );
+      showApiErrorToast(err, "Unable to assign this ticket.");
     } finally {
       setIsMutating(false);
     }
@@ -166,11 +161,7 @@ export function TicketDetailsPage() {
       setTicket(res.ticket);
       toast.success(res.message);
     } catch (err) {
-      toast.error(
-        err instanceof ApiError
-          ? err.message
-          : "Unable to unassign this ticket.",
-      );
+      showApiErrorToast(err, "Unable to unassign this ticket.");
     } finally {
       setIsMutating(false);
     }
@@ -183,9 +174,7 @@ export function TicketDetailsPage() {
       toast.success(res.message);
       navigate("/tickets", { replace: true });
     } catch (err) {
-      toast.error(
-        err instanceof ApiError ? err.message : "Unable to delete this ticket.",
-      );
+      showApiErrorToast(err, "Unable to delete this ticket.");
       setIsDeleteOpen(false);
     } finally {
       setIsMutating(false);
