@@ -207,7 +207,7 @@ export function TicketDetailsPage() {
       />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="flex flex-col gap-6 lg:col-span-2">
+        <div className="order-2 flex flex-col gap-6 lg:order-0 lg:col-span-2">
           <div className="shadow-soft rounded-xl border border-slate-200/80 bg-white p-5 sm:p-6">
             <h2 className="mb-3 text-sm font-semibold text-slate-900">
               Description
@@ -225,7 +225,7 @@ export function TicketDetailsPage() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-6 lg:col-span-1">
+        <div className="order-1 flex flex-col gap-6 lg:order-0 lg:col-span-1">
           <div className="shadow-soft rounded-xl border border-slate-200/80 bg-white p-5 sm:p-6">
             <h2 className="text-sm font-semibold text-slate-900">Overview</h2>
             <div className="mt-3 flex flex-wrap gap-2">
